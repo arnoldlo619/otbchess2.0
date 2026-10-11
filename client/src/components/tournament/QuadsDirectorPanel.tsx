@@ -27,6 +27,7 @@ import {
   Activity,
   Grid3X3,
 } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import type { Player, Game, Result, Round } from "../../lib/tournamentData";
 import type { QuadSection } from "../../lib/quads";
 import type { TournamentConfig } from "../../lib/tournamentRegistry";
@@ -64,6 +65,12 @@ interface QuadsDirectorPanelProps {
   onSectionChange?: (sectionId: string) => void;
 }
 
+interface PlayerTournamentStanding {
+  rank: number;
+  sectionName: string;
+  rating: number;
+}
+
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function getPlayerName(players: Player[], id: string): string {
@@ -73,6 +80,26 @@ function getPlayerName(players: Player[], id: string): string {
 
 function getPlayerRating(players: Player[], id: string): number {
   return players.find((p) => p.id === id)?.elo ?? 0;
+}
+
+function findNextQuadWithPendingBoards(
+  sections: QuadSection[],
+  games: Game[],
+  currentRound: number,
+  completedSectionId: string,
+): string | null {
+  const orderedSections = [...sections].sort((a, b) => a.orderIndex - b.orderIndex);
+  const completedSectionIndex = orderedSections.findIndex((section) => section.id === completedSectionId);
+  const subsequentSections = completedSectionIndex >= 0
+    ? [...orderedSections.slice(completedSectionIndex + 1), ...orderedSections.slice(0, completedSectionIndex)]
+    : orderedSections;
+
+  return subsequentSections.find((section) => games.some((game) => (
+    game.sectionId === section.id
+    && game.round === currentRound
+    && game.blackId !== "BYE"
+    && game.result === "*"
+  )))?.id ?? null;
 }
 
 function PlayerProfileAvatar({
@@ -112,18 +139,22 @@ function BoardPlayerAvatar({
   fallbackName,
   side,
   size = 32,
+  tournamentStanding,
+  isDark,
 }: {
   player?: Player;
   fallbackName: string;
   side: "white" | "black";
   size?: number;
+  tournamentStanding?: PlayerTournamentStanding;
+  isDark: boolean;
 }) {
   const isWhite = side === "white";
-  return (
+  const avatar = (
     <div className="relative flex-shrink-0">
       <PlayerProfileAvatar player={player} fallbackName={fallbackName} size={size} />
       <span
-        aria-label={`Playing as ${side}`}
+        aria-hidden="true"
         className="absolute -bottom-0.5 -right-0.5 rounded-full border"
         style={{
           width: Math.max(9, Math.round(size * 0.32)),
@@ -134,6 +165,46 @@ function BoardPlayerAvatar({
         }}
       />
     </div>
+  );
+
+  if (!player || !tournamentStanding || size < 28) return avatar;
+
+  return (
+    <Tooltip delayDuration={250}>
+      <TooltipTrigger asChild>
+        <button
+          type="button"
+          aria-label={`${player.name}, playing as ${side}. Current tournament standing: rank ${tournamentStanding.rank} in ${tournamentStanding.sectionName}; ELO rating ${tournamentStanding.rating}.`}
+          className="-m-1 flex min-h-11 min-w-11 flex-shrink-0 items-center justify-center rounded-full transition-transform duration-200 hover:scale-[1.04] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 active:scale-95"
+          style={{
+            color: isDark ? "oklch(0.72 0.19 145)" : "oklch(0.45 0.14 145)",
+            background: "transparent",
+            touchAction: "manipulation",
+          }}
+        >
+          {avatar}
+        </button>
+      </TooltipTrigger>
+      <TooltipContent
+        side="top"
+        sideOffset={8}
+        className={`z-[80] min-w-44 border px-3 py-2.5 text-left shadow-xl ${
+          isDark
+            ? "border-white/10 bg-[oklch(0.16_0.03_145)] text-white"
+            : "border-[#D7E5D7] bg-white text-[#12372A]"
+        }`}
+      >
+        <p className={`text-[10px] font-bold uppercase tracking-wider ${isDark ? "text-white/50" : "text-[#54705B]"}`}>
+          Current standing
+        </p>
+        <p className="mt-1 text-sm font-black tabular-nums">
+          #{tournamentStanding.rank} <span className={`ml-1 text-xs font-medium ${isDark ? "text-white/65" : "text-[#54705B]"}`}>in {tournamentStanding.sectionName}</span>
+        </p>
+        <p className={`mt-1 text-xs ${isDark ? "text-white/65" : "text-[#54705B]"}`}>
+          ELO rating <span className={`font-bold tabular-nums ${isDark ? "text-white" : "text-[#12372A]"}`}>{tournamentStanding.rating.toLocaleString()}</span>
+        </p>
+      </TooltipContent>
+    </Tooltip>
   );
 }
 
@@ -207,9 +278,10 @@ function ProgressRing({ completed, total, size = 36, isDark }: { completed: numb
 // ─── ResultEntryPanel ────────────────────────────────────────────────────────
 
 function ResultEntryPanel({
-  game, players, boardIndex, onEnterResult, onClose, onAdvanceToNext, isDark, T,
+  game, players, playerStandings, boardIndex, onEnterResult, onClose, onAdvanceToNext, isDark, T,
 }: {
   game: Game; players: Player[]; boardIndex: number;
+  playerStandings: Map<string, PlayerTournamentStanding>;
   onEnterResult: (gameId: string, result: Result) => void;
   onClose: () => void;
   onAdvanceToNext: (currentGameId: string) => void;
@@ -235,13 +307,14 @@ function ResultEntryPanel({
   // Escape is handled by the shared accessible-overlay behavior.
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
+      if (current !== "*") return;
       if (e.key === "w" || e.key === "W") { onEnterResult(game.id, "1-0"); onAdvanceToNext(game.id); }
       if (e.key === "d" || e.key === "D") { onEnterResult(game.id, "½-½"); onAdvanceToNext(game.id); }
       if (e.key === "b" || e.key === "B") { onEnterResult(game.id, "0-1"); onAdvanceToNext(game.id); }
     };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
-  }, [game.id, onEnterResult, onAdvanceToNext]);
+  }, [current, game.id, onEnterResult, onAdvanceToNext]);
 
   const handleResult = (result: "1-0" | "½-½" | "0-1") => {
     if (current === result) {
@@ -249,8 +322,7 @@ function ResultEntryPanel({
       onEnterResult(game.id, "*" as Result);
     } else {
       onEnterResult(game.id, result);
-      onAdvanceToNext(game.id);
-      return;
+      if (current === "*") onAdvanceToNext(game.id);
     }
   };
 
@@ -280,7 +352,7 @@ function ResultEntryPanel({
         {/* Players */}
         <div className="px-5 py-5 flex flex-col gap-3 flex-shrink-0">
           <div className="flex items-center gap-3 p-3 rounded-xl transition-all" style={{ background: current === "1-0" ? T.greenSoft : T.rowBg, border: `1px solid ${current === "1-0" ? T.greenBorder : T.rowBorder}` }}>
-            <BoardPlayerAvatar player={white} fallbackName={whiteName} side="white" size={36} />
+            <BoardPlayerAvatar player={white} fallbackName={whiteName} side="white" size={36} tournamentStanding={playerStandings.get(game.whiteId)} isDark={isDark} />
             <div className="flex-1 min-w-0">
               <p className="text-sm font-bold truncate" style={{ color: T.text }}>{whiteName}</p>
               <p className="text-xs" style={{ color: T.textDim }}>{whiteRating} · White</p>
@@ -288,7 +360,7 @@ function ResultEntryPanel({
             {current === "1-0" && <Check size={16} style={{ color: T.green, flexShrink: 0 }} />}
           </div>
           <div className="flex items-center gap-3 p-3 rounded-xl transition-all" style={{ background: current === "0-1" ? T.greenSoft : T.rowBg, border: `1px solid ${current === "0-1" ? T.greenBorder : T.rowBorder}` }}>
-            <BoardPlayerAvatar player={black} fallbackName={blackName} side="black" size={36} />
+            <BoardPlayerAvatar player={black} fallbackName={blackName} side="black" size={36} tournamentStanding={playerStandings.get(game.blackId)} isDark={isDark} />
             <div className="flex-1 min-w-0">
               <p className="text-sm font-bold truncate" style={{ color: T.text }}>{blackName}</p>
               <p className="text-xs" style={{ color: T.textDim }}>{blackRating} · Black</p>
@@ -361,10 +433,12 @@ function ResultEntryPanel({
 // ─── GameRow ──────────────────────────────────────────────────────────────────
 
 function GameRow({
-  game, players, boardIndex, onEnterResult, onGameClick, isActive, isDark, T,
+  game, players, playerStandings, boardIndex, onEnterResult, onAdvanceToNext, onGameClick, isActive, isDark, T,
 }: {
   game: Game; players: Player[]; boardIndex: number;
+  playerStandings: Map<string, PlayerTournamentStanding>;
   onEnterResult: (gameId: string, result: Result) => void;
+  onAdvanceToNext: (currentGameId: string) => void;
   onGameClick?: (gameId: string) => void;
   isActive: boolean; isDark: boolean; T: Record<string, string>;
 }) {
@@ -385,6 +459,7 @@ function GameRow({
       setCollapsed(false);
     } else {
       onEnterResult(game.id, result);
+      if (isPending) onAdvanceToNext(game.id);
       setTimeout(() => setCollapsed(true), 200);
     }
   };
@@ -406,7 +481,7 @@ function GameRow({
       >
         <div className="flex items-center gap-2 min-w-0">
           <span className="text-xs font-bold uppercase tracking-widest flex-shrink-0 w-6" style={{ color: T.textDim }}>B{boardIndex}</span>
-          <BoardPlayerAvatar player={whitePlayer} fallbackName={whiteFullName} side="white" size={20} />
+          <BoardPlayerAvatar player={whitePlayer} fallbackName={whiteFullName} side="white" size={20} isDark={isDark} />
           <span
             className="text-sm font-semibold truncate max-w-[72px]"
             style={{ color: whiteWon ? T.green : isDraw ? T.textMuted : T.textDim }}
@@ -428,7 +503,7 @@ function GameRow({
           >
             {blackName}
           </span>
-          <BoardPlayerAvatar player={blackPlayer} fallbackName={blackFullName} side="black" size={20} />
+          <BoardPlayerAvatar player={blackPlayer} fallbackName={blackFullName} side="black" size={20} isDark={isDark} />
         </div>
         <span className="text-xs flex-shrink-0" aria-hidden="true" style={{ color: T.textDim }}>▼</span>
       </button>
@@ -462,7 +537,7 @@ function GameRow({
       </div>
       <div className="flex items-center gap-2">
         <div className="flex items-center gap-2.5 flex-1 min-w-0 rounded-xl px-2.5 py-2.5" style={{ background: whiteWon ? T.greenSoft : "transparent", border: `1px solid ${whiteWon ? T.greenBorder : "transparent"}` }}>
-          <BoardPlayerAvatar player={whitePlayer} fallbackName={whiteFullName} side="white" />
+          <BoardPlayerAvatar player={whitePlayer} fallbackName={whiteFullName} side="white" tournamentStanding={playerStandings.get(game.whiteId)} isDark={isDark} />
           <div className="flex flex-col min-w-0">
             <span className="text-sm font-semibold truncate" style={{ color: T.text }}>{whiteFullName}</span>
             <span className="text-xs font-mono" style={{ color: T.textDim }}>{getPlayerRating(players, game.whiteId)}</span>
@@ -476,7 +551,7 @@ function GameRow({
             <span className="text-sm font-semibold truncate text-right" style={{ color: isBye ? T.textDim : T.text }}>{blackFullName}</span>
             <span className="text-xs font-mono" style={{ color: T.textDim }}>{isBye ? "" : getPlayerRating(players, game.blackId)}</span>
           </div>
-          <BoardPlayerAvatar player={blackPlayer} fallbackName={blackFullName} side="black" />
+          <BoardPlayerAvatar player={blackPlayer} fallbackName={blackFullName} side="black" tournamentStanding={playerStandings.get(game.blackId)} isDark={isDark} />
         </div>
       </div>
       {isActive && !isBye && (() => {
@@ -813,9 +888,11 @@ function CrossTableView({ section, games, players, standings, isDark, T }: {
 
 // ─── RoundPairings ────────────────────────────────────────────────────────────
 
-function RoundPairings({ section, games, players, roundNum, currentRound, onEnterResult, onGameClick, isDark, T }: {
+function RoundPairings({ section, games, players, playerStandings, roundNum, currentRound, onEnterResult, onAdvanceToNext, onGameClick, isDark, T }: {
   section: QuadSection; games: Game[]; players: Player[]; roundNum: number; currentRound: number;
+  playerStandings: Map<string, PlayerTournamentStanding>;
   onEnterResult: (gameId: string, result: Result) => void;
+  onAdvanceToNext: (currentGameId: string) => void;
   onGameClick?: (gameId: string) => void;
   isDark: boolean; T: Record<string, string>;
 }) {
@@ -834,7 +911,7 @@ function RoundPairings({ section, games, players, roundNum, currentRound, onEnte
         </div>
       )}
       {roundGames.map((game, idx) => (
-        <GameRow key={game.id} game={game} players={players} boardIndex={idx + 1} onEnterResult={onEnterResult} onGameClick={onGameClick} isActive={isActive} isDark={isDark} T={T} />
+        <GameRow key={game.id} game={game} players={players} playerStandings={playerStandings} boardIndex={idx + 1} onEnterResult={onEnterResult} onAdvanceToNext={onAdvanceToNext} onGameClick={onGameClick} isActive={isActive} isDark={isDark} T={T} />
       ))}
     </div>
   );
@@ -939,6 +1016,21 @@ export default function QuadsDirectorPanel({
     return map;
   }, [sections, gamesBySection, players]);
 
+  const playerStandings = useMemo(() => {
+    const map = new Map<string, PlayerTournamentStanding>();
+    for (const section of sections) {
+      const standings = standingsBySection.get(section.id) ?? [];
+      for (const standing of standings) {
+        map.set(standing.playerId, {
+          rank: standing.finalRank,
+          sectionName: section.name,
+          rating: getPlayerRating(players, standing.playerId),
+        });
+      }
+    }
+    return map;
+  }, [players, sections, standingsBySection]);
+
   const sectionStatus = useMemo(() => {
     const map = new Map<string, { completed: number; total: number; pct: number; currentCompleted: number; currentTotal: number }>();
     for (const section of sections) {
@@ -1026,6 +1118,41 @@ export default function QuadsDirectorPanel({
   };
 
   const selectedSection = sections.find((s) => s.id === selectedSectionId) ?? sections[0];
+
+  const handleAdvanceToNextBoard = (currentGameId: string) => {
+    const currentGame = games.find((game) => game.id === currentGameId);
+    if (!currentGame || !currentGame.sectionId) {
+      setSelectedGameId(null);
+      return;
+    }
+
+    const currentSectionRoundGames = games
+      .filter((game) => game.sectionId === currentGame.sectionId && game.round === currentGame.round && game.blackId !== "BYE")
+      .sort((a, b) => a.id.localeCompare(b.id));
+    const currentGameIndex = currentSectionRoundGames.findIndex((game) => game.id === currentGameId);
+    const nextInCurrentQuad = [
+      ...currentSectionRoundGames.slice(currentGameIndex + 1),
+      ...currentSectionRoundGames.slice(0, currentGameIndex),
+    ].find((game) => game.result === "*");
+
+    if (nextInCurrentQuad) {
+      setSelectedGameId(nextInCurrentQuad.id);
+      return;
+    }
+
+    const nextSectionId = findNextQuadWithPendingBoards(sections, games, currentGame.round, currentGame.sectionId);
+    if (nextSectionId) {
+      setSelectedSectionId(nextSectionId);
+      setSectionRoundTab((previous) => ({ ...previous, [nextSectionId]: currentGame.round }));
+      setSectionView((previous) => ({ ...previous, [nextSectionId]: "pairings" }));
+      setExceptionTrayOpen(false);
+      setSelectedGameId(null);
+      requestAnimationFrame(() => workspaceRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }));
+      return;
+    }
+
+    setSelectedGameId(null);
+  };
 
   // ── Completion View (Section G) ────────────────────────────────────────────
   if (allComplete) {
@@ -1409,9 +1536,11 @@ export default function QuadsDirectorPanel({
                 section={selectedSection}
                 games={gamesBySection.get(selectedSection.id) ?? []}
                 players={players}
+                playerStandings={playerStandings}
                 roundNum={sectionRoundTab[selectedSection.id] ?? currentRound}
                 currentRound={currentRound}
                 onEnterResult={onEnterResult}
+                onAdvanceToNext={handleAdvanceToNextBoard}
                 onGameClick={(gameId) => setSelectedGameId(gameId)}
                 isDark={isDark}
                 T={T}
@@ -1447,32 +1576,15 @@ export default function QuadsDirectorPanel({
         const sectionGames = games.filter((g) => g.sectionId === game.sectionId);
         const boardIndex = sectionGames.filter((g) => g.round === game.round).findIndex((g) => g.id === game.id) + 1;
 
-        // Auto-advance: find next pending game in same section/round after current
-        const handleAdvanceToNext = (currentGameId: string) => {
-          const currentGame = games.find((g) => g.id === currentGameId);
-          if (!currentGame) { setSelectedGameId(null); return; }
-          const roundGames = sectionGames
-            .filter((g) => g.round === currentGame.round && g.blackId !== "BYE")
-            .sort((a, b) => a.id.localeCompare(b.id));
-          const currentIdx = roundGames.findIndex((g) => g.id === currentGameId);
-          // Look for next pending game after current index
-          const nextPending = roundGames.slice(currentIdx + 1).find((g) => g.result === "*");
-          // If none after, wrap around from beginning
-          const firstPending = !nextPending
-            ? roundGames.slice(0, currentIdx).find((g) => g.result === "*")
-            : undefined;
-          const next = nextPending ?? firstPending ?? null;
-          setSelectedGameId(next ? next.id : null);
-        };
-
         return (
           <ResultEntryPanel
             game={game}
             players={players}
+            playerStandings={playerStandings}
             boardIndex={boardIndex}
             onEnterResult={onEnterResult}
             onClose={() => setSelectedGameId(null)}
-            onAdvanceToNext={handleAdvanceToNext}
+            onAdvanceToNext={handleAdvanceToNextBoard}
             isDark={isDark}
             T={T}
           />
