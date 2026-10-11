@@ -571,6 +571,7 @@ export default function TournamentOverview() {
         <PlayerCardExpandedModal
           perf={expandedPerf}
           accentColor={getAccent(expandedPerf)}
+          tournamentName={tournamentName}
           onClose={() => setExpandedPerf(null)}
         />
       )}

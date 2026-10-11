@@ -9,12 +9,18 @@
  *     points earned, and running cumulative score
  *   - Score progression mini-chart
  */
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import {X, Crown, Swords} from "lucide-react";
+import { Download, Loader2, X, Crown, Swords } from "lucide-react";
 import { PlayerAvatar } from "@/components/PlayerAvatar";
 import type { PlayerPerformance, RoundHistoryEntry } from "@/lib/performanceStats";
 import { FLAG_EMOJI } from "@/lib/tournamentData";
+import { OTB_LOGO_ASSET } from "@/lib/brandAssets";
+import { toast } from "sonner";
+
+const FULL_CARD_EXPORT_WIDTH = 540;
+const FULL_CARD_EXPORT_HEIGHT = 675;
+const FULL_CARD_EXPORT_PIXEL_RATIO = 2;
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -60,12 +66,14 @@ function ColorChip({ color }: { color: "W" | "B" }) {
 function ScoreSparkline({
   history,
   totalRounds,
+  width = 280,
 }: {
   history: RoundHistoryEntry[];
   totalRounds: number;
+  width?: number;
 }) {
   if (history.length < 2) return null;
-  const W = 280;
+  const W = width;
   const H = 48;
   const padX = 8;
   const padY = 6;
@@ -100,16 +108,210 @@ function ScoreSparkline({
   );
 }
 
+function slugifyFilePart(value: string): string {
+  return value
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "") || "performance";
+}
+
+async function downloadFullPerformanceCard(element: HTMLElement, filename: string): Promise<void> {
+  const { toPng } = await import("html-to-image");
+  const dataUrl = await toPng(element, {
+    pixelRatio: FULL_CARD_EXPORT_PIXEL_RATIO,
+    fetchRequestInit: { mode: "cors" },
+    width: FULL_CARD_EXPORT_WIDTH,
+    height: FULL_CARD_EXPORT_HEIGHT,
+  });
+
+  const link = document.createElement("a");
+  link.download = filename;
+  link.href = dataUrl;
+  link.click();
+}
+
+function FullPerformanceCardExport({
+  perf,
+  accentColor,
+  tournamentName,
+}: {
+  perf: PlayerPerformance;
+  accentColor: string;
+  tournamentName: string;
+}) {
+  const {
+    player,
+    rank,
+    totalPlayers,
+    points,
+    wins,
+    draws,
+    losses,
+    performanceRating,
+    ratingChange,
+    longestStreak,
+    whiteGames,
+    blackGames,
+    badgeLabel,
+    roundHistory,
+  } = perf;
+  const flag = player.country ? FLAG_EMOJI[player.country] ?? "" : "";
+  const visibleHistory = roundHistory.slice(-5);
+  const gamesPlayed = wins + draws + losses;
+
+  return (
+    <div
+      data-expanded-performance-card-export
+      className="relative overflow-hidden"
+      style={{
+        width: FULL_CARD_EXPORT_WIDTH,
+        height: FULL_CARD_EXPORT_HEIGHT,
+        color: "#F8FFF4",
+        background: "linear-gradient(150deg, oklch(0.23 0.075 145) 0%, oklch(0.16 0.05 145) 55%, oklch(0.13 0.035 145) 100%)",
+        fontFamily: "'Clash Display', ui-sans-serif, system-ui, sans-serif",
+      }}
+    >
+      <div
+        className="absolute inset-x-0 top-0 h-44 pointer-events-none"
+        style={{ background: `radial-gradient(ellipse at 65% -20%, ${accentColor}55 0%, transparent 68%)` }}
+      />
+      <div className="relative h-full p-7 flex flex-col">
+        <header className="flex items-start gap-4 pb-5 border-b" style={{ borderColor: "rgba(255,255,255,0.13)" }}>
+          <div className="relative flex-shrink-0">
+            <div
+              className="w-[74px] h-[74px] overflow-hidden rounded-2xl border-2"
+              style={{ borderColor: `${accentColor}99`, background: "oklch(0.25 0.04 145)" }}
+            >
+              <PlayerAvatar
+                username={player.username ?? player.name}
+                name={player.name}
+                size={74}
+                className="w-full h-full object-cover"
+              />
+            </div>
+            <span
+              className="absolute -bottom-2 -right-2 min-w-7 h-7 px-1.5 rounded-full border-2 flex items-center justify-center text-xs font-black"
+              style={{ background: accentColor, color: "#07140C", borderColor: "oklch(0.16 0.05 145)" }}
+            >
+              {rank}
+            </span>
+          </div>
+          <div className="min-w-0 flex-1 pt-0.5">
+            <div className="flex items-center gap-2 flex-wrap mb-2">
+              {flag && <span className="text-base leading-none">{flag}</span>}
+              {player.title && (
+                <span className="px-2 py-1 rounded-md text-[11px] font-black tracking-wide" style={{ background: `${accentColor}26`, color: accentColor }}>
+                  {player.title}
+                </span>
+              )}
+              <span
+                className="max-w-[245px] px-2.5 py-1 rounded-full text-[11px] leading-tight font-bold"
+                style={{ background: `${accentColor}22`, color: accentColor, overflowWrap: "anywhere" }}
+              >
+                {badgeLabel}
+              </span>
+            </div>
+            <h2 className="text-[27px] leading-none font-black tracking-tight truncate">{player.name}</h2>
+            <p className="mt-2 text-[13px] font-medium text-white/65">
+              {tournamentName} <span className="mx-1.5 text-white/30">·</span> ELO {player.elo}
+            </p>
+            <p className="mt-1 text-[12px] text-white/48">Rank #{rank} of {totalPlayers} <span className="mx-1.5 text-white/25">·</span> {gamesPlayed} games</p>
+          </div>
+        </header>
+
+        <section className="grid grid-cols-4 gap-2 py-5" aria-label="Tournament performance summary">
+          {[
+            { label: "Performance", value: performanceRating || "—", detail: ratingChange > 0 ? `+${ratingChange} rating` : ratingChange < 0 ? `${ratingChange} rating` : "rating level" },
+            { label: "Record", value: `${wins}/${draws}/${losses}`, detail: "W / D / L" },
+            { label: "Score", value: `${points}`, detail: `${gamesPlayed} rounds` },
+            { label: "Streak", value: `${longestStreak}W`, detail: "best run" },
+          ].map((stat) => (
+            <div key={stat.label} className="rounded-xl px-2.5 py-3 text-center border" style={{ background: "rgba(5,25,14,0.48)", borderColor: "rgba(255,255,255,0.10)" }}>
+              <p className="text-[11px] uppercase tracking-[0.12em] font-bold text-white/48">{stat.label}</p>
+              <p className="mt-1.5 text-[24px] leading-none font-black tracking-tight" style={{ color: stat.label === "Score" ? accentColor : "#F8FFF4" }}>{stat.value}</p>
+              <p className="mt-1 text-[10px] text-white/46">{stat.detail}</p>
+            </div>
+          ))}
+        </section>
+
+        <section className="grid grid-cols-[0.9fr_1.1fr] gap-4 px-4 py-3.5 rounded-xl border" style={{ background: "rgba(5,25,14,0.36)", borderColor: "rgba(255,255,255,0.09)" }}>
+          <div>
+            <p className="text-[10px] uppercase tracking-[0.14em] font-bold text-white/50">Color balance</p>
+            <div className="mt-2.5 flex items-center gap-2">
+              <span className="w-4 text-right text-[11px] font-bold text-white/70">{whiteGames}</span>
+              <div className="h-2 flex-1 rounded-full overflow-hidden" style={{ background: "rgba(255,255,255,0.15)" }}>
+                <div className="h-full" style={{ width: `${whiteGames + blackGames ? (whiteGames / (whiteGames + blackGames)) * 100 : 50}%`, background: "rgba(255,255,255,0.86)" }} />
+              </div>
+              <span className="w-4 text-[11px] font-bold text-white/70">{blackGames}</span>
+            </div>
+            <div className="mt-1 flex justify-between text-[10px] text-white/42"><span>White</span><span>Black</span></div>
+          </div>
+          <div>
+            <p className="text-[10px] uppercase tracking-[0.14em] font-bold text-white/50">Score progression</p>
+            <div className="mt-1.5 h-10 overflow-hidden">
+              <ScoreSparkline history={roundHistory} totalRounds={Math.max(roundHistory.length, 1)} width={224} />
+            </div>
+          </div>
+        </section>
+
+        <section className="mt-4 flex-1 min-h-0">
+          <div className="flex items-center justify-between mb-2.5">
+            <p className="text-[11px] uppercase tracking-[0.14em] font-bold text-white/52">Tournament rounds</p>
+            <p className="text-[11px] font-medium text-white/42">{roundHistory.length} recorded</p>
+          </div>
+          {visibleHistory.length === 0 ? (
+            <div className="h-[150px] rounded-xl border flex items-center justify-center text-sm text-white/45" style={{ borderColor: "rgba(255,255,255,0.09)", background: "rgba(5,25,14,0.28)" }}>
+              No completed rounds recorded.
+            </div>
+          ) : (
+            <div className="space-y-1.5">
+              {visibleHistory.map((entry) => (
+                <div key={entry.roundNumber} className="flex items-center gap-2.5 rounded-xl px-3 py-2 border" style={{ borderColor: "rgba(255,255,255,0.08)", background: "rgba(5,25,14,0.30)" }}>
+                  <span className="w-7 h-7 rounded-lg flex items-center justify-center text-[10px] font-black text-white/55" style={{ background: "rgba(255,255,255,0.08)" }}>R{entry.roundNumber}</span>
+                  <div className="w-7 h-7 rounded-lg overflow-hidden flex-shrink-0 border border-white/10">
+                    <PlayerAvatar username={entry.opponent.username ?? entry.opponent.name} name={entry.opponent.name} size={28} className="w-full h-full object-cover" />
+                  </div>
+                  <p className="min-w-0 flex-1 truncate text-[12px] font-semibold text-white/88">{entry.opponent.name}</p>
+                  <ColorChip color={entry.color} />
+                  <ResultChip result={entry.result} />
+                  <span className="w-8 text-right text-[11px] font-bold" style={{ color: resultColor(entry.result) }}>+{entry.pointsEarned === 0.5 ? "½" : entry.pointsEarned}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
+
+        <footer className="mt-4 pt-3.5 flex items-center justify-between border-t" style={{ borderColor: "rgba(255,255,255,0.12)" }}>
+          <div className="flex items-center gap-2">
+            <img src={OTB_LOGO_ASSET} alt="OTB!!" width={24} height={24} className="h-6 w-auto object-contain" />
+            <span className="text-[10px] font-bold tracking-[0.13em] uppercase text-white/55">ChessOTB.club</span>
+          </div>
+          <span className="text-[10px] font-semibold text-white/38">Performance Card</span>
+        </footer>
+      </div>
+    </div>
+  );
+}
+
 // ─── Main Modal ───────────────────────────────────────────────────────────────
 
 interface Props {
   perf: PlayerPerformance;
   accentColor?: string;
+  tournamentName?: string;
   onClose: () => void;
 }
 
-export default function PlayerCardExpandedModal({ perf, accentColor = "#4CAF50", onClose }: Props) {
+export default function PlayerCardExpandedModal({
+  perf,
+  accentColor = "#4CAF50",
+  tournamentName = "Tournament Performance",
+  onClose,
+}: Props) {
   const overlayRef = useRef<HTMLDivElement>(null);
+  const exportCardRef = useRef<HTMLDivElement>(null);
+  const [isDownloading, setIsDownloading] = useState(false);
 
   // Close on Escape
   useEffect(() => {
@@ -123,6 +325,22 @@ export default function PlayerCardExpandedModal({ perf, accentColor = "#4CAF50",
     document.body.style.overflow = "hidden";
     return () => { document.body.style.overflow = ""; };
   }, []);
+
+  const handleDownload = async () => {
+    if (!exportCardRef.current || isDownloading) return;
+    setIsDownloading(true);
+    try {
+      const filename = `${slugifyFilePart(perf.player.username ?? perf.player.name)}-full-performance-card-${slugifyFilePart(tournamentName)}.png`;
+      await downloadFullPerformanceCard(exportCardRef.current, filename);
+      toast.success("Full performance card saved", {
+        description: "1080×1350 · Ready for Instagram feed posts and carousel slides.",
+      });
+    } catch {
+      toast.error("Full card download failed — try again.");
+    } finally {
+      setIsDownloading(false);
+    }
+  };
 
   const { player, rank, totalPlayers, points, wins, draws, losses,
     performanceRating, ratingChange, longestStreak, whiteGames, blackGames,
@@ -141,13 +359,30 @@ export default function PlayerCardExpandedModal({ perf, accentColor = "#4CAF50",
         className="relative w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-3xl border border-white/10 shadow-2xl"
         style={{ background: "oklch(0.18 0.06 145)", scrollbarWidth: "thin" }}
       >
-        {/* Close button */}
-        <button
-          onClick={onClose}
-          className="absolute top-4 right-4 z-10 w-8 h-8 rounded-full flex items-center justify-center text-white/50 hover:text-white hover:bg-white/10 transition-all"
-        >
-          <X className="w-4 h-4" />
-        </button>
+        {/* Modal actions */}
+        <div className="absolute top-3 right-3 z-10 flex items-center gap-2">
+          <button
+            type="button"
+            data-expanded-performance-card-download
+            onClick={handleDownload}
+            disabled={isDownloading}
+            className="min-h-11 rounded-xl px-3.5 flex items-center gap-2 border text-xs font-bold text-white/90 transition-all hover:bg-white/12 active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/80 focus-visible:ring-offset-2 focus-visible:ring-offset-[#12372A]"
+            style={{ background: `${accentColor}24`, borderColor: `${accentColor}66`, touchAction: "manipulation" }}
+            aria-label={`Download ${player.name}'s full performance card as a 1080 by 1350 PNG`}
+          >
+            {isDownloading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
+            <span className="hidden sm:inline">Download</span>
+          </button>
+          <button
+            type="button"
+            onClick={onClose}
+            className="w-11 h-11 rounded-xl flex items-center justify-center text-white/60 hover:text-white hover:bg-white/10 transition-all active:scale-[0.95] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/80 focus-visible:ring-offset-2 focus-visible:ring-offset-[#12372A]"
+            style={{ touchAction: "manipulation" }}
+            aria-label="Close full performance card"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
 
         {/* ── Header ── */}
         <div
@@ -382,5 +617,19 @@ export default function PlayerCardExpandedModal({ perf, accentColor = "#4CAF50",
     </div>
   );
 
-  return createPortal(modal, document.body);
+  return createPortal(
+    <>
+      <div
+        aria-hidden="true"
+        inert
+        style={{ position: "fixed", left: "-9999px", top: 0, width: FULL_CARD_EXPORT_WIDTH, height: FULL_CARD_EXPORT_HEIGHT, pointerEvents: "none" }}
+      >
+        <div ref={exportCardRef}>
+          <FullPerformanceCardExport perf={perf} accentColor={accentColor} tournamentName={tournamentName} />
+        </div>
+      </div>
+      {modal}
+    </>,
+    document.body
+  );
 }

@@ -705,6 +705,7 @@ function ExportableCard({
         <PlayerCardExpandedModal
           perf={perf}
           accentColor={accentColor}
+          tournamentName={tournamentName}
           onClose={() => setShowExpanded(false)}
         />
       )}
