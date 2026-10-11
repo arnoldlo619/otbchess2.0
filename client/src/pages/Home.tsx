@@ -73,11 +73,12 @@ import { AnnouncementBanner } from "@/components/ui/announcement-banner";
 import { SpinBorderButton } from "@/components/ui/spin-border-button";
 import { HeroDashboardMockup } from "@/components/ui/HeroDashboardMockup";
 import { AsciiArt } from "@/components/ui/d60-hero";
-import { PatternText } from "@/components/ui/pattern-text";
+import { VideoText } from "@/components/ui/video-text";
 import { normalizePlatformStats } from "@/lib/platformStats";
 import { useLeagueWorkspaceNavigation } from "@/lib/leagueWorkspaceNavigation";
 
 const LIVE_TOURNAMENT_DEMO_PATH = "/tournament/otb-demo-2026/manage";
+const HERO_VIDEO_TEXT_SOURCE = "/videos/chess-hero-text-loop.mp4";
 
 // ─── CDN Assets ─────────────────────────────────────────────────────────────
 // Mascot illustrations removed; sections use clean text-only layouts.
@@ -437,9 +438,10 @@ function Hero({ onCreateTournament }: { onCreateTournament: () => void }) {
             >
               Chess Tournaments,
               <br />
-              <PatternText
+              <VideoText
                 text="Over the Board."
-                className={isDark ? "otb-pattern-text--dark" : "otb-pattern-text--light"}
+                src={HERO_VIDEO_TEXT_SOURCE}
+                className={isDark ? "otb-video-text--dark" : "otb-video-text--light"}
               />
             </h1>
 

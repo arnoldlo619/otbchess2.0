@@ -118,58 +118,67 @@
   }
 }
 
-.otb-pattern-text {
+.otb-video-text {
   position: relative;
   display: inline-block;
-  color: var(--otb-pattern-base);
-  text-shadow: 0 0.05em 0.1em color-mix(in srgb, var(--otb-pattern-base) 18%, transparent);
-  transition: text-shadow 280ms ease;
+  white-space: nowrap;
+  color: var(--otb-video-text-fallback);
+  text-shadow: 0 0.05em 0.12em color-mix(in srgb, var(--otb-video-text-fallback) 18%, transparent);
 }
 
-.otb-pattern-text::after {
+.otb-video-text__fallback {
+  display: inline-block;
+  transition: color 180ms ease, text-shadow 180ms ease;
+}
+
+.otb-video-text__canvas {
   position: absolute;
   inset: 0;
-  content: attr(data-pattern-text);
+  width: 100%;
+  height: 100%;
   pointer-events: none;
-  color: transparent;
-  background-image:
-    repeating-linear-gradient(135deg, var(--otb-pattern-line) 0 1px, transparent 1px 5px),
-    linear-gradient(105deg, transparent 0%, transparent 32%, var(--otb-pattern-mid) 43%, var(--otb-pattern-glint) 50%, var(--otb-pattern-mid) 57%, transparent 68%, transparent 100%);
-  background-size: 0.46em 0.46em, 100% 100%;
-  background-clip: text;
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  opacity: 0.46;
-  transition: opacity 280ms ease;
+  opacity: 0;
+  transition: opacity 180ms ease;
 }
 
-@media (hover: hover) and (pointer: fine) {
-  .otb-pattern-text:hover {
-    text-shadow: 0 0.055em 0.13em color-mix(in srgb, var(--otb-pattern-glint) 24%, transparent);
-  }
-
-  .otb-pattern-text:hover::after {
-    opacity: 0.66;
-  }
+.otb-video-text[data-video-text-ready] .otb-video-text__fallback {
+  color: var(--otb-video-text-fallback);
+  -webkit-text-fill-color: currentColor;
+  text-shadow: 0 0.05em 0.12em color-mix(in srgb, var(--otb-video-text-fallback) 26%, transparent);
 }
 
-.otb-pattern-text--dark {
-  --otb-pattern-base: oklch(0.7 0.15 145);
-  --otb-pattern-mid: oklch(0.82 0.15 132);
-  --otb-pattern-glint: oklch(0.94 0.12 112);
-  --otb-pattern-line: oklch(0.96 0.08 120 / 0.32);
+.otb-video-text[data-video-text-ready] .otb-video-text__canvas {
+  opacity: 0.8;
 }
 
-.otb-pattern-text--light {
-  --otb-pattern-base: #2f6b42;
-  --otb-pattern-mid: #4f8a57;
-  --otb-pattern-glint: #a0c878;
-  --otb-pattern-line: rgb(12 59 35 / 0.18);
+.otb-video-text__video {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.otb-video-text--dark {
+  --otb-video-text-fallback: oklch(0.78 0.15 132);
+}
+
+.otb-video-text--dark .otb-video-text__canvas {
+  filter: brightness(1.72) saturate(1.26) contrast(0.98);
+}
+
+.otb-video-text--light {
+  --otb-video-text-fallback: #2f6b42;
+}
+
+.otb-video-text--light .otb-video-text__canvas {
+  filter: brightness(1.25) saturate(1.16) contrast(1.03);
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .otb-pattern-text,
-  .otb-pattern-text::after { transition: none; }
+  .otb-video-text__fallback,
+  .otb-video-text__canvas { transition: none; }
 }
 
 @media (prefers-reduced-motion: reduce) {
