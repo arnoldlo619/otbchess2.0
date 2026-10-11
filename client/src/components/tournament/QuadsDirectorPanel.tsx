@@ -75,6 +75,68 @@ function getPlayerRating(players: Player[], id: string): number {
   return players.find((p) => p.id === id)?.elo ?? 0;
 }
 
+function PlayerProfileAvatar({
+  player,
+  fallbackName,
+  size = 28,
+}: {
+  player?: Player;
+  fallbackName: string;
+  size?: number;
+}) {
+  if (!player) {
+    return (
+      <div
+        aria-hidden="true"
+        className="flex flex-shrink-0 items-center justify-center rounded-full text-[10px] font-black"
+        style={{ width: size, height: size, background: "oklch(0.20 0.02 145)", color: "oklch(0.66 0.02 145)" }}
+      >
+        {fallbackName === "BYE" ? "—" : fallbackName.slice(0, 1).toUpperCase()}
+      </div>
+    );
+  }
+
+  return (
+    <PlayerAvatar
+      username={player.username ?? ""}
+      name={player.name}
+      platform={(player.platform as "chesscom" | "lichess") ?? "chesscom"}
+      avatarUrl={player.avatarUrl}
+      size={size}
+    />
+  );
+}
+
+function BoardPlayerAvatar({
+  player,
+  fallbackName,
+  side,
+  size = 32,
+}: {
+  player?: Player;
+  fallbackName: string;
+  side: "white" | "black";
+  size?: number;
+}) {
+  const isWhite = side === "white";
+  return (
+    <div className="relative flex-shrink-0">
+      <PlayerProfileAvatar player={player} fallbackName={fallbackName} size={size} />
+      <span
+        aria-label={`Playing as ${side}`}
+        className="absolute -bottom-0.5 -right-0.5 rounded-full border"
+        style={{
+          width: Math.max(9, Math.round(size * 0.32)),
+          height: Math.max(9, Math.round(size * 0.32)),
+          background: isWhite ? "#f8fafc" : "oklch(0.14 0.02 145)",
+          borderColor: isWhite ? "oklch(0.72 0.02 145)" : "oklch(0.42 0.03 145)",
+          boxShadow: "0 0 0 1px oklch(0.12 0.02 145)",
+        }}
+      />
+    </div>
+  );
+}
+
 function getQuadStandingRows(
   section: QuadSection,
   games: Game[],
@@ -218,8 +280,7 @@ function ResultEntryPanel({
         {/* Players */}
         <div className="px-5 py-5 flex flex-col gap-3 flex-shrink-0">
           <div className="flex items-center gap-3 p-3 rounded-xl transition-all" style={{ background: current === "1-0" ? T.greenSoft : T.rowBg, border: `1px solid ${current === "1-0" ? T.greenBorder : T.rowBorder}` }}>
-            <div className="w-8 h-8 rounded-lg flex-shrink-0 border-2" style={{ background: "#f8f8f8", borderColor: isDark ? "oklch(0.40 0.02 145)" : "#d1d5db" }} />
-            <PlayerAvatar username={white?.username ?? ""} name={whiteName} platform={(white?.platform as "chesscom" | "lichess") ?? "chesscom"} avatarUrl={white?.avatarUrl} size={36} />
+            <BoardPlayerAvatar player={white} fallbackName={whiteName} side="white" size={36} />
             <div className="flex-1 min-w-0">
               <p className="text-sm font-bold truncate" style={{ color: T.text }}>{whiteName}</p>
               <p className="text-xs" style={{ color: T.textDim }}>{whiteRating} · White</p>
@@ -227,8 +288,7 @@ function ResultEntryPanel({
             {current === "1-0" && <Check size={16} style={{ color: T.green, flexShrink: 0 }} />}
           </div>
           <div className="flex items-center gap-3 p-3 rounded-xl transition-all" style={{ background: current === "0-1" ? T.greenSoft : T.rowBg, border: `1px solid ${current === "0-1" ? T.greenBorder : T.rowBorder}` }}>
-            <div className="w-8 h-8 rounded-lg flex-shrink-0 border-2" style={{ background: "#1a1a1a", borderColor: isDark ? "oklch(0.30 0.02 145)" : "#374151" }} />
-            <PlayerAvatar username={black?.username ?? ""} name={blackName} platform={(black?.platform as "chesscom" | "lichess") ?? "chesscom"} avatarUrl={black?.avatarUrl} size={36} />
+            <BoardPlayerAvatar player={black} fallbackName={blackName} side="black" size={36} />
             <div className="flex-1 min-w-0">
               <p className="text-sm font-bold truncate" style={{ color: T.text }}>{blackName}</p>
               <p className="text-xs" style={{ color: T.textDim }}>{blackRating} · Black</p>
@@ -313,6 +373,10 @@ function GameRow({
   const whiteWon = game.result === "1-0";
   const blackWon = game.result === "0-1";
   const isDraw = game.result === "½-½";
+  const whitePlayer = players.find((player) => player.id === game.whiteId);
+  const blackPlayer = players.find((player) => player.id === game.blackId);
+  const whiteFullName = whitePlayer?.name ?? game.whiteId;
+  const blackFullName = blackPlayer?.name ?? game.blackId;
   const [collapsed, setCollapsed] = useState(false);
 
   const handleResultClick = (result: "1-0" | "½-½" | "0-1") => {
@@ -331,8 +395,8 @@ function GameRow({
     //   White 1–0 Black  →  White won
     //   White 0–1 Black  →  Black won
     // Showing winner–score–loser would invert the score label for black wins.
-    const whiteName = getPlayerName(players, game.whiteId).split(" ")[0];
-    const blackName = getPlayerName(players, game.blackId).split(" ")[0];
+    const whiteName = whiteFullName.split(" ")[0];
+    const blackName = blackFullName.split(" ")[0];
     return (
       <button
         type="button" aria-expanded={false} aria-label="Expand game details"
@@ -342,8 +406,7 @@ function GameRow({
       >
         <div className="flex items-center gap-2 min-w-0">
           <span className="text-xs font-bold uppercase tracking-widest flex-shrink-0 w-6" style={{ color: T.textDim }}>B{boardIndex}</span>
-          {/* White piece indicator */}
-          <span className="w-3.5 h-3.5 rounded-[3px] flex-shrink-0 border" style={{ background: "#f8f8f8", borderColor: isDark ? "oklch(0.40 0.02 145)" : "#d1d5db" }} />
+          <BoardPlayerAvatar player={whitePlayer} fallbackName={whiteFullName} side="white" size={20} />
           <span
             className="text-sm font-semibold truncate max-w-[72px]"
             style={{ color: whiteWon ? T.green : isDraw ? T.textMuted : T.textDim }}
@@ -365,8 +428,7 @@ function GameRow({
           >
             {blackName}
           </span>
-          {/* Black piece indicator */}
-          <span className="w-3.5 h-3.5 rounded-[3px] flex-shrink-0" style={{ background: isDark ? "oklch(0.20 0.02 145)" : "#1f2937" }} />
+          <BoardPlayerAvatar player={blackPlayer} fallbackName={blackFullName} side="black" size={20} />
         </div>
         <span className="text-xs flex-shrink-0" aria-hidden="true" style={{ color: T.textDim }}>▼</span>
       </button>
@@ -379,7 +441,7 @@ function GameRow({
   return (
     <div
       className="rounded-xl px-3 py-2.5 transition-all"
-      style={{ background: !isPending ? (isDark ? "oklch(0.12 0.015 145 / 0.6)" : "rgba(240,244,240,0.55)") : T.rowBg, border: `1px solid ${!isPending ? T.rowBorder : isActive ? T.greenBorder : T.rowBorder}`, opacity: !isActive && isPending ? 0.55 : 1, animation: "tcSlideDown 0.22s cubic-bezier(0.16, 1, 0.3, 1) both" }}
+      style={{ background: !isPending ? (isDark ? "oklch(0.12 0.015 145 / 0.6)" : "rgba(240,244,240,0.55)") : T.rowBg, border: `1px solid ${!isPending ? T.rowBorder : isActive ? T.greenBorder : T.rowBorder}`, boxShadow: isActive && isPending ? `0 8px 20px ${isDark ? "oklch(0.04 0.01 145 / 0.22)" : "rgba(39,72,54,0.07)"}` : "none", opacity: !isActive && isPending ? 0.55 : 1, animation: "tcSlideDown 0.22s cubic-bezier(0.16, 1, 0.3, 1) both" }}
     >
       <div
         className={`flex items-center gap-1.5 mb-2${canOpenPanel ? " cursor-pointer hover:opacity-80" : ""}`}
@@ -399,22 +461,22 @@ function GameRow({
         )}
       </div>
       <div className="flex items-center gap-2">
-        <div className="flex items-center gap-2 flex-1 min-w-0 rounded-lg px-2.5 py-2" style={{ background: whiteWon ? T.greenSoft : "transparent", border: `1px solid ${whiteWon ? T.greenBorder : "transparent"}` }}>
-          <span className="w-4 h-4 rounded-[4px] flex-shrink-0 border" style={{ background: "#f8f8f8", borderColor: isDark ? "oklch(0.40 0.02 145)" : "#d1d5db" }} />
+        <div className="flex items-center gap-2.5 flex-1 min-w-0 rounded-xl px-2.5 py-2.5" style={{ background: whiteWon ? T.greenSoft : "transparent", border: `1px solid ${whiteWon ? T.greenBorder : "transparent"}` }}>
+          <BoardPlayerAvatar player={whitePlayer} fallbackName={whiteFullName} side="white" />
           <div className="flex flex-col min-w-0">
-            <span className="text-sm font-semibold truncate" style={{ color: T.text }}>{getPlayerName(players, game.whiteId)}</span>
+            <span className="text-sm font-semibold truncate" style={{ color: T.text }}>{whiteFullName}</span>
             <span className="text-xs font-mono" style={{ color: T.textDim }}>{getPlayerRating(players, game.whiteId)}</span>
           </div>
         </div>
         <div className="flex-shrink-0 flex items-center justify-center w-8">
           {isPending ? <span className="text-xs font-bold" style={{ color: T.textDim }}>vs</span> : <span className="text-sm font-bold" style={{ color: T.green }}>{resultLabel(game.result)}</span>}
         </div>
-        <div className="flex items-center gap-2 flex-1 min-w-0 rounded-lg px-2.5 py-2 justify-end" style={{ background: blackWon ? T.greenSoft : "transparent", border: `1px solid ${blackWon ? T.greenBorder : "transparent"}` }}>
+        <div className="flex items-center gap-2.5 flex-1 min-w-0 rounded-xl px-2.5 py-2.5 justify-end" style={{ background: blackWon ? T.greenSoft : "transparent", border: `1px solid ${blackWon ? T.greenBorder : "transparent"}` }}>
           <div className="flex flex-col min-w-0 items-end">
-            <span className="text-sm font-semibold truncate text-right" style={{ color: isBye ? T.textDim : T.text }}>{getPlayerName(players, game.blackId)}</span>
+            <span className="text-sm font-semibold truncate text-right" style={{ color: isBye ? T.textDim : T.text }}>{blackFullName}</span>
             <span className="text-xs font-mono" style={{ color: T.textDim }}>{isBye ? "" : getPlayerRating(players, game.blackId)}</span>
           </div>
-          <span className="w-4 h-4 rounded-[4px] flex-shrink-0" style={{ background: isDark ? "oklch(0.20 0.02 145)" : "#1f2937" }} />
+          <BoardPlayerAvatar player={blackPlayer} fallbackName={blackFullName} side="black" />
         </div>
       </div>
       {isActive && !isBye && (() => {
@@ -825,7 +887,7 @@ export default function QuadsDirectorPanel({
   const workspaceRef = useRef<HTMLDivElement>(null);
   const prevRoundRef = useRef(currentRound);
 
-  // Auto-switch all section round tabs when round advances + scroll workspace into view
+  // Auto-switch all section round tabs when round advances + return directors to Quad 1.
   useEffect(() => {
     setSectionRoundTab((prev) => {
       const updated: Record<string, number> = { ...prev };
@@ -839,13 +901,18 @@ export default function QuadsDirectorPanel({
         sections.forEach((s) => { updated[s.id] = "pairings"; });
         return updated;
       });
+      const firstSectionId = [...sections].sort((a, b) => a.orderIndex - b.orderIndex)[0]?.id ?? null;
+      _setInternalSelectedSectionId(firstSectionId);
+      if (firstSectionId) onSectionChange?.(firstSectionId);
+      setSelectedGameId(null);
+      setExceptionTrayOpen(false);
       // Scroll workspace into view after a brief delay for DOM update
       setTimeout(() => {
         workspaceRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
       }, 100);
       prevRoundRef.current = currentRound;
     }
-  }, [currentRound, sections]);
+  }, [currentRound, onSectionChange, sections]);
 
   useEffect(() => {
     if (editingSectionId && renameInputRef.current) {
