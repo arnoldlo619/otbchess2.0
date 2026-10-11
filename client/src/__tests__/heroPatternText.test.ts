@@ -10,6 +10,8 @@ describe("landing hero video text", () => {
   it("uses the reusable chess video text treatment for the Over the Board headline line", () => {
     expect(home).toContain('import { VideoText } from "@/components/ui/video-text"');
     expect(home).toContain('const HERO_VIDEO_TEXT_SOURCE = "/videos/chess-hero-text-loop.mp4"');
+    expect(home).toContain('text-[2.5rem] sm:text-[3.75rem] lg:text-[4.8rem] xl:text-[5rem]');
+    expect(home).toContain('<span className="sm:whitespace-nowrap">Chess Tournaments,</span>');
     expect(home).toContain('<VideoText\n                text="Over the Board."');
     expect(home).toContain("src={HERO_VIDEO_TEXT_SOURCE}");
     expect(home).not.toContain("PatternText");
@@ -33,6 +35,8 @@ describe("landing hero video text", () => {
     expect(styles).toContain(".otb-video-text[data-video-text-ready] .otb-video-text__canvas");
     expect(styles).toContain(".otb-video-text--dark");
     expect(styles).toContain(".otb-video-text--light");
+    expect(styles).toContain(".otb-video-text--light[data-video-text-ready] .otb-video-text__canvas");
+    expect(styles).toContain("opacity: 0.58;");
     expect(styles).not.toContain(".otb-pattern-text:hover");
   });
 });

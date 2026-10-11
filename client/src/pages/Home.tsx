@@ -433,10 +433,10 @@ function Hero({ onCreateTournament }: { onCreateTournament: () => void }) {
             </div>
 
             <h1
-              className="opacity-0-init animate-fade-in-up text-[2.2rem] sm:text-5xl lg:text-6xl xl:text-[4.5rem] font-bold leading-[1.03] tracking-tight mb-3 sm:mb-6 text-foreground"
+              className="opacity-0-init animate-fade-in-up text-[2.5rem] sm:text-[3.75rem] lg:text-[4.8rem] xl:text-[5rem] font-bold leading-[1.01] tracking-tight mb-3 sm:mb-6 text-foreground"
               style={{ fontFamily: "'Clash Display', sans-serif", animationDelay: "0.2s", animationFillMode: "forwards" }}
             >
-              Chess Tournaments,
+              <span className="sm:whitespace-nowrap">Chess Tournaments,</span>
               <br />
               <VideoText
                 text="Over the Board."

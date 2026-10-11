@@ -173,7 +173,11 @@
 }
 
 .otb-video-text--light .otb-video-text__canvas {
-  filter: brightness(1.25) saturate(1.16) contrast(1.03);
+  filter: brightness(0.92) saturate(1.16) contrast(1.12);
+}
+
+.otb-video-text--light[data-video-text-ready] .otb-video-text__canvas {
+  opacity: 0.58;
 }
 
 @media (prefers-reduced-motion: reduce) {
