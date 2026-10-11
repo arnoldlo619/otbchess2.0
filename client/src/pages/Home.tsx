@@ -73,7 +73,7 @@ import { AnnouncementBanner } from "@/components/ui/announcement-banner";
 import { SpinBorderButton } from "@/components/ui/spin-border-button";
 import { HeroDashboardMockup } from "@/components/ui/HeroDashboardMockup";
 import { AsciiArt } from "@/components/ui/d60-hero";
-import { LineShadowText } from "@/components/ui/line-shadow-text";
+import { PatternText } from "@/components/ui/pattern-text";
 import { normalizePlatformStats } from "@/lib/platformStats";
 import { useLeagueWorkspaceNavigation } from "@/lib/leagueWorkspaceNavigation";
 
@@ -438,9 +438,9 @@ function Hero({ onCreateTournament }: { onCreateTournament: () => void }) {
             >
               <span className="sm:whitespace-nowrap">Chess Tournaments,</span>
               <br />
-              <LineShadowText
+              <PatternText
                 text="Over the Board."
-                className={isDark ? "otb-line-shadow-text--dark" : "otb-line-shadow-text--light"}
+                className={isDark ? "otb-pattern-text--dark" : "otb-pattern-text--light"}
               />
             </h1>
 
