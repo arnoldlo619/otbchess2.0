@@ -7,7 +7,7 @@
  * the hidden export-quality card so the exported PNG reflects the chosen
  * color. Accent state is stored in a Map keyed by player id.
  */
-import { useState, useRef, useCallback, useEffect } from "react";
+import { useState, useRef, useCallback, useEffect, useId } from "react";
 import confetti from "canvas-confetti";
 import { useChessAvatars, toProxiedAvatarUrl } from "@/hooks/useChessAvatar";
 import { useClubAvatar } from "@/hooks/useClubAvatar";
@@ -27,6 +27,7 @@ import { calculateCompletedGameDrawRate } from "@/lib/reportMetrics";
 import PlayerStatsCard, {
   ACCENT_PALETTE,
   defaultAccentForBadge,
+  normalizeAccentHex,
   type AccentSwatch,
 } from "@/components/PlayerStatsCard";
 import CrossTable from "@/components/CrossTable";
@@ -260,9 +261,9 @@ function SummaryBanner({
 
 // ─── Accent Color Picker ──────────────────────────────────────────────────────
 /**
- * A row of 8 color swatches that lets the player pick an accent color for
- * their card. The active swatch shows a white ring. Clicking a swatch calls
- * onChange with the new hex value.
+ * A complete hue palette plus native color wheel and typed hex entry. The
+ * active swatch shows a high-contrast ring, while invalid hex values never
+ * overwrite the last valid card accent.
  */
 function AccentColorPicker({
   value,
@@ -273,21 +274,72 @@ function AccentColorPicker({
   onChange: (hex: string) => void;
   isDark: boolean;
 }) {
+  const customColorId = useId();
+  const customHexId = useId();
+  const [hexInput, setHexInput] = useState(value.toUpperCase());
+  const [hexError, setHexError] = useState(false);
+
+  useEffect(() => {
+    setHexInput(value.toUpperCase());
+    setHexError(false);
+  }, [value]);
+
+  const applyHex = () => {
+    const normalized = normalizeAccentHex(hexInput);
+    if (!normalized) {
+      setHexError(true);
+      return;
+    }
+    setHexInput(normalized);
+    setHexError(false);
+    onChange(normalized);
+  };
+
   return (
-    <div
+    <fieldset
+      data-performance-card-accent-picker
       className={`mt-2 rounded-2xl border px-3 py-2.5 ${
         isDark
           ? "bg-white/05 border-white/10"
           : "bg-[#FBFADA]/70 border-[#ADBC9F]"
       }`}
     >
-      <div className="flex items-center gap-2 mb-2">
+      <legend className="sr-only">Card accent color</legend>
+      <div className="flex items-center justify-between gap-2 mb-2">
         <Palette className={`w-3 h-3 flex-shrink-0 ${isDark ? "text-white/40" : "text-[#436850]"}`} />
-        <span className={`text-[10px] font-semibold uppercase tracking-wider ${isDark ? "text-white/40" : "text-[#436850]"}`}>
-          Card Accent
-        </span>
+        <div className="flex-1 min-w-0">
+          <span className={`block text-[10px] font-semibold uppercase tracking-wider ${isDark ? "text-white/55" : "text-[#436850]"}`}>
+            Card Accent
+          </span>
+          <span className={`block text-[10px] mt-0.5 ${isDark ? "text-white/35" : "text-[#436850]/75"}`}>
+            Choose a preset or make your own.
+          </span>
+        </div>
+        <label
+          htmlFor={customColorId}
+          className={`flex items-center gap-1.5 rounded-lg border pl-2 pr-1.5 py-1 text-[10px] font-semibold cursor-pointer transition-colors focus-within:ring-2 focus-within:ring-offset-1 ${
+            isDark
+              ? "border-white/12 text-white/65 hover:bg-white/08 focus-within:ring-white/70 focus-within:ring-offset-[#142719]"
+              : "border-[#ADBC9F] text-[#436850] hover:bg-white focus-within:ring-[#436850] focus-within:ring-offset-[#FBFADA]"
+          }`}
+        >
+          Custom
+          <input
+            id={customColorId}
+            type="color"
+            value={value}
+            aria-label="Open custom accent color picker"
+            onChange={(event) => {
+              const next = event.target.value.toUpperCase();
+              setHexInput(next);
+              setHexError(false);
+              onChange(next);
+            }}
+            className="h-6 w-6 cursor-pointer rounded-md border-0 bg-transparent p-0"
+          />
+        </label>
       </div>
-      <div className="flex items-center gap-2 flex-wrap">
+      <div className="grid grid-cols-6 sm:grid-cols-9 gap-2" role="group" aria-label="Preset accent colors">
         {ACCENT_PALETTE.map((swatch: AccentSwatch) => {
           const isActive = value.toLowerCase() === swatch.hex.toLowerCase();
           return (
@@ -296,8 +348,9 @@ function AccentColorPicker({
               onClick={() => onChange(swatch.hex)}
               title={swatch.label}
               aria-label={`${swatch.label} accent color${isActive ? " (selected)" : ""}`}
-              className="relative flex-shrink-0 transition-transform duration-150 hover:scale-110 active:scale-95"
-              style={{ width: 24, height: 24 }}
+              aria-pressed={isActive}
+              className="relative justify-self-center flex-shrink-0 rounded-full transition-transform duration-150 hover:scale-110 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-[#183022]"
+              style={{ width: 26, height: 26 }}
             >
               {/* Outer ring when active */}
               {isActive && (
@@ -324,7 +377,53 @@ function AccentColorPicker({
           );
         })}
       </div>
-    </div>
+      <div className="mt-3 flex items-start gap-2">
+        <label htmlFor={customHexId} className="sr-only">Custom accent hex color</label>
+        <input
+          id={customHexId}
+          value={hexInput}
+          onChange={(event) => {
+            setHexInput(event.target.value);
+            setHexError(false);
+          }}
+          onBlur={applyHex}
+          onKeyDown={(event) => {
+            if (event.key === "Enter") {
+              event.preventDefault();
+              applyHex();
+            }
+          }}
+          aria-invalid={hexError}
+          aria-describedby={hexError ? `${customHexId}-error` : undefined}
+          inputMode="text"
+          maxLength={7}
+          placeholder="#4CAF50"
+          className={`min-w-0 flex-1 rounded-lg border px-2.5 py-2 font-mono text-xs uppercase outline-none transition-colors ${
+            hexError
+              ? "border-red-400/80 text-red-200 focus:ring-2 focus:ring-red-400"
+              : isDark
+                ? "border-white/12 bg-black/15 text-white/85 placeholder:text-white/25 focus:border-white/35 focus:ring-2 focus:ring-white/20"
+                : "border-[#ADBC9F] bg-white/80 text-[#12372A] placeholder:text-[#436850]/45 focus:border-[#436850] focus:ring-2 focus:ring-[#436850]/15"
+          }`}
+        />
+        <button
+          type="button"
+          onClick={applyHex}
+          className={`min-h-9 rounded-lg border px-3 text-xs font-bold transition-colors active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 ${
+            isDark
+              ? "border-white/15 bg-white/08 text-white/80 hover:bg-white/14 focus-visible:ring-white/70 focus-visible:ring-offset-[#142719]"
+              : "border-[#436850]/20 bg-white text-[#12372A] hover:bg-[#ADBC9F]/35 focus-visible:ring-[#436850] focus-visible:ring-offset-[#FBFADA]"
+          }`}
+        >
+          Apply
+        </button>
+      </div>
+      {hexError && (
+        <p id={`${customHexId}-error`} role="alert" className="mt-1.5 text-[11px] font-medium text-red-400">
+          Enter a valid hex color, such as #4CAF50.
+        </p>
+      )}
+    </fieldset>
   );
 }
 

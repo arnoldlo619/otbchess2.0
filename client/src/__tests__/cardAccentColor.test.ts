@@ -10,13 +10,14 @@ import {
   ACCENT_PALETTE,
   defaultAccentForBadge,
   hexToGlow,
+  normalizeAccentHex,
 } from "@/components/PlayerStatsCard";
 
 // ─── ACCENT_PALETTE ───────────────────────────────────────────────────────────
 
 describe("ACCENT_PALETTE", () => {
-  it("contains exactly 8 swatches", () => {
-    expect(ACCENT_PALETTE).toHaveLength(8);
+  it("contains the complete 18-color report palette", () => {
+    expect(ACCENT_PALETTE).toHaveLength(18);
   });
 
   it("every swatch has a non-empty id", () => {
@@ -53,8 +54,11 @@ describe("ACCENT_PALETTE", () => {
     expect(new Set(hexes).size).toBe(hexes.length);
   });
 
-  it("includes a green swatch", () => {
-    expect(ACCENT_PALETTE.some((s) => s.id === "green")).toBe(true);
+  it("covers the full color spectrum plus neutral accents", () => {
+    const ids = new Set(ACCENT_PALETTE.map((swatch) => swatch.id));
+    ["forest", "lime", "gold", "orange", "red", "pink", "purple", "blue", "cyan", "teal", "slate", "charcoal"].forEach((id) => {
+      expect(ids.has(id)).toBe(true);
+    });
   });
 
   it("includes a gold swatch", () => {
@@ -63,6 +67,24 @@ describe("ACCENT_PALETTE", () => {
 
   it("includes a purple swatch", () => {
     expect(ACCENT_PALETTE.some((s) => s.id === "purple")).toBe(true);
+  });
+});
+
+describe("normalizeAccentHex", () => {
+  it("normalizes a six-digit color code to uppercase", () => {
+    expect(normalizeAccentHex("#4caf50")).toBe("#4CAF50");
+  });
+
+  it("accepts a hashless six-digit color code", () => {
+    expect(normalizeAccentHex("60a5fa")).toBe("#60A5FA");
+  });
+
+  it("expands a three-digit color code", () => {
+    expect(normalizeAccentHex("#4c5")).toBe("#44CC55");
+  });
+
+  it("rejects an invalid custom color code", () => {
+    expect(normalizeAccentHex("green")).toBeNull();
   });
 });
 

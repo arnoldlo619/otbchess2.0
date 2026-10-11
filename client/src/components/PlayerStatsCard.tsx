@@ -34,15 +34,34 @@ export interface AccentSwatch {
 }
 
 export const ACCENT_PALETTE: AccentSwatch[] = [
-  { id: "green",  label: "Forest",  hex: "#4CAF50", glow: "rgba(76,175,80,0.18)"   },
-  { id: "gold",   label: "Gold",    hex: "#F59E0B", glow: "rgba(245,158,11,0.18)"  },
-  { id: "purple", label: "Royal",   hex: "#A78BFA", glow: "rgba(167,139,250,0.18)" },
-  { id: "blue",   label: "Ocean",   hex: "#60A5FA", glow: "rgba(96,165,250,0.18)"  },
-  { id: "rose",   label: "Rose",    hex: "#FB7185", glow: "rgba(251,113,133,0.18)" },
-  { id: "teal",   label: "Teal",    hex: "#2DD4BF", glow: "rgba(45,212,191,0.18)"  },
-  { id: "orange", label: "Ember",   hex: "#FB923C", glow: "rgba(251,146,60,0.18)"  },
-  { id: "silver", label: "Silver",  hex: "#94A3B8", glow: "rgba(148,163,184,0.14)" },
+  { id: "forest",  label: "Forest",    hex: "#4CAF50", glow: "rgba(76,175,80,0.18)" },
+  { id: "emerald", label: "Emerald",   hex: "#34D399", glow: "rgba(52,211,153,0.18)" },
+  { id: "lime",    label: "Lime",      hex: "#A3E635", glow: "rgba(163,230,53,0.18)" },
+  { id: "gold",    label: "Gold",      hex: "#F59E0B", glow: "rgba(245,158,11,0.18)" },
+  { id: "orange",  label: "Ember",     hex: "#FB923C", glow: "rgba(251,146,60,0.18)" },
+  { id: "red",     label: "Red",       hex: "#F87171", glow: "rgba(248,113,113,0.18)" },
+  { id: "rose",    label: "Rose",      hex: "#FB7185", glow: "rgba(251,113,133,0.18)" },
+  { id: "pink",    label: "Pink",      hex: "#F472B6", glow: "rgba(244,114,182,0.18)" },
+  { id: "purple",  label: "Royal",     hex: "#A78BFA", glow: "rgba(167,139,250,0.18)" },
+  { id: "violet",  label: "Violet",    hex: "#8B5CF6", glow: "rgba(139,92,246,0.18)" },
+  { id: "indigo",  label: "Indigo",    hex: "#818CF8", glow: "rgba(129,140,248,0.18)" },
+  { id: "blue",    label: "Ocean",     hex: "#60A5FA", glow: "rgba(96,165,250,0.18)" },
+  { id: "sky",     label: "Sky",       hex: "#38BDF8", glow: "rgba(56,189,248,0.18)" },
+  { id: "cyan",    label: "Cyan",      hex: "#22D3EE", glow: "rgba(34,211,238,0.18)" },
+  { id: "teal",    label: "Teal",      hex: "#2DD4BF", glow: "rgba(45,212,191,0.18)" },
+  { id: "slate",   label: "Slate",     hex: "#64748B", glow: "rgba(100,116,139,0.18)" },
+  { id: "silver",  label: "Silver",    hex: "#94A3B8", glow: "rgba(148,163,184,0.14)" },
+  { id: "charcoal", label: "Charcoal", hex: "#334155", glow: "rgba(51,65,85,0.18)" },
 ];
+
+/** Normalise a three- or six-digit user-entered hex color for card accents. */
+export function normalizeAccentHex(value: string): string | null {
+  const source = value.trim().replace(/^#?/, "#");
+  if (/^#[0-9a-fA-F]{3}$/.test(source)) {
+    return `#${source.slice(1).split("").map((part) => `${part}${part}`).join("")}`.toUpperCase();
+  }
+  return /^#[0-9a-fA-F]{6}$/.test(source) ? source.toUpperCase() : null;
+}
 
 /** Default accent for a given badge — matches the badge's textColor. */
 export function defaultAccentForBadge(badge: string): string {
@@ -422,32 +441,6 @@ const PlayerStatsCard = forwardRef<HTMLDivElement, PlayerStatsCardProps>(
             )}
           </div>
 
-          {/* Badge pill — bottom-left of header */}
-          <div
-            style={{
-              position: "absolute",
-              bottom: forExport ? 40 : 16,
-              left: forExport ? 60 : 22,
-              zIndex: 3,
-            }}
-          >
-            <span
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                fontSize: forExport ? 18 : 9,
-                fontWeight: 700,
-                padding: forExport ? "8px 20px" : "3px 10px",
-                borderRadius: 999,
-                background: visual.badgeBackground,
-                color: visual.badgeText,
-                backdropFilter: "blur(8px)",
-                border: `1px solid ${visual.badgeBorder}`,
-              }}
-            >
-              {badgeLabel}
-            </span>
-          </div>
         </div>
 
         {/* ── Body ── */}
@@ -515,6 +508,33 @@ const PlayerStatsCard = forwardRef<HTMLDivElement, PlayerStatsCardProps>(
 
             {/* Name + meta */}
             <div style={{ flex: 1, minWidth: 0, paddingBottom: forExport ? 8 : 4 }}>
+              {/* Achievement chip lives in the identity stack, never over the avatar/header boundary. */}
+              <span
+                data-card-achievement
+                title={badgeLabel}
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  maxWidth: "100%",
+                  minHeight: forExport ? 38 : 22,
+                  boxSizing: "border-box",
+                  fontSize: forExport ? 18 : 10,
+                  fontWeight: 800,
+                  lineHeight: 1.1,
+                  padding: forExport ? "8px 16px" : "4px 9px",
+                  borderRadius: 999,
+                  background: visual.badgeBackground,
+                  color: visual.badgeText,
+                  border: `1px solid ${visual.badgeBorder}`,
+                  boxShadow: `0 4px 14px ${hexToGlow(badgeBaseColor, 0.16)}`,
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                  whiteSpace: "nowrap",
+                  marginBottom: forExport ? 12 : 6,
+                }}
+              >
+                {badgeLabel}
+              </span>
               {/* Title chip */}
               {player.title && (
                 <span
