@@ -183,6 +183,8 @@
 @media (prefers-reduced-motion: reduce) {
   .otb-video-text__fallback,
   .otb-video-text__canvas { transition: none; }
+
+  .landing-stats-video { display: none; }
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -554,6 +554,62 @@ function StatItem({
   );
 }
 
+function StatsVideoBackground() {
+  const videoRef = useRef<HTMLVideoElement>(null);
+
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    const motionQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
+    let visible = false;
+
+    const syncPlayback = () => {
+      if (motionQuery.matches || !visible) {
+        video.pause();
+        return;
+      }
+
+      void video.play().catch(() => {
+        // The green fallback and scrim remain fully legible if autoplay is blocked.
+      });
+    };
+
+    const observer = new IntersectionObserver(([entry]) => {
+      visible = Boolean(entry?.isIntersecting);
+      syncPlayback();
+    }, { threshold: 0.1 });
+
+    const handleMotionChange = () => syncPlayback();
+    observer.observe(video);
+    video.addEventListener("canplay", syncPlayback);
+    motionQuery.addEventListener("change", handleMotionChange);
+
+    return () => {
+      observer.disconnect();
+      video.pause();
+      video.removeEventListener("canplay", syncPlayback);
+      motionQuery.removeEventListener("change", handleMotionChange);
+    };
+  }, []);
+
+  return (
+    <video
+      ref={videoRef}
+      data-testid="landing-stats-video"
+      className="landing-stats-video absolute inset-0 h-full w-full object-cover"
+      src={HERO_VIDEO_TEXT_SOURCE}
+      autoPlay
+      loop
+      muted
+      playsInline
+      preload="metadata"
+      aria-hidden="true"
+      tabIndex={-1}
+    />
+  );
+}
+
 function StatsBar() {
   const { ref, inView } = useInView();
   const [liveCounts, setLiveCounts] = useState<{ tournaments: number; players: number; clubs: number } | null>(null);
@@ -577,14 +633,20 @@ function StatsBar() {
   return (
     <section
       ref={ref}
-      className="relative overflow-hidden mt-0"
+      data-testid="landing-stats-divider"
+      className="relative isolate overflow-hidden mt-0"
       style={{
-/* Solid green band with hard contrast edges and no top or bottom faders */
+        // Always available if video playback is unavailable or motion is reduced.
         background: "#436850",
       }}
     >
-      {/* Subtle chess texture overlay */}
-      <div className="absolute inset-0 chess-board-bg opacity-10 pointer-events-none" />
+      <StatsVideoBackground />
+      <div
+        data-testid="landing-stats-video-scrim"
+        className="absolute inset-0 pointer-events-none bg-[linear-gradient(90deg,rgba(8,43,24,0.84),rgba(12,64,35,0.76),rgba(8,43,24,0.84))]"
+        aria-hidden="true"
+      />
+      <div className="absolute inset-0 chess-board-bg opacity-10 pointer-events-none" aria-hidden="true" />
 
       <div className="container relative z-10 py-6 sm:py-8">
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-x-6 gap-y-6 sm:gap-8">
