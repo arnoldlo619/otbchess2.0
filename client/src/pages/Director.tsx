@@ -20,7 +20,7 @@ import { useParams, useLocation } from "wouter";
 import { MinimalTournamentNav } from "@/components/MinimalTournamentNav";
 import { toast } from "sonner";
 import { useTheme } from "@/contexts/ThemeContext";
-import { useDirectorState } from "@/lib/directorState";
+import { getPreviousRoundCorrectionEligibility, useDirectorState } from "@/lib/directorState";
 import { calculateQuadStandings, DEFAULT_QUAD_SETTINGS, getQuadSectionPlan, getSectionWinners, type QuadSection } from "@/lib/quads";
 import { PlayerAvatar } from "@/components/PlayerAvatar";
 import { PlayerHoverCard } from "@/components/PlayerProfileCard";
@@ -45,6 +45,7 @@ import { PairingSwapModal } from "@/components/PairingSwapModal";
 import { SwissStandingsPanel } from "@/components/SwissStandingsPanel";
 import { SwissPhaseSummaryModal } from "@/components/SwissPhaseSummaryModal";
 import { PreStartPlayerLookup } from "@/components/tournament/PreStartPlayerLookup";
+import { PreviousRoundCorrectionModal } from "@/components/tournament/PreviousRoundCorrectionModal";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -2307,6 +2308,7 @@ export default function Director() {
     revokeBye,
     startTournament,
     enterResult,
+    correctPreviousRound,
     generateNextRound,
     generateNextRoundWithCutoff,
     advanceToElimination: _advanceToElimination,
@@ -2335,6 +2337,10 @@ export default function Director() {
     loadMockQuadsState(scenario);
   }, [loadMockQuadsState]);
   const tournamentStatusDisplay = getTournamentStatusDisplay(state);
+  const previousRoundCorrection = useMemo(
+    () => getPreviousRoundCorrectionEligibility(state),
+    [state],
+  );
   // ── Undo result snackbar ────────────────────────────────────────────────
   const { pending: undoPending, recordWithUndo, undo: undoResult, dismiss: dismissUndo } =
     useUndoResult(enterResult);
@@ -2414,7 +2420,50 @@ export default function Director() {
   const [showAnnounce, setShowAnnounce] = useState(false);
   const [showSpectatorShare, setShowSpectatorShare] = useState(false);
   const [showSpectatorQR, setShowSpectatorQR] = useState(false);
+  const [showPreviousRoundCorrection, setShowPreviousRoundCorrection] = useState(false);
   const [_showOverflow, _setShowOverflow] = useState(false);
+
+  const applyPreviousRoundCorrection = useCallback((correctedResults: Record<string, Result>) => {
+    const outcome = correctPreviousRound(correctedResults);
+    if (!outcome.applied) {
+      toast.error(outcome.reason);
+      return;
+    }
+
+    setShowPreviousRoundCorrection(false);
+    stateRef.current = outcome.state;
+    if (tournamentId !== "otb-demo-2026") {
+      void flushStateToServer(outcome.state);
+    }
+
+    if (outcome.pairingRegenerated) {
+      const regeneratedRound = outcome.state.rounds.find((round) => round.number === outcome.regeneratedRoundNumber);
+      if (regeneratedRound) {
+        authFetch(`/api/tournament/${encodeURIComponent(tournamentId)}/round`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            round: outcome.regeneratedRoundNumber,
+            games: regeneratedRound.games,
+            players: outcome.state.players,
+            elimPhase: outcome.state.elimPhase,
+            elimPlayers: outcome.state.elimPlayers,
+          }),
+        }).catch(() => {
+          // The corrected state is already persisted locally and will resync on retry.
+        });
+      }
+    }
+
+    setActiveTab("home");
+    window.requestAnimationFrame(() => window.scrollTo({ top: 0, behavior: "smooth" }));
+    toast.success(
+      outcome.pairingRegenerated
+        ? `Round ${outcome.correctedRoundNumber} corrected — Round ${outcome.regeneratedRoundNumber} pairings refreshed.`
+        : `Round ${outcome.correctedRoundNumber} corrected — Quad standings updated.`,
+    );
+  }, [correctPreviousRound, flushStateToServer, tournamentId]);
+
   // Board assignment editing state
   const [editBoardsMode, setEditBoardsMode] = useState(false);
   const [swapSourceId, setSwapSourceId] = useState<string | null>(null);
@@ -3578,6 +3627,34 @@ export default function Director() {
                     </span>
                   )}
                 </div>
+                {!isRegistration && state.currentRound >= 2 && (
+                  <div className="mt-2 flex items-center justify-center gap-2">
+                    {previousRoundCorrection.eligible ? (
+                      <button
+                        type="button"
+                        onClick={() => setShowPreviousRoundCorrection(true)}
+                        className={`inline-flex min-h-9 items-center gap-1.5 rounded-xl border px-3 py-1.5 text-xs font-bold transition-all active:scale-[0.98] ${
+                          isDark
+                            ? "border-amber-400/30 bg-amber-400/10 text-amber-300 hover:bg-amber-400/16 hover:border-amber-400/45"
+                            : "border-amber-300 bg-amber-50 text-amber-800 hover:bg-amber-100"
+                        }`}
+                      >
+                        <Undo2 className="h-3.5 w-3.5" aria-hidden="true" />
+                        Correct Round {previousRoundCorrection.correctionRoundNumber}
+                      </button>
+                    ) : (
+                      <span
+                        title={previousRoundCorrection.reason}
+                        className={`inline-flex min-h-9 cursor-help items-center gap-1.5 rounded-xl border px-3 py-1.5 text-xs font-semibold ${
+                          isDark ? "border-white/10 bg-white/[0.03] text-white/35" : "border-[#ADBC9F]/60 bg-[#EEF4EC]/60 text-[#436850]/65"
+                        }`}
+                      >
+                        <Info className="h-3.5 w-3.5" aria-hidden="true" />
+                        Previous round locked
+                      </span>
+                    )}
+                  </div>
+                )}
                 {/* Bracket child: back-to-parent link + bracket label badge */}
                 {tournamentConfig?.bracketLabel && tournamentConfig?.parentBracketGroupId && (
                   <div className="flex items-center justify-center gap-2 mt-0.5">
@@ -7126,6 +7203,25 @@ export default function Director() {
           />
         </Suspense>
       )}
+
+      {/* ── Previous Round Correction ───────────────────────────────────────── */}
+      {showPreviousRoundCorrection && previousRoundCorrection.eligible && (() => {
+        const correctionRound = state.rounds.find(
+          (round) => round.number === previousRoundCorrection.correctionRoundNumber,
+        );
+        if (!correctionRound) return null;
+        return (
+          <PreviousRoundCorrectionModal
+            round={correctionRound}
+            activeRoundNumber={state.currentRound}
+            players={state.players}
+            isDark={isDark}
+            pairingRegenerationRequired={previousRoundCorrection.pairingRegenerationRequired}
+            onApply={applyPreviousRoundCorrection}
+            onClose={() => setShowPreviousRoundCorrection(false)}
+          />
+        );
+      })()}
 
        {/* ── Instagram Carousel Modal ──────────────────────────────────────── */}
       {showCarousel && (

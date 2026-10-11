@@ -160,6 +160,286 @@ export function computeDirectorLiveStandings(state: DirectorState): StandingRow[
   return computeTournamentLiveStandings(state.players, state.rounds, state.format, state.quadSections);
 }
 
+export type PreviousRoundCorrectionEligibility =
+  | {
+      eligible: true;
+      correctionRoundNumber: number;
+      pairingRegenerationRequired: boolean;
+    }
+  | {
+      eligible: false;
+      reason: string;
+    };
+
+export type PreviousRoundCorrectionOutcome =
+  | {
+      applied: true;
+      correctedRoundNumber: number;
+      regeneratedRoundNumber: number;
+      changedGameCount: number;
+      pairingRegenerated: boolean;
+      state: DirectorState;
+    }
+  | {
+      applied: false;
+      reason: string;
+    };
+
+/**
+ * Corrections are deliberately limited to the immediately preceding round.
+ * For Swiss-style and elimination events, the active round must still be clean
+ * so its boards can be safely regenerated from the corrected prior results.
+ * Quads schedule all pairings upfront, so their current boards remain stable.
+ */
+export function getPreviousRoundCorrectionEligibility(
+  state: DirectorState,
+): PreviousRoundCorrectionEligibility {
+  if (state.status !== "in_progress" && state.status !== "paused") {
+    return { eligible: false, reason: "Round corrections are available while the tournament is active." };
+  }
+
+  if (state.currentRound < 2) {
+    return { eligible: false, reason: "A previous round is available after Round 2 begins." };
+  }
+
+  const correctionRoundNumber = state.currentRound - 1;
+  const correctionRound = state.rounds.find((round) => round.number === correctionRoundNumber);
+  const activeRound = state.rounds.find((round) => round.number === state.currentRound);
+  if (!correctionRound || !activeRound) {
+    return { eligible: false, reason: "The current round data is not ready for a safe correction." };
+  }
+
+  const previousRoundIsComplete = correctionRound.games.every((game) => game.result !== "*");
+  if (!previousRoundIsComplete) {
+    return { eligible: false, reason: `Round ${correctionRoundNumber} is not complete yet.` };
+  }
+
+  if (state.format !== "quads") {
+    const activeRoundHasRecordedBoards = activeRound.games.some(
+      (game) => game.result !== "*" && game.whiteId !== "BYE" && game.blackId !== "BYE",
+    );
+    if (activeRoundHasRecordedBoards) {
+      return {
+        eligible: false,
+        reason: `Round ${state.currentRound} already has recorded boards, so its pairings can no longer be safely regenerated.`,
+      };
+    }
+  }
+
+  return {
+    eligible: true,
+    correctionRoundNumber,
+    pairingRegenerationRequired: state.format !== "quads",
+  };
+}
+
+function rescorePlayersFromCompletedRounds(players: Player[], completedRounds: Round[]): Player[] {
+  let rescoredPlayers: Player[] = players.map((player) => ({
+    ...player,
+    points: 0,
+    wins: 0,
+    draws: 0,
+    losses: 0,
+    buchholz: 0,
+    colorHistory: [] as ("W" | "B")[],
+  }));
+
+  for (const round of [...completedRounds].sort((a, b) => a.number - b.number)) {
+    for (const game of round.games) {
+      if (game.result === "*") continue;
+
+      if (game.whiteId === "BYE" || game.blackId === "BYE") {
+        const byeRecipientId = game.whiteId === "BYE" ? game.blackId : game.whiteId;
+        rescoredPlayers = rescoredPlayers.map((player) =>
+          player.id === byeRecipientId
+            ? { ...player, points: player.points + 1, wins: player.wins + 1 }
+            : player,
+        );
+        continue;
+      }
+
+      rescoredPlayers = applyResultToPlayers(
+        rescoredPlayers,
+        { ...game, result: "*" },
+        game.result,
+      );
+    }
+  }
+
+  const standingsByPlayerId = new Map(
+    computeStandings(rescoredPlayers, completedRounds).map((standing) => [standing.player.id, standing]),
+  );
+
+  return rescoredPlayers.map((player) => {
+    const standing = standingsByPlayerId.get(player.id);
+    return standing
+      ? {
+          ...player,
+          points: standing.points,
+          wins: standing.wins,
+          draws: standing.draws,
+          losses: standing.losses,
+          buchholz: standing.buchholz,
+        }
+      : player;
+  });
+}
+
+function regenerateEliminationRound(
+  state: DirectorState,
+  correctedRounds: Round[],
+  rescoredPlayers: Player[],
+): { games: Game[]; elimPlayers?: Player[]; elimRoundLabelText?: string } {
+  const correctionRound = correctedRounds.find((round) => round.number === state.currentRound - 1);
+  if (!correctionRound) return { games: [] };
+
+  const swissRoundCount = state.swissRounds ?? 0;
+  if (state.format === "swiss_elim" && state.elimPhase === "elimination" && correctionRound.number === swissRoundCount) {
+    const cutoffSize = state.elimCutoff ?? suggestElimCutoff(rescoredPlayers.length);
+    const elimPlayers = computeStandings(rescoredPlayers, correctedRounds)
+      .filter((standing) => !standing.player.withdrawn)
+      .slice(0, cutoffSize)
+      .map((standing) => standing.player);
+
+    return {
+      games: generateEliminationFirstRound(elimPlayers, state.currentRound),
+      elimPlayers,
+      elimRoundLabelText: elimRoundLabel(cutoffSize),
+    };
+  }
+
+  const bracketPlayers = state.elimPlayers ?? rescoredPlayers;
+  const eliminationGames = generateEliminationNextRound(
+    correctionRound.games,
+    bracketPlayers,
+    state.currentRound,
+  );
+
+  if (state.format === "swiss_elim") {
+    const nonByeGames = correctionRound.games.filter(
+      (game) => game.whiteId !== "BYE" && game.blackId !== "BYE",
+    );
+    if (nonByeGames.length === 2 && eliminationGames.length === 1) {
+      const thirdPlaceGame = generateThirdPlaceGame(
+        correctionRound.games,
+        bracketPlayers,
+        state.currentRound,
+      );
+      if (thirdPlaceGame) eliminationGames.push(thirdPlaceGame);
+    }
+  }
+
+  return {
+    games: eliminationGames,
+    elimRoundLabelText: elimRoundLabel(Math.max(2, eliminationGames.filter((game) => !game.isThirdPlace).length * 2)),
+  };
+}
+
+/**
+ * Applies a result correction to exactly one completed round back and atomically
+ * replaces the active round with a fresh pairing set when pairings are dynamic.
+ */
+export function applyPreviousRoundCorrection(
+  state: DirectorState,
+  correctedResults: Record<string, Result>,
+  actor: ResultEntryActor = { id: null, displayName: "Tournament Director" },
+  now: Date = new Date(),
+): PreviousRoundCorrectionOutcome {
+  const eligibility = getPreviousRoundCorrectionEligibility(state);
+  if (!eligibility.eligible) return { applied: false, reason: eligibility.reason };
+
+  const correctionRoundNumber = eligibility.correctionRoundNumber;
+  const previousRound = state.rounds.find((round) => round.number === correctionRoundNumber);
+  if (!previousRound) return { applied: false, reason: "The previous round could not be found." };
+
+  const correctedGames = previousRound.games.map((game) => {
+    if (game.whiteId === "BYE" || game.blackId === "BYE") return game;
+    return { ...game, result: correctedResults[game.id] ?? game.result };
+  });
+
+  if (correctedGames.some((game) => game.result === "*")) {
+    return { applied: false, reason: `Every board in Round ${correctionRoundNumber} needs a result before pairings can be regenerated.` };
+  }
+
+  const changedGames = correctedGames.filter((game) => {
+    const priorGame = previousRound.games.find((candidate) => candidate.id === game.id);
+    return priorGame?.result !== game.result;
+  });
+  if (changedGames.length === 0) {
+    return { applied: false, reason: "Choose at least one different result to apply a correction." };
+  }
+
+  const correctedHistoricalRounds = state.rounds
+    .filter((round) => round.number < state.currentRound)
+    .map((round) => round.number === correctionRoundNumber
+      ? { ...round, status: "completed" as const, games: correctedGames }
+      : round,
+    );
+  const rescoredPlayers = rescorePlayersFromCompletedRounds(state.players, correctedHistoricalRounds);
+
+  let regeneratedGames: Game[];
+  let nextElimPlayers = state.elimPlayers;
+  let nextElimRoundLabelText = state.elimRoundLabelText;
+
+  if (state.format === "quads") {
+    regeneratedGames = state.rounds.find((round) => round.number === state.currentRound)?.games ?? [];
+  } else if (state.format === "elimination" || (state.format === "swiss_elim" && state.elimPhase === "elimination")) {
+    const regeneration = regenerateEliminationRound(state, correctedHistoricalRounds, rescoredPlayers);
+    regeneratedGames = regeneration.games;
+    nextElimPlayers = regeneration.elimPlayers ?? nextElimPlayers;
+    nextElimRoundLabelText = regeneration.elimRoundLabelText ?? nextElimRoundLabelText;
+  } else if (state.format === "doubleswiss") {
+    regeneratedGames = generateDoubleSwissPairings(rescoredPlayers, correctedHistoricalRounds, state.currentRound);
+  } else {
+    regeneratedGames = generateSwissPairings(rescoredPlayers, correctedHistoricalRounds, state.currentRound);
+  }
+
+  if (state.format !== "quads" && regeneratedGames.length === 0) {
+    return { applied: false, reason: "The active round could not be regenerated from the corrected results." };
+  }
+
+  const rounds = state.rounds.map((round) => {
+    if (round.number === correctionRoundNumber) {
+      return { ...round, status: "completed" as const, games: correctedGames };
+    }
+    if (round.number === state.currentRound) {
+      return { ...round, status: "in_progress" as const, games: regeneratedGames };
+    }
+    return round;
+  });
+
+  const historyStart = state.resultHistory?.length ?? 0;
+  const correctionHistory = changedGames.map((game, index) => {
+    const priorGame = previousRound.games.find((candidate) => candidate.id === game.id)!;
+    return createResultHistoryEntry(
+      priorGame,
+      game.result,
+      actor,
+      historyStart + index,
+      { action: "corrected" },
+      new Date(now.getTime() + index),
+    );
+  });
+
+  const nextState: DirectorState = {
+    ...state,
+    players: rescoredPlayers,
+    rounds,
+    ...(nextElimPlayers ? { elimPlayers: nextElimPlayers } : {}),
+    ...(nextElimRoundLabelText ? { elimRoundLabelText: nextElimRoundLabelText } : {}),
+    resultHistory: [...(state.resultHistory ?? []), ...correctionHistory],
+  };
+
+  return {
+    applied: true,
+    correctedRoundNumber: correctionRoundNumber,
+    regeneratedRoundNumber: state.currentRound,
+    changedGameCount: changedGames.length,
+    pairingRegenerated: eligibility.pairingRegenerationRequired,
+    state: nextState,
+  };
+}
+
 interface PersistedState {
   schemaVersion: number;
   savedAt: string;
@@ -809,6 +1089,14 @@ export function useDirectorState(
     });
   }, [resultActor]);
 
+  // Correct the immediately preceding round, then replace the clean active-round
+  // pairings from the corrected standing order in one atomic state transition.
+  const correctPreviousRound = useCallback((correctedResults: Record<string, Result>): PreviousRoundCorrectionOutcome => {
+    const outcome = applyPreviousRoundCorrection(state, correctedResults, resultActor);
+    if (outcome.applied) setState(outcome.state);
+    return outcome;
+  }, [resultActor, state]);
+
   // Generate pairings for next round using the full Swiss engine
   const generateNextRound = useCallback((): { roundNum: number; games: Game[]; players: Player[] } | null => {
     let result: { roundNum: number; games: Game[]; players: Player[] } | null = null;
@@ -1298,6 +1586,7 @@ export function useDirectorState(
     revokeBye,
     startTournament,
     enterResult,
+    correctPreviousRound,
     generateNextRound,
     generateNextRoundWithCutoff,
     advanceToElimination,
