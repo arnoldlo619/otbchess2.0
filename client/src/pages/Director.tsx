@@ -851,15 +851,13 @@ function DoubleSwissBoardCard({
             </span>
           )}
         </div>
-        {/* Color indicators */}
-        <div className="flex items-center gap-1.5 mb-2.5 text-sm">
-          <span className={`px-1.5 py-0.5 rounded font-bold ${
-            isDark ? "bg-white/90 text-[#12372A]" : "bg-white border border-[#ADBC9F] text-[#12372A]/85"
-          }`}>{white.name.split(" ")[0]} ⬜</span>
+        {/* Explicit color assignment keeps both color-swapped games immediately scannable. */}
+        <div className={`flex flex-wrap items-center justify-center gap-x-2 gap-y-1 mb-2.5 text-center text-sm sm:text-base font-semibold leading-snug ${
+          isDark ? "text-white/80" : "text-[#12372A]"
+        }`}>
+          <span>{white.name.split(" ")[0]} <span className={isDark ? "text-white/45" : "text-[#436850]/70"}>as White</span></span>
           <span className={isDark ? "text-white/25" : "text-[#436850]/70"}>vs</span>
-          <span className={`px-1.5 py-0.5 rounded font-bold ${
-            isDark ? "bg-[#12372A]/80 text-white/80 border border-white/10" : "bg-[#12372A] text-white"
-          }`}>{black.name.split(" ")[0]} ⬛</span>
+          <span>{black.name.split(" ")[0]} <span className={isDark ? "text-white/45" : "text-[#436850]/70"}>as Black</span></span>
         </div>
         {/* Result buttons */}
         <div className="flex gap-1.5">

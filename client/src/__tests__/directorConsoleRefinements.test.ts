@@ -387,6 +387,16 @@ describe("Director Home and Standings readability", () => {
     expect(doubleSwissCardSource).toContain('style={{ minHeight: "44px", touchAction: "manipulation" }}');
   });
 
+  it("centers explicit color assignments for both Double Swiss games", () => {
+    expect(doubleSwissCardSource).toContain("justify-center gap-x-2 gap-y-1 mb-2.5 text-center");
+    expect(doubleSwissCardSource).toContain("as White");
+    expect(doubleSwissCardSource).toContain("as Black");
+    expect(doubleSwissCardSource).not.toContain('⬜');
+    expect(doubleSwissCardSource).not.toContain('⬛');
+    expect(doubleSwissCardSource).toContain('<GameRow game={gameA} label="Game A" />');
+    expect(doubleSwissCardSource).toContain('<GameRow game={gameB} label="Game B" />');
+  });
+
   it("centers the enlarged tournament name without redundant operational metadata", () => {
     const identityStart = directorSource.indexOf("/* Round title row */");
     const identitySource = directorSource.slice(identityStart, directorSource.indexOf("/* Round Timer", identityStart));
