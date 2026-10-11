@@ -12,9 +12,9 @@ describe("landing stats video divider", () => {
       home.indexOf("// ─── How It Works"),
     );
 
-    expect(home).toContain('const HERO_VIDEO_TEXT_SOURCE = "/videos/chess-hero-text-loop.mp4"');
+    expect(home).toContain('const LANDING_CHESS_VIDEO_SOURCE = "/videos/chess-hero-text-loop.mp4"');
     expect(statsSection).toContain('data-testid="landing-stats-video"');
-    expect(statsSection).toContain("src={HERO_VIDEO_TEXT_SOURCE}");
+    expect(statsSection).toContain("src={LANDING_CHESS_VIDEO_SOURCE}");
     expect(statsSection).toContain("autoPlay");
     expect(statsSection).toContain("loop");
     expect(statsSection).toContain("muted");
