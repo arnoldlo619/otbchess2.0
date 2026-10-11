@@ -640,12 +640,111 @@ function resolveInitialState(tournamentId: string): DirectorState {
   return getUnresolvedInitialState(tournamentId);
 }
 
+export type LatePlayerOutcome =
+  | { paired: true; opponentName: string; board: number }
+  | { bye: true }
+  | { duplicate: true }
+  | { locked: true };
+
+export interface LatePlayerRegistrationTransition {
+  state: DirectorState;
+  outcome: LatePlayerOutcome;
+}
+
+/**
+ * Applies a Round 1 late-registration update as a single deterministic state transition.
+ * Double Swiss boards stay atomic: if either color is reported, both games are retained.
+ */
+export function applyLatePlayerRegistration(
+  previousState: DirectorState,
+  player: Player,
+): LatePlayerRegistrationTransition {
+  if (previousState.status !== "in_progress" || previousState.currentRound !== 1 || previousState.format === "quads") {
+    return { state: previousState, outcome: { locked: true } };
+  }
+
+  if (previousState.players.some((candidate) => candidate.id === player.id || (candidate.username && candidate.username === player.username))) {
+    return { state: previousState, outcome: { duplicate: true } };
+  }
+
+  const round1 = previousState.rounds.find((round) => round.number === 1);
+  if (!round1) return { state: previousState, outcome: { locked: true } };
+
+  // A scored non-bye game has started. Automatic byes can be refreshed if another
+  // player walks in, preventing avoidable consecutive byes before results are due.
+  const hasReportedContestResult = (game: Game) =>
+    game.result !== "*" && game.whiteId !== "BYE" && game.blackId !== "BYE";
+
+  const lockedBoardNumbers = previousState.format === "doubleswiss"
+    ? new Set(
+        Array.from(new Set(round1.games.map((game) => game.board))).filter((board) =>
+          round1.games.some((game) => game.board === board && hasReportedContestResult(game)),
+        ),
+      )
+    : new Set<number>();
+  const lockedGames = round1.games.filter((game) =>
+    previousState.format === "doubleswiss"
+      ? lockedBoardNumbers.has(game.board)
+      : hasReportedContestResult(game),
+  );
+  const openGames = round1.games.filter((game) =>
+    previousState.format === "doubleswiss"
+      ? !lockedBoardNumbers.has(game.board)
+      : !hasReportedContestResult(game),
+  );
+
+  const openPlayerIds = new Set<string>();
+  for (const game of openGames) {
+    if (game.whiteId !== "BYE") openPlayerIds.add(game.whiteId);
+    if (game.blackId !== "BYE") openPlayerIds.add(game.blackId);
+  }
+
+  const updatedPlayers = [...previousState.players, player];
+  const openPlayers = updatedPlayers.filter((candidate) => openPlayerIds.has(candidate.id) || candidate.id === player.id);
+  const freshOpenGames = previousState.format === "doubleswiss"
+    ? generateDoubleSwissPairings(openPlayers, [], 1)
+    : generateSwissPairings(openPlayers, [], 1);
+
+  // Map each fresh source board once so Double Swiss color-swapped games remain
+  // together on one reporting card after the refreshed boards follow locked ones.
+  const lockedMaxBoard = lockedGames.length > 0 ? Math.max(...lockedGames.map((game) => game.board)) : 0;
+  const freshBoardNumbers = Array.from(new Set(freshOpenGames.map((game) => game.board))).sort((a, b) => a - b);
+  const freshBoardMap = new Map(freshBoardNumbers.map((board, index) => [board, lockedMaxBoard + index + 1]));
+  const numberedFreshGames = freshOpenGames.map((game) => ({
+    ...game,
+    board: freshBoardMap.get(game.board) ?? game.board,
+  }));
+
+  const newPlayerGame = numberedFreshGames.find((game) => game.whiteId === player.id || game.blackId === player.id);
+  const outcome: LatePlayerOutcome = !newPlayerGame || newPlayerGame.whiteId === "BYE" || newPlayerGame.blackId === "BYE"
+    ? { bye: true }
+    : (() => {
+        const opponentId = newPlayerGame.whiteId === player.id ? newPlayerGame.blackId : newPlayerGame.whiteId;
+        const opponent = updatedPlayers.find((candidate) => candidate.id === opponentId);
+        return { paired: true, opponentName: opponent?.name ?? "Unknown", board: newPlayerGame.board };
+      })();
+
+  return {
+    state: {
+      ...previousState,
+      players: updatedPlayers,
+      rounds: previousState.rounds.map((round) => round.number === 1
+        ? { ...round1, games: [...lockedGames, ...numberedFreshGames] }
+        : round,
+      ),
+    },
+    outcome,
+  };
+}
+
 // ─── Hook ─────────────────────────────────────────────────────────────────────
 export function useDirectorState(
   tournamentId: string = "otb-demo-2026",
   resultActor: ResultEntryActor = { id: null, displayName: "Tournament Director" },
 ) {
   const [state, setState] = useState<DirectorState>(() => resolveInitialState(tournamentId));
+  const stateRef = useRef(state);
+  stateRef.current = state;
   const [lastSaved, setLastSaved] = useState<string | null>(() => getSavedAt(tournamentId));
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const serverSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -784,86 +883,13 @@ export function useDirectorState(
     });
   }, []);
 
-  // Add a late-arriving player during Round 1.
-  // Strategy: lock any games that have already started (result !== "*"), then regenerate
-  // pairings for all unstarted players + the new arrival, preserving locked games.
-  // Returns a descriptor: { paired: true, opponentName, board } | { bye: true } | { duplicate: true } | { locked: true }
-  const addLatePlayer = useCallback((player: Player): { paired: true; opponentName: string; board: number } | { bye: true } | { duplicate: true } | { locked: true } => {
-    let result: { paired: true; opponentName: string; board: number } | { bye: true } | { duplicate: true } | { locked: true } = { locked: true };
-    setState((prev) => {
-      // Only allowed during Round 1
-      if (prev.status !== "in_progress" || prev.currentRound !== 1) {
-        result = { locked: true };
-        return prev;
-      }
-      // Quads: late registration is not supported — all sections/pairings are pre-generated
-      if (prev.format === "quads") {
-        result = { locked: true };
-        return prev;
-      }
-      // Prevent duplicates
-      if (prev.players.some((p) => p.id === player.id || (p.username && p.username === player.username))) {
-        result = { duplicate: true };
-        return prev;
-      }
-      const round1 = prev.rounds.find((r) => r.number === 1);
-      if (!round1) { result = { locked: true }; return prev; }
-
-      // Separate locked games (already have a result) from open games
-      const lockedGames = round1.games.filter((g) => g.result !== "*");
-      const openGames = round1.games.filter((g) => g.result === "*");
-
-      // Collect IDs of players already locked into completed games — they keep their pairing
-      const lockedPlayerIds = new Set<string>();
-      for (const g of lockedGames) {
-        if (g.whiteId !== "BYE") lockedPlayerIds.add(g.whiteId);
-        if (g.blackId !== "BYE") lockedPlayerIds.add(g.blackId);
-      }
-
-      // Players whose games are still open (result === "*") + the new arrival
-      const openPlayerIds = new Set<string>();
-      for (const g of openGames) {
-        if (g.whiteId !== "BYE") openPlayerIds.add(g.whiteId);
-        if (g.blackId !== "BYE") openPlayerIds.add(g.blackId);
-      }
-      // Also include any player who had a bye in open games
-      for (const g of openGames) {
-        if (g.whiteId === "BYE") openPlayerIds.add(g.blackId);
-      }
-
-      const updatedPlayers = [...prev.players, player];
-      const openPlayers = updatedPlayers.filter((p) => openPlayerIds.has(p.id) || p.id === player.id);
-
-      // Re-pair open players + new arrival using the standard Round 1 algorithm
-      // Pass empty prior rounds so it uses the top-half/bottom-half path
-      const freshOpenGames = generateSwissPairings(openPlayers, [], 1);
-
-      // Renumber boards: locked games keep their boards, fresh games get boards after locked max
-      const lockedMaxBoard = lockedGames.length > 0 ? Math.max(...lockedGames.map((g) => g.board)) : 0;
-      const numberedFreshGames = freshOpenGames.map((g, i) => ({ ...g, board: lockedMaxBoard + i + 1 }));
-
-      const newRound: Round = {
-        ...round1,
-        games: [...lockedGames, ...numberedFreshGames],
-      };
-
-      // Determine outcome for toast message
-      const newPlayerGame = numberedFreshGames.find((g) => g.whiteId === player.id || g.blackId === player.id);
-      if (!newPlayerGame || newPlayerGame.whiteId === "BYE" || newPlayerGame.blackId === "BYE") {
-        result = { bye: true };
-      } else {
-        const opponentId = newPlayerGame.whiteId === player.id ? newPlayerGame.blackId : newPlayerGame.whiteId;
-        const opponent = updatedPlayers.find((p) => p.id === opponentId);
-        result = { paired: true, opponentName: opponent?.name ?? "Unknown", board: newPlayerGame.board };
-      }
-
-      return {
-        ...prev,
-        players: updatedPlayers,
-        rounds: prev.rounds.map((r) => r.number === 1 ? newRound : r),
-      };
-    });
-    return result;
+  const addLatePlayer = useCallback((player: Player): LatePlayerOutcome => {
+    const transition = applyLatePlayerRegistration(stateRef.current, player);
+    if (transition.state !== stateRef.current) {
+      stateRef.current = transition.state;
+      setState(transition.state);
+    }
+    return transition.outcome;
   }, []);
 
   // Remove a player from the registration list (only during registration phase)

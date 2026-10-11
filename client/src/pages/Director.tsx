@@ -4948,7 +4948,7 @@ export default function Director() {
                     }`}>
                       <div className="flex items-center gap-2.5 min-w-0">
                         <UserPlus className="w-4 h-4 flex-shrink-0" />
-                        <p className="text-sm font-medium">Late registration open — players added now will be paired or given a bye.</p>
+                        <p className="text-sm font-medium">Late registration open — unreported boards refresh; reported boards stay intact.</p>
                       </div>
                       <button
                         onClick={() => setShowAddPlayer(true)}

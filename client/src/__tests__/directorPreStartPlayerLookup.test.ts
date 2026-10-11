@@ -33,7 +33,7 @@ describe("Director pre-start player lookup", () => {
   });
 
   it("keeps late walk-in registration available from the Home dashboard during Round 1", () => {
-    expect(homeTab).toContain("Late registration open — players added now will be paired or given a bye.");
+    expect(homeTab).toContain("Late registration open — unreported boards refresh; reported boards stay intact.");
     expect(homeTab).toContain("state.currentRound === 1");
     expect(homeTab).toContain("setShowAddPlayer(true)");
   });
