@@ -2779,131 +2779,151 @@ export function InstagramCarouselModal({ open, onClose, rows, config, tournament
               />
             </div>
 
-            {/* ── Colour Theme Picker ── */}
-            <div className={`w-full rounded-2xl border p-4 ${isDark ? "border-white/08 bg-white/03" : "border-[#ADBC9F] bg-[#FBFADA]/70"}`}>
-              <p className={`text-xs font-bold mb-3 ${isDark ? "text-white/70" : "text-[#12372A]/85"}`}>Slide Colour Theme</p>
-              <div className="flex items-center gap-2 flex-wrap">
-                {ALL_THEMES.map((t) => {
-                  const isActive = activeTheme.id === t.id;
+            {/* ── Premium Defaults ── */}
+            <section data-carousel-premium-defaults aria-labelledby="carousel-premium-defaults" className={`w-full rounded-2xl border p-4 space-y-3 ${isDark ? "border-white/08 bg-white/03" : "border-[#ADBC9F] bg-[#FBFADA]/70"}`}>
+              <div className="flex items-center gap-2">
+                <p id="carousel-premium-defaults" className={`text-xs font-bold ${isDark ? "text-white/70" : "text-[#12372A]/85"}`}>Premium Defaults</p>
+                <span className="px-1.5 py-0.5 rounded-md text-[9px] font-bold bg-gradient-to-r from-amber-500/20 to-amber-400/10 text-amber-400 border border-amber-500/20">PRO</span>
+              </div>
+              <p className={`text-[10px] leading-relaxed ${isDark ? "text-white/35" : "text-[#436850]/70"}`}>
+                Curated high-quality templates — one click to apply.
+              </p>
+              <div className="grid grid-cols-4 gap-2">
+                {PREMIUM_DEFAULTS.map((prem, idx) => {
+                  const premTheme = ALL_THEMES.find((t) => t.id === prem.themeId) ?? DEFAULT_THEME;
+                  const premFont = SLIDE_FONTS.find((f) => f.id === prem.headingFontId) ?? DEFAULT_FONT;
+                  const THUMB_SIZE = 64;
+                  const thumbScale = THUMB_SIZE / SLIDE_W;
                   return (
                     <button
-                      key={t.id}
-                      onClick={() => setActiveTheme(t)}
-                      title={t.label}
-                      className="flex flex-col items-center gap-1.5 group"
+                      type="button"
+                      key={idx}
+                      onClick={() => handleLoadTemplate({ ...prem, id: `premium-${idx}`, createdAt: "" } as CarouselTemplate)}
+                      className={`group relative flex flex-col items-center gap-1.5 rounded-xl p-1.5 border transition-all hover:scale-[1.03] ${
+                        isDark
+                          ? "border-white/06 bg-white/02 hover:border-white/15 hover:bg-white/05"
+                          : "border-[#ADBC9F]/40 bg-white/20 hover:border-[#436850]/40 hover:bg-white/40"
+                      }`}
+                      aria-label={`Apply ${prem.name} premium default`}
+                      title={prem.name}
                     >
+                      {/* Thumbnail */}
                       <div
+                        className="rounded-lg overflow-hidden"
                         style={{
-                          width: 36,
-                          height: 36,
-                          borderRadius: "50%",
-                          background: `linear-gradient(135deg, ${t.bg} 0%, ${t.bgDark} 100%)`,
-                          border: isActive ? `2.5px solid ${t.accentLight}` : isDark ? "2px solid rgba(255,255,255,0.12)" : "2px solid rgba(0,0,0,0.10)",
-                          boxShadow: isActive ? `0 0 0 2px ${t.accentLight}44` : "none",
-                          transition: "all 0.15s ease",
+                          width: THUMB_SIZE,
+                          height: THUMB_SIZE,
                           position: "relative",
-                          overflow: "hidden",
+                          border: isDark ? "1px solid rgba(255,255,255,0.06)" : "1px solid rgba(0,0,0,0.06)",
                         }}
                       >
-                        <div style={{ position: "absolute", bottom: 7, right: 7, width: 10, height: 10, borderRadius: "50%", background: t.accentLight }} />
+                        <div
+                          style={{
+                            position: "absolute",
+                            top: 0,
+                            left: 0,
+                            transformOrigin: "top left",
+                            transform: `scale(${thumbScale})`,
+                            pointerEvents: "none",
+                            userSelect: "none",
+                          }}
+                        >
+                          <Slide1Cover
+                            rows={rows}
+                            config={config}
+                            tournamentName={tournamentName}
+                            totalRounds={totalRounds}
+                            scale={1}
+                            hostLogoUrl={null}
+                            theme={premTheme}
+                            format="square"
+                            championAvatarUrl={null}
+                            logoScale={1}
+                            logoPosition="center"
+                            headingFont={premFont}
+                            headingSize={prem.headingSize}
+                            headingColor={prem.headingColor}
+                            bodyColor={prem.bodyColor}
+                            bgType={prem.bgType}
+                            bgValue={prem.bgValue}
+                          />
+                        </div>
                       </div>
-                      <span className={`text-[10px] font-semibold leading-none transition-colors ${isActive ? isDark ? "text-white/80" : "text-[#12372A]" : isDark ? "text-white/35" : "text-[#436850]"}`}>
-                        {t.label}
-                      </span>
+                      {/* Label */}
+                      <span className={`text-[9px] font-bold text-center leading-tight truncate w-full ${
+                        isDark ? "text-white/50 group-hover:text-white/80" : "text-[#436850]/70 group-hover:text-[#12372A]"
+                      }`}>{prem.name}</span>
                     </button>
                   );
                 })}
               </div>
-            </div>
+            </section>
 
-            {/* ── Typography Panel ── */}
-            <div className={`w-full rounded-2xl border p-4 space-y-4 ${isDark ? "border-white/08 bg-white/03" : "border-[#ADBC9F] bg-[#FBFADA]/70"}`}>
-              <p className={`text-xs font-bold ${isDark ? "text-white/70" : "text-[#12372A]/85"}`}>Typography</p>
-
-              {/* Font family */}
+            {/* ── Visual Style ── */}
+            <section data-carousel-visual-style aria-labelledby="carousel-visual-style" className={`w-full rounded-2xl border p-4 space-y-4 ${isDark ? "border-white/08 bg-white/03" : "border-[#ADBC9F] bg-[#FBFADA]/70"}`}>
               <div>
-                <span className={`text-[10px] font-semibold block mb-1.5 ${isDark ? "text-white/40" : "text-[#436850]"}`}>Heading Font</span>
-                <div className="flex gap-1.5 flex-wrap">
-                  {SLIDE_FONTS.map((f) => {
-                    const isActive = headingFont.id === f.id;
+                <p id="carousel-visual-style" className={`text-xs font-bold ${isDark ? "text-white/70" : "text-[#12372A]/85"}`}>Visual style</p>
+                <p className={`mt-0.5 text-[10px] leading-relaxed ${isDark ? "text-white/35" : "text-[#436850]/70"}`}>Set the carousel’s palette and canvas in one place.</p>
+              </div>
+
+              <section aria-labelledby="carousel-theme-palette">
+                <div className="mb-2 flex items-baseline justify-between gap-3">
+                  <p id="carousel-theme-palette" className={`text-[11px] font-bold ${isDark ? "text-white/70" : "text-[#12372A]/85"}`}>Theme palette</p>
+                  <p className={`text-right text-[10px] ${isDark ? "text-white/30" : "text-[#436850]/70"}`}>Sets your accent and default tone</p>
+                </div>
+                <div className="flex items-center gap-2.5 flex-wrap">
+                  {ALL_THEMES.map((t) => {
+                    const isActive = activeTheme.id === t.id;
                     return (
                       <button
-                        key={f.id}
-                        onClick={() => setHeadingFont(f)}
-                        className={`px-3 py-1.5 rounded-lg text-[11px] font-bold transition-all border ${
-                          isActive
-                            ? isDark ? "border-[#769656] bg-[#769656]/20 text-[#9bc46a]" : "border-[#436850] bg-[#436850]/10 text-[#12372A]"
-                            : isDark ? "border-white/08 bg-white/03 text-white/40 hover:border-white/15" : "border-[#ADBC9F] bg-transparent text-[#436850]/60 hover:border-[#436850]"
-                        }`}
-                        style={{ fontFamily: f.family, fontStyle: f.italic ? "italic" : "normal" }}
+                        type="button"
+                        key={t.id}
+                        onClick={() => setActiveTheme(t)}
+                        aria-pressed={isActive}
+                        aria-label={`Use ${t.label} theme palette`}
+                        title={t.label}
+                        className="flex flex-col items-center gap-1.5 rounded-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-[#769656]"
                       >
-                        {f.label}
+                        <div
+                          style={{
+                            width: 36,
+                            height: 36,
+                            borderRadius: "50%",
+                            background: `linear-gradient(135deg, ${t.bg} 0%, ${t.bgDark} 100%)`,
+                            border: isActive ? `2.5px solid ${t.accentLight}` : isDark ? "2px solid rgba(255,255,255,0.12)" : "2px solid rgba(0,0,0,0.10)",
+                            boxShadow: isActive ? `0 0 0 2px ${t.accentLight}44` : "none",
+                            transition: "all 0.15s ease",
+                            position: "relative",
+                            overflow: "hidden",
+                          }}
+                        >
+                          <div style={{ position: "absolute", bottom: 7, right: 7, width: 10, height: 10, borderRadius: "50%", background: t.accentLight }} />
+                        </div>
+                        <span className={`text-[10px] font-semibold leading-none transition-colors ${isActive ? isDark ? "text-white/80" : "text-[#12372A]" : isDark ? "text-white/35" : "text-[#436850]"}`}>
+                          {t.label}
+                        </span>
                       </button>
                     );
                   })}
                 </div>
-              </div>
+              </section>
 
-              {/* Heading size */}
-              <div>
-                <div className="flex items-center justify-between mb-1.5">
-                  <span className={`text-[10px] font-semibold ${isDark ? "text-white/40" : "text-[#436850]"}`}>Heading Size</span>
-                  <span className={`text-[10px] font-bold tabular-nums ${isDark ? "text-white/50" : "text-[#12372A]/70"}`}>{headingSize}px</span>
-                </div>
-                <input
-                  aria-label="Heading Size"
-                  type="range"
-                  min={60}
-                  max={200}
-                  step={4}
-                  value={headingSize}
-                  onChange={(e) => setHeadingSize(Number(e.target.value))}
-                  className="w-full h-1.5 rounded-full appearance-none cursor-pointer accent-[#769656]"
-                  style={{ background: `linear-gradient(to right, #769656 ${((headingSize - 60) / 140) * 100}%, rgba(255,255,255,0.12) ${((headingSize - 60) / 140) * 100}%)` }}
-                />
-                <div className={`flex justify-between mt-0.5 text-[9px] ${isDark ? "text-white/20" : "text-[#436850]/50"}`}>
-                  <span>Small</span><span>Default</span><span>Large</span>
+            <section aria-labelledby="carousel-background-treatment" className={`border-t pt-4 space-y-4 ${isDark ? "border-white/08" : "border-[#ADBC9F]/70"}`}>
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <p id="carousel-background-treatment" className={`text-[11px] font-bold ${isDark ? "text-white/70" : "text-[#12372A]/85"}`}>Background treatment</p>
+                  <p className={`mt-0.5 text-[10px] leading-relaxed ${isDark ? "text-white/35" : "text-[#436850]/70"}`}>Choose the canvas behind every slide.</p>
                 </div>
               </div>
-
-              {/* Heading color */}
-              <div>
-                <span className={`text-[10px] font-semibold block mb-1.5 ${isDark ? "text-white/40" : "text-[#436850]"}`}>Heading Colour</span>
-                <div className="flex items-center gap-2">
-                  <input
-                    aria-label="Heading Colour"
-                    type="color"
-                    value={headingColor}
-                    onChange={(e) => setHeadingColor(e.target.value)}
-                    className="w-8 h-8 rounded-lg cursor-pointer border-0 p-0.5 bg-transparent"
-                  />
-                  <div className="flex gap-1.5">
-                    {["#FFFFFF", "#4CAF50", "#39FF14", "#FFD700", "#FF6B35", "#00BFFF"].map((c) => (
-                      <button
-                        key={c}
-                        onClick={() => setHeadingColor(c)}
-                        className="w-6 h-6 rounded-full border-2 transition-all"
-                        style={{
-                          background: c,
-                          borderColor: headingColor === c ? "white" : "transparent",
-                          boxShadow: headingColor === c ? "0 0 0 1px rgba(255,255,255,0.4)" : "none",
-                        }}
-                      />
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* ── Background Panel ── */}
-            <div className={`w-full rounded-2xl border p-4 space-y-4 ${isDark ? "border-white/08 bg-white/03" : "border-[#ADBC9F] bg-[#FBFADA]/70"}`}>
-              <p className={`text-xs font-bold ${isDark ? "text-white/70" : "text-[#12372A]/85"}`}>Background</p>
 
               {/* BG type tabs */}
-              <div className={`flex gap-1 p-1 rounded-xl ${isDark ? "bg-white/05" : "bg-[#ADBC9F]/20"}`}>
+              <div data-carousel-background-type className={`flex gap-1 p-1 rounded-xl ${isDark ? "bg-white/05" : "bg-[#ADBC9F]/20"}`}>
                 {(["gradient", "solid", "image"] as BgType[]).map((t) => (
                   <button
+                    type="button"
                     key={t}
+                    aria-pressed={bgType === t}
+                    aria-label={`Use ${t === "image" ? "an" : "a"} ${t} background`}
                     onClick={() => {
                       setBgType(t);
                       if (t === "gradient") {
@@ -3040,6 +3060,86 @@ export function InstagramCarouselModal({ open, onClose, rows, config, tournament
                   />
                 </div>
               )}
+            </section>
+            </section>
+
+            {/* ── Typography Panel ── */}
+            <div className={`w-full rounded-2xl border p-4 space-y-4 ${isDark ? "border-white/08 bg-white/03" : "border-[#ADBC9F] bg-[#FBFADA]/70"}`}>
+              <p className={`text-xs font-bold ${isDark ? "text-white/70" : "text-[#12372A]/85"}`}>Typography</p>
+
+              {/* Font family */}
+              <div>
+                <span className={`text-[10px] font-semibold block mb-1.5 ${isDark ? "text-white/40" : "text-[#436850]"}`}>Heading Font</span>
+                <div className="flex gap-1.5 flex-wrap">
+                  {SLIDE_FONTS.map((f) => {
+                    const isActive = headingFont.id === f.id;
+                    return (
+                      <button
+                        key={f.id}
+                        onClick={() => setHeadingFont(f)}
+                        className={`px-3 py-1.5 rounded-lg text-[11px] font-bold transition-all border ${
+                          isActive
+                            ? isDark ? "border-[#769656] bg-[#769656]/20 text-[#9bc46a]" : "border-[#436850] bg-[#436850]/10 text-[#12372A]"
+                            : isDark ? "border-white/08 bg-white/03 text-white/40 hover:border-white/15" : "border-[#ADBC9F] bg-transparent text-[#436850]/60 hover:border-[#436850]"
+                        }`}
+                        style={{ fontFamily: f.family, fontStyle: f.italic ? "italic" : "normal" }}
+                      >
+                        {f.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Heading size */}
+              <div>
+                <div className="flex items-center justify-between mb-1.5">
+                  <span className={`text-[10px] font-semibold ${isDark ? "text-white/40" : "text-[#436850]"}`}>Heading Size</span>
+                  <span className={`text-[10px] font-bold tabular-nums ${isDark ? "text-white/50" : "text-[#12372A]/70"}`}>{headingSize}px</span>
+                </div>
+                <input
+                  aria-label="Heading Size"
+                  type="range"
+                  min={60}
+                  max={200}
+                  step={4}
+                  value={headingSize}
+                  onChange={(e) => setHeadingSize(Number(e.target.value))}
+                  className="w-full h-1.5 rounded-full appearance-none cursor-pointer accent-[#769656]"
+                  style={{ background: `linear-gradient(to right, #769656 ${((headingSize - 60) / 140) * 100}%, rgba(255,255,255,0.12) ${((headingSize - 60) / 140) * 100}%)` }}
+                />
+                <div className={`flex justify-between mt-0.5 text-[9px] ${isDark ? "text-white/20" : "text-[#436850]/50"}`}>
+                  <span>Small</span><span>Default</span><span>Large</span>
+                </div>
+              </div>
+
+              {/* Heading color */}
+              <div>
+                <span className={`text-[10px] font-semibold block mb-1.5 ${isDark ? "text-white/40" : "text-[#436850]"}`}>Heading Colour</span>
+                <div className="flex items-center gap-2">
+                  <input
+                    aria-label="Heading Colour"
+                    type="color"
+                    value={headingColor}
+                    onChange={(e) => setHeadingColor(e.target.value)}
+                    className="w-8 h-8 rounded-lg cursor-pointer border-0 p-0.5 bg-transparent"
+                  />
+                  <div className="flex gap-1.5">
+                    {["#FFFFFF", "#4CAF50", "#39FF14", "#FFD700", "#FF6B35", "#00BFFF"].map((c) => (
+                      <button
+                        key={c}
+                        onClick={() => setHeadingColor(c)}
+                        className="w-6 h-6 rounded-full border-2 transition-all"
+                        style={{
+                          background: c,
+                          borderColor: headingColor === c ? "white" : "transparent",
+                          boxShadow: headingColor === c ? "0 0 0 1px rgba(255,255,255,0.4)" : "none",
+                        }}
+                      />
+                    ))}
+                  </div>
+                </div>
+              </div>
             </div>
 
             {/* ── Save as Custom Template ── */}
@@ -3085,84 +3185,6 @@ export function InstagramCarouselModal({ open, onClose, rows, config, tournament
                     </>
                   )}
                 </button>
-              </div>
-            </div>
-
-            {/* ── Premium Defaults ── */}
-            <div className={`w-full rounded-2xl border p-4 space-y-3 ${isDark ? "border-white/08 bg-white/03" : "border-[#ADBC9F] bg-[#FBFADA]/70"}`}>
-              <div className="flex items-center gap-2">
-                <p className={`text-xs font-bold ${isDark ? "text-white/70" : "text-[#12372A]/85"}`}>Premium Defaults</p>
-                <span className="px-1.5 py-0.5 rounded-md text-[9px] font-bold bg-gradient-to-r from-amber-500/20 to-amber-400/10 text-amber-400 border border-amber-500/20">PRO</span>
-              </div>
-              <p className={`text-[10px] leading-relaxed ${isDark ? "text-white/35" : "text-[#436850]/70"}`}>
-                Curated high-quality templates — one click to apply.
-              </p>
-              <div className="grid grid-cols-4 gap-2">
-                {PREMIUM_DEFAULTS.map((prem, idx) => {
-                  const premTheme = ALL_THEMES.find((t) => t.id === prem.themeId) ?? DEFAULT_THEME;
-                  const premFont = SLIDE_FONTS.find((f) => f.id === prem.headingFontId) ?? DEFAULT_FONT;
-                  const THUMB_SIZE = 64;
-                  const thumbScale = THUMB_SIZE / SLIDE_W;
-                  return (
-                    <button
-                      key={idx}
-                      onClick={() => handleLoadTemplate({ ...prem, id: `premium-${idx}`, createdAt: "" } as CarouselTemplate)}
-                      className={`group relative flex flex-col items-center gap-1.5 rounded-xl p-1.5 border transition-all hover:scale-[1.03] ${
-                        isDark
-                          ? "border-white/06 bg-white/02 hover:border-white/15 hover:bg-white/05"
-                          : "border-[#ADBC9F]/40 bg-white/20 hover:border-[#436850]/40 hover:bg-white/40"
-                      }`}
-                      title={prem.name}
-                    >
-                      {/* Thumbnail */}
-                      <div
-                        className="rounded-lg overflow-hidden"
-                        style={{
-                          width: THUMB_SIZE,
-                          height: THUMB_SIZE,
-                          position: "relative",
-                          border: isDark ? "1px solid rgba(255,255,255,0.06)" : "1px solid rgba(0,0,0,0.06)",
-                        }}
-                      >
-                        <div
-                          style={{
-                            position: "absolute",
-                            top: 0,
-                            left: 0,
-                            transformOrigin: "top left",
-                            transform: `scale(${thumbScale})`,
-                            pointerEvents: "none",
-                            userSelect: "none",
-                          }}
-                        >
-                          <Slide1Cover
-                            rows={rows}
-                            config={config}
-                            tournamentName={tournamentName}
-                            totalRounds={totalRounds}
-                            scale={1}
-                            hostLogoUrl={null}
-                            theme={premTheme}
-                            format="square"
-                            championAvatarUrl={null}
-                            logoScale={1}
-                            logoPosition="center"
-                            headingFont={premFont}
-                            headingSize={prem.headingSize}
-                            headingColor={prem.headingColor}
-                            bodyColor={prem.bodyColor}
-                            bgType={prem.bgType}
-                            bgValue={prem.bgValue}
-                          />
-                        </div>
-                      </div>
-                      {/* Label */}
-                      <span className={`text-[9px] font-bold text-center leading-tight truncate w-full ${
-                        isDark ? "text-white/50 group-hover:text-white/80" : "text-[#436850]/70 group-hover:text-[#12372A]"
-                      }`}>{prem.name}</span>
-                    </button>
-                  );
-                })}
               </div>
             </div>
 
