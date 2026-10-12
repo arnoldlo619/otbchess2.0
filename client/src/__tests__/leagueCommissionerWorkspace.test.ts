@@ -9,7 +9,7 @@ const demoSource = readFileSync(resolve(clientRoot, "pages/LeagueDemo.tsx"), "ut
 describe("League player and commissioner workspace separation", () => {
   it("adds a dedicated commissioner tab only for live League commissioners", () => {
     expect(dashboardSource).toContain('"commissioner" | "matchups"');
-    expect(dashboardSource).toContain('label: "Commissioner", icon: Crown');
+    expect(dashboardSource).toContain('label: "Commissioner", icon: Settings');
     expect(dashboardSource).toContain('data-testid="league-commissioner-workspace"');
     expect(dashboardSource).toContain("Week {league.currentWeek} operations");
   });
@@ -31,10 +31,20 @@ describe("League player and commissioner workspace separation", () => {
 
   it("keeps the interactive demo aligned with the commissioner workflow", () => {
     expect(demoSource).toContain('type TabId = "overview" | "commissioner"');
-    expect(demoSource).toContain('label: "Commissioner", icon: Crown');
+    expect(demoSource).toContain('label: "Commissioner", icon: Settings');
     expect(demoSource).toContain('data-testid="league-demo-commissioner-workspace"');
     expect(demoSource).toContain("Results reported");
-    expect(demoSource).toContain("Generate Week 15");
+    expect(demoSource).toContain('data-testid="league-demo-advance-ready-footer"');
+    expect(demoSource).toContain("Advance to Week 15");
+    expect(demoSource).toContain('setSelectedScheduleWeek(15); setActiveTab("schedule");');
     expect(demoSource).not.toContain("{/* Compact Standings Preview */}");
+  });
+
+  it("reveals the sticky next-week action only after the active League week is complete", () => {
+    expect(dashboardSource).toContain('data-testid="league-advance-ready-footer"');
+    expect(dashboardSource).toContain('currentWeekMatches.every((match) => match.resultStatus === "completed")');
+    expect(dashboardSource).toContain('sticky bottom-3 z-20');
+    expect(dashboardSource).toContain("All board results are reported. Generate the next week when you are ready.");
+    expect(dashboardSource).not.toContain("Commissioner Controls");
   });
 });

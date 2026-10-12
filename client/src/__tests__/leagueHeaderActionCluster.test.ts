@@ -15,15 +15,16 @@ const heroSource = dashboardSource.slice(
 );
 
 describe("League commissioner header action cluster", () => {
-  it("embeds active-season commissioner controls in the League hero instead of a separate desktop bar", () => {
+  it("embeds one active-season Commissioner entry in the League hero instead of duplicate actions", () => {
     expect(topBarSource).toContain("lg:hidden");
     expect(heroSource).toContain('data-testid="league-dashboard-header-actions"');
     expect(heroSource).toContain('absolute left-1/2 top-1/2 hidden -translate-x-1/2 -translate-y-1/2');
     expect(heroSource).toContain("league.status === \"active\" ? (");
-    expect(heroSource).toContain("Commissioner");
-    expect(heroSource).toContain(">\n                        Report");
-    expect(heroSource).toContain(">\n                        Advance");
-    expect(heroSource).not.toContain("Report Results");
+    expect(heroSource).toContain('aria-label="Open Commissioner workspace"');
+    expect(heroSource).toContain(">\n                        Commissioner");
+    expect(heroSource).not.toContain(">\n                        Report");
+    expect(heroSource).not.toContain(">\n                        Advance");
+    expect(heroSource).not.toContain("<Crown size");
     expect(heroSource).not.toContain("Live · Week");
     expect(heroSource).toContain('league.status !== "active" ? (');
   });
@@ -37,8 +38,8 @@ describe("League commissioner header action cluster", () => {
     expect(heroSource).toContain('{ label: "Week", value: `${league.currentWeek}/${league.totalWeeks}` }');
   });
 
-  it("gives Report the primary treatment and preserves direct mobile controls", () => {
-    expect(heroSource).toContain('aria-label="Report League Result"');
+  it("gives Commissioner the primary treatment and preserves direct mobile access", () => {
+    expect(heroSource).toContain('aria-label="Open Commissioner workspace"');
     expect(heroSource).toContain('linear-gradient(135deg, ${accent}, oklch(0.51 0.15 145))');
     expect(topBarSource).toContain('className="ml-auto flex items-center gap-1.5 lg:hidden"');
     expect(topBarSource).toContain("min-h-11 min-w-11");
@@ -57,7 +58,7 @@ describe("League commissioner header action cluster", () => {
     expect(overviewSource).toContain("<Binoculars size={16} />");
     expect(overviewSource).not.toContain("My Standing");
     expect(commissionerSource).toContain("Commissioner workspace");
-    expect(commissionerSource).toContain("<Crown size={15}");
+    expect(commissionerSource).toContain("<Settings size={15}");
   });
 
   it("uses a reduced-motion-safe gradient glow interaction rather than continuous animation", () => {
@@ -65,6 +66,7 @@ describe("League commissioner header action cluster", () => {
     expect(styleSource).toContain("linear-gradient(112deg");
     expect(styleSource).toContain("@media (hover: hover)");
     expect(styleSource).toContain(".league-header-action:focus-visible");
+    expect(styleSource).toContain(".league-advance-footer__button");
     expect(styleSource).toContain("@media (prefers-reduced-motion: reduce)");
   });
 });

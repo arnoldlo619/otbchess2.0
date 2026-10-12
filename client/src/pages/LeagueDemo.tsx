@@ -12,7 +12,7 @@ import { useAuthContext } from "@/context/AuthContext";
 import AuthModal from "@/components/AuthModal";
 import {
   Trophy, Users as _Users, Calendar, BarChart3 as _BarChart3, ListOrdered as _ListOrdered,
-  Clock, Swords as _Swords, Target as _Target, ArrowLeft, Crown,
+  Clock, Swords as _Swords, Target as _Target, ArrowLeft, Crown, Settings,
   History as _History, Shield as _Shield, Plus, Users2,
 } from "lucide-react";
 import {
@@ -164,7 +164,7 @@ type TabId = "overview" | "commissioner" | "matchup" | "standings" | "schedule" 
 
 const TABS: { id: TabId; label: string; icon: React.ComponentType<{ size?: number }> }[] = [
   { id: "overview",  label: "Overview",   icon: DashboardIcon },
-  { id: "commissioner", label: "Commissioner", icon: Crown },
+  { id: "commissioner", label: "Commissioner", icon: Settings },
   { id: "matchup",   label: "Matchup",    icon: BattleIcon },
   { id: "standings", label: "Standings",  icon: RatingIcon },
   { id: "schedule",  label: "Schedule",   icon: EventsIcon },
@@ -673,7 +673,7 @@ export default function LeagueDemo() {
                   <section className="rounded-2xl overflow-hidden" style={{ background: cardBg, border: `1.5px solid ${accent}55` }}>
                     <div className="flex flex-col gap-4 px-5 py-5 sm:flex-row sm:items-center sm:justify-between" style={{ background: isDark ? "linear-gradient(135deg, oklch(0.23 0.08 145), oklch(0.18 0.05 145))" : "linear-gradient(135deg, oklch(0.93 0.07 145), #fff)" }}>
                       <div>
-                        <div className="flex items-center gap-2"><Crown size={15} style={{ color: accent }} /><p className="text-xs font-bold uppercase tracking-[0.14em]" style={{ color: accent }}>Commissioner workspace</p></div>
+                        <div className="flex items-center gap-2"><Settings size={15} style={{ color: accent }} /><p className="text-xs font-bold uppercase tracking-[0.14em]" style={{ color: accent }}>Commissioner workspace</p></div>
                         <h2 className="mt-2 text-xl font-black tracking-tight" style={{ color: textMain }}>Week 14 operations</h2>
                         <p className="mt-1 text-sm" style={{ color: textMuted }}>Report each board, review the completed week, then generate the next set of matchups.</p>
                       </div>
@@ -705,8 +705,22 @@ export default function LeagueDemo() {
                         );
                       })}
                     </div>
-                    <div className="flex flex-col gap-3 px-5 py-4 sm:flex-row sm:items-center sm:justify-between" style={{ background: `${accent}08`, borderTop: `1px solid ${accent}18` }}><p className="text-sm" style={{ color: textMuted }}>{allReported ? "All board results are reported. The next week can be generated." : "Report every board to unlock next week generation."}</p><button disabled={!allReported} className="min-h-11 rounded-xl px-4 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-45" style={{ background: accent, color: "#fff" }}>Generate Week 15</button></div>
                   </section>
+                  {allReported && (
+                    <div
+                      data-testid="league-demo-advance-ready-footer"
+                      role="status"
+                      aria-live="polite"
+                      className="league-advance-footer sticky bottom-3 z-20 flex flex-col items-start justify-between gap-3 rounded-2xl p-4 sm:flex-row sm:items-center"
+                      style={{ background: isDark ? "oklch(0.22 0.07 145 / 0.96)" : "oklch(0.96 0.04 145 / 0.96)", border: `1.5px solid ${accent}66` }}
+                    >
+                      <div>
+                        <p className="flex items-center gap-1.5 text-sm font-semibold" style={{ color: textMain }}><Trophy size={14} style={{ color: accent }} />Week 14 complete</p>
+                        <p className="mt-0.5 text-xs" style={{ color: textMuted }}>All board results are reported. Review Week 15 matchups next.</p>
+                      </div>
+                      <button type="button" onClick={() => { setSelectedScheduleWeek(15); setActiveTab("schedule"); }} className="league-advance-footer__button inline-flex min-h-11 items-center gap-2 rounded-xl px-4 text-sm font-bold" style={{ background: accent, color: "#fff" }}><span>Advance to Week 15</span><span aria-hidden="true">→</span></button>
+                    </div>
+                  )}
                 </div>
               );
             })()}

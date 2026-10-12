@@ -1879,9 +1879,9 @@ select {
   scrollbar-gutter: stable;
 }
 
-/* ── Club League commissioner header actions ───────────────────────────────
- * A single, restrained hover treatment keeps the operational header readable
- * while making the report/advance path discoverable without a looping effect.
+/* ── Club League commissioner actions ─────────────────────────────────────
+ * A single, restrained hover treatment keeps the operational entry point
+ * discoverable without competing header controls or continuous motion.
  */
 .league-header-action {
   position: relative;
@@ -1945,10 +1945,35 @@ select {
   outline-offset: 3px;
 }
 
+/* Render only after every active-week board is reported. The sticky surface
+ * preserves the final next step without obscuring the result ledger. */
+.league-advance-footer {
+  box-shadow: 0 14px 34px rgba(7, 31, 15, 0.26), 0 0 26px rgba(124, 245, 98, 0.14);
+  backdrop-filter: blur(14px);
+}
+
+.league-advance-footer__button {
+  box-shadow: 0 7px 18px rgba(23, 105, 51, 0.32), 0 0 16px rgba(124, 245, 98, 0.2);
+  transition: transform 180ms cubic-bezier(0.22, 1, 0.36, 1), box-shadow 180ms ease-out;
+}
+
+@media (hover: hover) {
+  .league-advance-footer__button:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 10px 22px rgba(23, 105, 51, 0.38), 0 0 22px rgba(124, 245, 98, 0.28);
+  }
+}
+
+.league-advance-footer__button:focus-visible {
+  outline: 2px solid oklch(0.78 0.18 145);
+  outline-offset: 3px;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .league-header-action,
   .league-header-action::before,
-  .league-header-action::after {
+  .league-header-action::after,
+  .league-advance-footer__button {
     transition-duration: 0.01ms;
   }
 }

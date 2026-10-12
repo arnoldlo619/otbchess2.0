@@ -1293,7 +1293,7 @@ export default function LeagueDashboard() {
 
   const tabs = [
     { id: "overview" as const, label: "Overview", icon: DashboardIcon },
-    ...(isCommissioner ? [{ id: "commissioner" as const, label: "Commissioner", icon: Crown }] : []),
+    ...(isCommissioner ? [{ id: "commissioner" as const, label: "Commissioner", icon: Settings }] : []),
     { id: "matchups" as const, label: "Matchups", icon: BattleIcon },
     { id: "standings" as const, label: "Standings", icon: RatingIcon },
     { id: "schedule" as const, label: "Schedule", icon: EventsIcon },
@@ -1436,27 +1436,18 @@ export default function LeagueDashboard() {
               <span className="block whitespace-nowrap text-base font-bold" style={{ color: "#ffffff" }}>ChessOTB Club League</span>
             </div>
 
-            {/* Mobile commissioner controls retain direct tap access within the compact header. */}
+            {/* Mobile keeps one direct path into Commissioner operations. */}
             <div className="ml-auto flex items-center gap-1.5 lg:hidden">
               {isCommissioner && league.status === "active" && (
-                <>
-                  <button
-                    onClick={() => { setSelectedWeek(league.currentWeek); setActiveTab("commissioner"); }}
-                    className="league-header-action flex min-h-11 min-w-11 items-center justify-center rounded-xl border"
-                    style={{ background: accent, color: "oklch(0.98 0.01 145)", borderColor: `${accent}99` }}
-                    aria-label="Report League Result"
-                  >
-                    <span className="league-header-action__content"><CheckCircle2 size={17} aria-hidden="true" /></span>
-                  </button>
-                  <button
-                    onClick={() => { setSelectedWeek(league.currentWeek); setActiveTab("commissioner"); }}
-                    className="league-header-action flex min-h-11 min-w-11 items-center justify-center rounded-xl border"
-                    style={{ background: isDark ? "oklch(0.22 0.07 145)" : "#f3f4f6", color: textMain, borderColor: `${accent}66` }}
-                    aria-label="Close current week and advance"
-                  >
-                    <span className="league-header-action__content"><ChevronRight size={18} aria-hidden="true" /></span>
-                  </button>
-                </>
+                <button
+                  onClick={() => { setSelectedWeek(league.currentWeek); setActiveTab("commissioner"); }}
+                  className="league-header-action flex min-h-11 min-w-11 items-center justify-center rounded-xl border"
+                  style={{ background: accent, color: "oklch(0.98 0.01 145)", borderColor: `${accent}99` }}
+                  aria-label="Open Commissioner workspace"
+                  title="Commissioner"
+                >
+                  <span className="league-header-action__content"><Settings size={17} aria-hidden="true" /></span>
+                </button>
               )}
             </div>
           </div>
@@ -1497,33 +1488,17 @@ export default function LeagueDashboard() {
                 className="absolute left-1/2 top-1/2 hidden -translate-x-1/2 -translate-y-1/2 items-center justify-center lg:flex"
               >
                 {isCommissioner && league.status === "active" ? (
-                  <div className="flex items-center gap-2">
-                    <span className="flex min-h-9 items-center gap-1.5 px-2 text-[11px] font-bold uppercase tracking-[0.12em] select-none" style={{ color: "oklch(0.88 0.15 80)" }}>
-                      <Crown size={12} aria-hidden="true" />
-                      Commissioner
-                    </span>
+                  <div className="flex items-center">
                     <button
                       onClick={() => { setSelectedWeek(league.currentWeek); setActiveTab("commissioner"); }}
                       className="league-header-action min-h-10 rounded-xl border px-4 text-sm font-bold"
                       style={{ background: `linear-gradient(135deg, ${accent}, oklch(0.51 0.15 145))`, color: "oklch(0.98 0.01 145)", borderColor: `${accent}99` }}
-                      title="Report results"
-                      aria-label="Report League Result"
+                      title="Open Commissioner workspace"
+                      aria-label="Open Commissioner workspace"
                     >
                       <span className="league-header-action__content flex items-center gap-2">
-                        <CheckCircle2 size={15} aria-hidden="true" />
-                        Report
-                      </span>
-                    </button>
-                    <button
-                      onClick={() => { setSelectedWeek(league.currentWeek); setActiveTab("commissioner"); }}
-                      className="league-header-action min-h-10 rounded-xl border px-4 text-sm font-semibold"
-                      style={{ background: isDark ? "oklch(0.22 0.07 145)" : "#f3f4f6", color: textMain, borderColor: `${accent}66` }}
-                      title="Close Week and Advance"
-                      aria-label="Close current week and advance"
-                    >
-                      <span className="league-header-action__content flex items-center gap-2">
-                        <ChevronRight size={16} aria-hidden="true" />
-                        Advance
+                        <Settings size={15} aria-hidden="true" />
+                        Commissioner
                       </span>
                     </button>
                   </div>
@@ -2170,7 +2145,7 @@ export default function LeagueDashboard() {
               <div className="flex flex-col gap-4 px-5 py-5 sm:flex-row sm:items-center sm:justify-between" style={{ background: isDark ? "linear-gradient(135deg, oklch(0.23 0.08 145), oklch(0.18 0.05 145))" : "linear-gradient(135deg, oklch(0.93 0.07 145), #fff)" }}>
                 <div>
                   <div className="flex items-center gap-2">
-                    <span className="flex h-8 w-8 items-center justify-center rounded-xl" style={{ background: `${accent}22`, color: accent }}><Crown size={15} aria-hidden="true" /></span>
+                    <span className="flex h-8 w-8 items-center justify-center rounded-xl" style={{ background: `${accent}22`, color: accent }}><Settings size={15} aria-hidden="true" /></span>
                     <p className="text-xs font-bold uppercase tracking-[0.14em]" style={{ color: accent }}>Commissioner workspace</p>
                   </div>
                   <h2 className="mt-2 text-xl font-black tracking-tight" style={{ color: textMain }}>Week {league.currentWeek} operations</h2>
@@ -2760,28 +2735,28 @@ export default function LeagueDashboard() {
               )}
             </div>
 
-            {/* Commissioner: Advance Week button */}
-            {isCommissioner && activeTab === "commissioner" && league.status === "active" && league.currentWeek < league.totalWeeks && selectedWeek === league.currentWeek && (
+            {/* Appears only after the Commissioner has completed every board in the active week. */}
+            {isCommissioner && activeTab === "commissioner" && league.status === "active" && league.currentWeek < league.totalWeeks && selectedWeek === league.currentWeek && currentWeekMatches.length > 0 && currentWeekMatches.every((match) => match.resultStatus === "completed") && (
               <div
-                className="rounded-2xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3"
-                style={{ background: isDark ? "oklch(0.22 0.07 145)" : "#f0fdf4", border: `1.5px solid ${accent}44` }}
+                data-testid="league-advance-ready-footer"
+                role="status"
+                aria-live="polite"
+                className="league-advance-footer sticky bottom-3 z-20 rounded-2xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3"
+                style={{ background: isDark ? "oklch(0.22 0.07 145 / 0.96)" : "oklch(0.96 0.04 145 / 0.96)", border: `1.5px solid ${accent}66` }}
               >
                 <div className="flex flex-col gap-0.5">
                   <span className="text-sm font-semibold flex items-center gap-1.5" style={{ color: textMain }}>
-                    <Crown size={14} style={{ color: accent }} />
-                    Commissioner Controls
+                    <CheckCircle2 size={14} style={{ color: accent }} />
+                    Week {league.currentWeek} complete
                   </span>
                   <span className="text-xs" style={{ color: textMuted }}>
-                    {weeks.find(w => w.weekNumber === league.currentWeek)?.matches.every(m => m.resultStatus === "completed")
-                      ? `All Week ${league.currentWeek} results reported — ready to advance.`
-                      : `${currentWeekMatches.filter(m => m.resultStatus === "completed").length}/${currentWeekMatches.length} matches reported in Week ${league.currentWeek}.`
-                    }
+                    All board results are reported. Generate the next week when you are ready.
                   </span>
                 </div>
                 <button
                   onClick={() => setShowAdvanceConfirm(true)}
                   disabled={advancingWeek}
-                  className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all active:scale-95 disabled:opacity-50 flex-shrink-0"
+                  className="league-advance-footer__button flex min-h-11 items-center gap-2 rounded-xl px-4 py-2 text-sm font-bold active:scale-95 disabled:opacity-50 flex-shrink-0"
                   style={{ background: accent, color: "#fff" }}
                 >
                   {advancingWeek ? (
