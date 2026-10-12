@@ -6,42 +6,42 @@
  */
 .league-content-scale .text-\[9px\],
 .league-content-scale .text-\[10px\] {
-  font-size: 0.75rem;
-  line-height: 1rem;
-}
-
-.league-content-scale .text-\[11px\],
-.league-content-scale .text-xs {
   font-size: 0.8125rem;
   line-height: 1.125rem;
 }
 
+.league-content-scale .text-\[11px\],
+.league-content-scale .text-xs {
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+}
+
 .league-content-scale .text-sm {
-  font-size: 0.9375rem;
-  line-height: 1.375rem;
+  font-size: 1rem;
+  line-height: 1.5rem;
 }
 
 .league-content-scale .text-base {
-  font-size: 1rem;
-  line-height: 1.5rem;
+  font-size: 1.0625rem;
+  line-height: 1.625rem;
 }
 
 @media (min-width: 1024px) {
   .league-content-scale .text-\[9px\],
   .league-content-scale .text-\[10px\] {
-    font-size: 0.8125rem;
-    line-height: 1.125rem;
-  }
-
-  .league-content-scale .text-\[11px\],
-  .league-content-scale .text-xs {
     font-size: 0.875rem;
     line-height: 1.25rem;
   }
 
+  .league-content-scale .text-\[11px\],
+  .league-content-scale .text-xs {
+    font-size: 0.9375rem;
+    line-height: 1.375rem;
+  }
+
   .league-content-scale .text-sm {
-    font-size: 1rem;
-    line-height: 1.5rem;
+    font-size: 1.0625rem;
+    line-height: 1.625rem;
   }
 
   .league-content-scale .text-base {
@@ -50,11 +50,163 @@
   }
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .league-content-scale *,
-  .league-content-scale *::before,
-  .league-content-scale *::after {
-    scroll-behavior: auto;
+/*
+ * Dashboard hierarchy
+ *
+ * A quiet, reusable context band keeps every League tab oriented before the
+ * data surface begins. The treatment is intentionally structural rather than
+ * decorative: one page title, two high-signal metrics, then the working list.
+ */
+.league-page-intro {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1.25rem;
+  border: 1px solid rgba(49, 123, 76, 0.20);
+  border-radius: 1.25rem;
+  background:
+    linear-gradient(138deg, rgba(49, 123, 76, 0.13), rgba(49, 123, 76, 0.035) 58%, transparent),
+    rgba(255, 255, 255, 0.34);
+  box-shadow: 0 10px 28px rgba(15, 40, 22, 0.055);
+}
+
+.league-page-intro::before {
+  position: absolute;
+  inset: auto -12% -84% 42%;
+  z-index: -1;
+  width: 15rem;
+  height: 15rem;
+  border-radius: 999px;
+  background: radial-gradient(circle, rgba(115, 222, 103, 0.17), transparent 69%);
+  content: "";
+  pointer-events: none;
+}
+
+.dark .league-page-intro,
+.league-content-scale--dark .league-page-intro {
+  border-color: rgba(122, 245, 98, 0.18);
+  background:
+    linear-gradient(138deg, rgba(89, 190, 85, 0.16), rgba(16, 52, 26, 0.22) 58%, rgba(5, 25, 12, 0.10)),
+    oklch(0.19 0.06 145);
+  box-shadow: 0 12px 30px rgba(0, 9, 3, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.045);
+}
+
+.dark .league-page-intro::before,
+.league-content-scale--dark .league-page-intro::before {
+  background: radial-gradient(circle, rgba(124, 245, 98, 0.18), transparent 69%);
+}
+
+.league-page-intro__eyebrow {
+  color: var(--league-accent, oklch(0.50 0.14 145));
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  line-height: 1rem;
+  text-transform: uppercase;
+}
+
+.league-page-intro__title {
+  margin-top: 0.25rem;
+  color: var(--league-text-main, currentColor);
+  font-size: clamp(1.25rem, 2vw, 1.5rem);
+  font-weight: 800;
+  letter-spacing: -0.025em;
+  line-height: 1.25;
+}
+
+.league-page-intro__description {
+  max-width: 42rem;
+  margin-top: 0.35rem;
+  color: var(--league-text-muted, currentColor);
+  font-size: 0.9375rem;
+  line-height: 1.45;
+}
+
+.league-page-intro__metrics {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.5rem;
+}
+
+.league-page-intro__metric {
+  min-width: 0;
+  padding: 0.7rem 0.8rem;
+  border: 1px solid rgba(49, 123, 76, 0.16);
+  border-radius: 0.9rem;
+  background: rgba(255, 255, 255, 0.36);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.62);
+  transition: transform 180ms ease, box-shadow 180ms ease;
+}
+
+.dark .league-page-intro__metric,
+.league-content-scale--dark .league-page-intro__metric {
+  border-color: rgba(220, 255, 220, 0.10);
+  background: oklch(0.22 0.06 145);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.045);
+}
+
+.league-page-intro__metric-label {
+  color: var(--league-text-muted, currentColor);
+  font-size: 0.6875rem;
+  font-weight: 800;
+  letter-spacing: 0.105em;
+  line-height: 1rem;
+  text-transform: uppercase;
+}
+
+.league-page-intro__metric-value {
+  overflow: hidden;
+  margin-top: 0.15rem;
+  color: var(--league-text-main, currentColor);
+  font-size: 1rem;
+  font-weight: 800;
+  letter-spacing: -0.015em;
+  line-height: 1.3;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.league-operations-panel {
+  box-shadow: 0 14px 32px rgba(15, 40, 22, 0.075);
+}
+
+.league-data-surface {
+  box-shadow: 0 9px 24px rgba(15, 40, 22, 0.045);
+  transition: box-shadow 200ms ease, transform 200ms ease;
+}
+
+.league-data-surface:focus-within {
+  outline: 2px solid rgba(49, 123, 76, 0.58);
+  outline-offset: 3px;
+}
+
+@media (min-width: 640px) {
+  .league-page-intro {
+    flex-direction: row;
+    align-items: end;
+    justify-content: space-between;
+    gap: 1.5rem;
+    padding: 1.35rem 1.5rem;
+  }
+
+  .league-page-intro__metrics {
+    width: min(19rem, 44%);
+    flex: 0 0 auto;
+  }
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .league-page-intro__metric:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 7px 16px rgba(15, 40, 22, 0.07), inset 0 1px 0 rgba(255, 255, 255, 0.7);
+  }
+
+  .league-data-surface:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 14px 30px rgba(15, 40, 22, 0.075);
   }
 }
 
@@ -91,10 +243,20 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .league-content-scale *,
+  .league-content-scale *::before,
+  .league-content-scale *::after {
+    scroll-behavior: auto;
+  }
+
+  .league-page-intro__metric,
+  .league-data-surface,
   .league-matchup-card {
     transition: none;
   }
 
+  .league-page-intro__metric:hover,
+  .league-data-surface:hover,
   .league-matchup-card:hover,
   .league-matchup-card:active {
     transform: none;

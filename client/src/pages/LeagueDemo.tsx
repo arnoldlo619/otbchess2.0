@@ -4,7 +4,7 @@
  * using popular chess.com usernames as mock players.
  * Mirrors the exact UI design system of LeagueDashboard.tsx.
  */
-import { useState, useEffect } from "react";
+import { useState, useEffect, type CSSProperties } from "react";
 import { useChessAvatars } from "@/hooks/useChessAvatar";
 import { useLocation } from "wouter";
 import { useTheme } from "@/contexts/ThemeContext";
@@ -173,8 +173,8 @@ const TABS: { id: TabId; label: string; icon: React.ComponentType<{ size?: numbe
 
 export default function LeagueDemo() {
   const [, navigate] = useLocation();
-  const themeCtx = useTheme();
-  const isDark = (themeCtx as { isDark?: boolean }).isDark ?? true;
+  const { theme } = useTheme();
+  const isDark = theme === "dark";
   const [activeTab, setActiveTab] = useState<TabId>("standings");
   const [standingsView, setStandingsView] = useState<"table" | "bracket">("bracket");
   const [selectedScheduleWeek, setSelectedScheduleWeek] = useState(14);
@@ -458,17 +458,31 @@ export default function LeagueDemo() {
           </div>
 
           {/* ── SCROLLABLE CONTENT ────────────────────────────────────────── */}
-          <div className="league-content-scale flex-1">
+          <div className={`league-content-scale ${isDark ? "league-content-scale--dark" : ""} flex-1`}>
 
             {/* ── OVERVIEW TAB ──────────────────────────────────────────────── */}
             {activeTab === "overview" && (
               <div className="flex">
                 {/* Main content */}
                 <div data-testid="league-demo-content-shell" className="flex-1 px-4 pt-0 pb-4 lg:px-6 lg:pt-0 lg:pb-6 space-y-5">
-
+                  <section
+                    data-testid="league-demo-overview-context"
+                    className="league-page-intro"
+                    style={{ "--league-accent": accent, "--league-text-main": textMain, "--league-text-muted": textMuted } as CSSProperties}
+                  >
+                    <div>
+                      <p className="league-page-intro__eyebrow">Player dashboard</p>
+                      <h2 className="league-page-intro__title">Your week at a glance</h2>
+                      <p className="league-page-intro__description">A focused player view for the active matchup and the decisions that matter before you play.</p>
+                    </div>
+                    <div className="league-page-intro__metrics" aria-label="Demo League overview">
+                      <div className="league-page-intro__metric"><p className="league-page-intro__metric-label">Current week</p><p className="league-page-intro__metric-value">14 of 16</p></div>
+                      <div className="league-page-intro__metric"><p className="league-page-intro__metric-label">Matchups</p><p className="league-page-intro__metric-value">{CURRENT_WEEK_MATCHUPS.length} boards</p></div>
+                    </div>
+                  </section>
                   {/* Featured Matchup Hero */}
                   <div
-                    className="league-matchup-card rounded-2xl overflow-hidden"
+                    className="league-matchup-card league-data-surface rounded-2xl overflow-hidden"
                     style={{ background: cardBg, border: `1px solid ${cardBorder}` }}
                   >
                     <div className="px-5 py-4 flex items-center justify-between" style={{ borderBottom: `1px solid ${cardBorder}` }}>
@@ -670,7 +684,7 @@ export default function LeagueDemo() {
               const allReported = reportedCount === CURRENT_WEEK_MATCHUPS.length;
               return (
                 <div data-testid="league-demo-commissioner-workspace" className="mx-auto max-w-4xl space-y-5 px-4 pb-4 lg:px-6 lg:pb-6">
-                  <section className="rounded-2xl overflow-hidden" style={{ background: cardBg, border: `1.5px solid ${accent}55` }}>
+                  <section className="league-operations-panel rounded-2xl overflow-hidden" style={{ background: cardBg, border: `1.5px solid ${accent}55` }}>
                     <div className="flex flex-col gap-4 px-5 py-5 sm:flex-row sm:items-center sm:justify-between" style={{ background: isDark ? "linear-gradient(135deg, oklch(0.23 0.08 145), oklch(0.18 0.05 145))" : "linear-gradient(135deg, oklch(0.93 0.07 145), #fff)" }}>
                       <div>
                         <div className="flex items-center gap-2"><Settings size={15} style={{ color: accent }} /><p className="text-xs font-bold uppercase tracking-[0.14em]" style={{ color: accent }}>Commissioner workspace</p></div>
@@ -684,7 +698,7 @@ export default function LeagueDemo() {
                     </div>
                   </section>
 
-                  <section className="overflow-hidden rounded-2xl" style={{ background: cardBg, border: `1px solid ${cardBorder}` }}>
+                  <section className="league-data-surface overflow-hidden rounded-2xl" style={{ background: cardBg, border: `1px solid ${cardBorder}` }}>
                     <div className="flex items-center justify-between px-5 py-4" style={{ borderBottom: `1px solid ${cardBorder}` }}>
                       <div><p className="text-xs font-bold uppercase tracking-[0.14em]" style={{ color: accent }}>Active week</p><h2 className="mt-1 text-lg font-bold" style={{ color: textMain }}>Board reporting</h2></div>
                       <span className="rounded-full px-2.5 py-1 text-xs font-semibold" style={{ background: allReported ? `${accent}22` : "oklch(0.55 0.15 60 / 0.18)", color: allReported ? accent : "oklch(0.65 0.15 60)" }}>{allReported ? "Ready to advance" : "Results pending"}</span>
@@ -728,6 +742,21 @@ export default function LeagueDemo() {
             {/* ── MATCHUP TAB ───────────────────────────────────────────────── */}
             {activeTab === "matchup" && (
               <div className="px-4 pt-0 pb-4 lg:px-6 lg:pt-0 lg:pb-6 max-w-3xl mx-auto space-y-5">
+                <section
+                  data-testid="league-demo-matchup-context"
+                  className="league-page-intro"
+                  style={{ "--league-accent": accent, "--league-text-main": textMain, "--league-text-muted": textMuted } as CSSProperties}
+                >
+                  <div>
+                    <p className="league-page-intro__eyebrow">Match center</p>
+                    <h2 className="league-page-intro__title">Your active board</h2>
+                    <p className="league-page-intro__description">Review colors, ratings, head-to-head context, and recent League form before the clock starts.</p>
+                  </div>
+                  <div className="league-page-intro__metrics" aria-label="Active matchup summary">
+                    <div className="league-page-intro__metric"><p className="league-page-intro__metric-label">Week</p><p className="league-page-intro__metric-value">14</p></div>
+                    <div className="league-page-intro__metric"><p className="league-page-intro__metric-label">Time control</p><p className="league-page-intro__metric-value">90m + 30s</p></div>
+                  </div>
+                </section>
                 {/* Hero card */}
                 <div
                   className="league-matchup-card rounded-2xl overflow-hidden"
@@ -854,7 +883,22 @@ export default function LeagueDemo() {
 
             {/* ── STANDINGS TAB ─────────────────────────────────────────────── */}
             {activeTab === "standings" && (
-              <div className="px-4 pt-0 pb-4 lg:px-6 lg:pt-0 lg:pb-6">
+              <div className="px-4 pt-0 pb-4 lg:px-6 lg:pt-0 lg:pb-6 space-y-5">
+                <section
+                  data-testid="league-demo-standings-context"
+                  className="league-page-intro"
+                  style={{ "--league-accent": accent, "--league-text-main": textMain, "--league-text-muted": textMuted } as CSSProperties}
+                >
+                  <div>
+                    <p className="league-page-intro__eyebrow">Season table</p>
+                    <h2 className="league-page-intro__title">League standings</h2>
+                    <p className="league-page-intro__description">Rankings keep points, form, and player profile access in one clear comparison view.</p>
+                  </div>
+                  <div className="league-page-intro__metrics" aria-label="Demo League standings summary">
+                    <div className="league-page-intro__metric"><p className="league-page-intro__metric-label">Players</p><p className="league-page-intro__metric-value">{DEMO_PLAYERS.length}</p></div>
+                    <div className="league-page-intro__metric"><p className="league-page-intro__metric-label">Leader</p><p className="league-page-intro__metric-value">{DEMO_PLAYERS[0].points} pts</p></div>
+                  </div>
+                </section>
                 {/* Standings subtab toggle */}
                 <div className="flex items-center gap-2 mb-4">
                   {(["table", "bracket"] as const).map((sub) => (
@@ -878,7 +922,7 @@ export default function LeagueDemo() {
                 </div>
 
                 {standingsView === "bracket" && (
-                  <div className="rounded-2xl overflow-hidden" style={{ background: cardBg, border: `1px solid ${cardBorder}` }}>
+                  <div className="league-data-surface rounded-2xl overflow-hidden" style={{ background: cardBg, border: `1px solid ${cardBorder}` }}>
                     <div className="px-4 pt-4 pb-2">
                       <div className="flex items-center justify-between">
                         <div>
@@ -903,7 +947,7 @@ export default function LeagueDemo() {
                 )}
 
                 {standingsView === "table" && (
-                <div className="rounded-2xl overflow-hidden" style={{ background: cardBg, border: `1px solid ${cardBorder}` }}>
+                <div className="league-data-surface rounded-2xl overflow-hidden" style={{ background: cardBg, border: `1px solid ${cardBorder}` }}>
                   {/* Header */}
                   <div
                   className="hidden sm:grid items-center px-4 py-3 text-xs font-bold uppercase tracking-widest"
@@ -1084,6 +1128,21 @@ export default function LeagueDemo() {
             {/* ── SCHEDULE TAB ──────────────────────────────────────────────── */}
             {activeTab === "schedule" && (
               <div className="px-4 pt-0 pb-4 lg:px-6 lg:pt-0 lg:pb-6 space-y-5">
+                <section
+                  data-testid="league-demo-schedule-context"
+                  className="league-page-intro"
+                  style={{ "--league-accent": accent, "--league-text-main": textMain, "--league-text-muted": textMuted } as CSSProperties}
+                >
+                  <div>
+                    <p className="league-page-intro__eyebrow">Season planner</p>
+                    <h2 className="league-page-intro__title">League schedule</h2>
+                    <p className="league-page-intro__description">Move from the month view into a concise selected-week board list without losing season context.</p>
+                  </div>
+                  <div className="league-page-intro__metrics" aria-label="Demo League schedule summary">
+                    <div className="league-page-intro__metric"><p className="league-page-intro__metric-label">Selected</p><p className="league-page-intro__metric-value">Week {selectedScheduleWeek}</p></div>
+                    <div className="league-page-intro__metric"><p className="league-page-intro__metric-label">Season</p><p className="league-page-intro__metric-value">14/16 weeks</p></div>
+                  </div>
+                </section>
                 <LeagueMonthCalendar
                   leagueName="Demo League"
                   seasonStartAt={demoSeasonStart.toISOString()}
@@ -1100,7 +1159,7 @@ export default function LeagueDemo() {
                   cardBorder={cardBorder}
                 />
 
-                <section className="rounded-2xl overflow-hidden" style={{ background: cardBg, border: `1px solid ${cardBorder}` }} aria-labelledby="demo-schedule-week-details">
+                <section className="league-data-surface rounded-2xl overflow-hidden" style={{ background: cardBg, border: `1px solid ${cardBorder}` }} aria-labelledby="demo-schedule-week-details">
                   <div className="flex flex-col gap-3 px-4 py-4 sm:flex-row sm:items-center sm:justify-between" style={{ borderBottom: `1px solid ${cardBorder}` }}>
                     <div>
                       <p className="text-xs font-semibold uppercase tracking-[0.14em]" style={{ color: accent }}>Selected schedule</p>
@@ -1133,8 +1192,23 @@ export default function LeagueDemo() {
 
             {/* ── HISTORY TAB ───────────────────────────────────────────────── */}
             {activeTab === "history" && (
-              <div className="px-4 pt-0 pb-4 lg:px-6 lg:pt-0 lg:pb-6 space-y-4">
-                <div className="rounded-2xl p-6 text-center" style={{ background: cardBg, border: `1px solid ${cardBorder}` }}>
+              <div className="px-4 pt-0 pb-4 lg:px-6 lg:pt-0 lg:pb-6 space-y-5">
+                <section
+                  data-testid="league-demo-history-context"
+                  className="league-page-intro"
+                  style={{ "--league-accent": accent, "--league-text-main": textMain, "--league-text-muted": textMuted } as CSSProperties}
+                >
+                  <div>
+                    <p className="league-page-intro__eyebrow">Season archive</p>
+                    <h2 className="league-page-intro__title">Results and champions</h2>
+                    <p className="league-page-intro__description">Keep the current season status visible while making completed League history easy to scan.</p>
+                  </div>
+                  <div className="league-page-intro__metrics" aria-label="Demo League history summary">
+                    <div className="league-page-intro__metric"><p className="league-page-intro__metric-label">Current season</p><p className="league-page-intro__metric-value">Season 4</p></div>
+                    <div className="league-page-intro__metric"><p className="league-page-intro__metric-label">Remaining</p><p className="league-page-intro__metric-value">2 weeks</p></div>
+                  </div>
+                </section>
+                <div className="league-data-surface rounded-2xl p-6 text-center" style={{ background: cardBg, border: `1px solid ${cardBorder}` }}>
                   <TournamentsIcon size={36} className="mx-auto mb-3 opacity-40" style={{ color: accent }} />
                   <div className="text-base font-bold mb-1" style={{ color: textMain }}>Season in Progress</div>
                   <div className="text-sm" style={{ color: textMuted }}>Season history will appear here once the current season completes (Week 16/16).</div>

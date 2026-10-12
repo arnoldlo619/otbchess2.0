@@ -3,7 +3,7 @@
  * Phase 2: Your Match This Week · Next Opponent · Recent Results ·
  *          Streak/Movement Standings · Schedule Highlights
  */
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, type CSSProperties } from "react";
 import { useParams, useLocation } from "wouter";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useAuthContext } from "@/context/AuthContext";
@@ -1611,7 +1611,7 @@ export default function LeagueDashboard() {
 
           {/* Scrollable content */}
           <div className="flex-1 min-w-0 overflow-x-hidden overflow-y-auto pb-[calc(7rem+env(safe-area-inset-bottom,0px))] lg:pb-6">
-            <div data-testid="league-dashboard-content-shell" className="league-content-scale px-4 pt-0 pb-4 lg:px-6 lg:pt-0 lg:pb-6">
+            <div data-testid="league-dashboard-content-shell" className={`league-content-scale ${isDark ? "league-content-scale--dark" : ""} px-4 pt-0 pb-4 lg:px-6 lg:pt-0 lg:pb-6`}>
               <div className="flex flex-col lg:flex-row gap-4 items-start">
                 {/* Main content column */}
                                 <div className="flex-1 min-w-0 space-y-4">
@@ -1619,6 +1619,21 @@ export default function LeagueDashboard() {
         {/* ── OVERVIEW ──────────────────────────────────────────────────────── */}
         {activeTab === "overview" && (
           <>
+            <section
+              data-testid="league-overview-context"
+              className="league-page-intro"
+              style={{ "--league-accent": accent, "--league-text-main": textMain, "--league-text-muted": textMuted } as CSSProperties}
+            >
+              <div>
+                <p className="league-page-intro__eyebrow">Player dashboard</p>
+                <h2 className="league-page-intro__title">Your week in {league.name}</h2>
+                <p className="league-page-intro__description">Your current matchup and League form are kept together, so the next move is always easy to find.</p>
+              </div>
+              <div className="league-page-intro__metrics" aria-label="Your League overview">
+                <div className="league-page-intro__metric"><p className="league-page-intro__metric-label">Season</p><p className="league-page-intro__metric-value">{league.status === "active" ? `Week ${league.currentWeek}/${league.totalWeeks}` : league.status === "draft" ? "Setup" : "Complete"}</p></div>
+                <div className="league-page-intro__metric"><p className="league-page-intro__metric-label">Your record</p><p className="league-page-intro__metric-value">{myStanding ? `${myStanding.wins}W ${myStanding.draws}D ${myStanding.losses}L` : "No results yet"}</p></div>
+              </div>
+            </section>
             {isFullSeason && (
               <section className="rounded-2xl overflow-hidden" style={{ background: cardBg, border: `1px solid ${accent}33` }}>
                 <div className="flex items-center gap-2 px-4 py-2.5" style={{ background: `${accent}12`, borderBottom: `1px solid ${accent}22` }}>
@@ -2136,10 +2151,27 @@ export default function LeagueDashboard() {
         {/* ── MATCHUPS ──────────────────────────────────────────────────────── */}
         {(activeTab === "matchups" || activeTab === "commissioner") && (
           <>
+          {activeTab === "matchups" && (
+            <section
+              data-testid="league-matchups-context"
+              className="league-page-intro"
+              style={{ "--league-accent": accent, "--league-text-main": textMain, "--league-text-muted": textMuted } as CSSProperties}
+            >
+              <div>
+                <p className="league-page-intro__eyebrow">Match center</p>
+                <h2 className="league-page-intro__title">Week {selectedWeek} pairings</h2>
+                <p className="league-page-intro__description">Follow every board in the selected week. Your own pairing stays highlighted for quick preparation.</p>
+              </div>
+              <div className="league-page-intro__metrics" aria-label="Selected week status">
+                <div className="league-page-intro__metric"><p className="league-page-intro__metric-label">Boards</p><p className="league-page-intro__metric-value">{currentWeekMatches.length} scheduled</p></div>
+                <div className="league-page-intro__metric"><p className="league-page-intro__metric-label">Reported</p><p className="league-page-intro__metric-value">{currentWeekMatches.filter((match) => match.resultStatus === "completed").length}/{currentWeekMatches.length}</p></div>
+              </div>
+            </section>
+          )}
           {activeTab === "commissioner" && isCommissioner && (
             <section
               data-testid="league-commissioner-workspace"
-              className="rounded-2xl overflow-hidden"
+              className="league-operations-panel rounded-2xl overflow-hidden"
               style={{ background: cardBg, border: `1.5px solid ${accent}55` }}
             >
               <div className="flex flex-col gap-4 px-5 py-5 sm:flex-row sm:items-center sm:justify-between" style={{ background: isDark ? "linear-gradient(135deg, oklch(0.23 0.08 145), oklch(0.18 0.05 145))" : "linear-gradient(135deg, oklch(0.93 0.07 145), #fff)" }}>
@@ -2774,20 +2806,52 @@ export default function LeagueDashboard() {
 
         {/* ── STANDINGS ─────────────────────────────────────────────────────── */}
         {activeTab === "standings" && (
-          isFullSeason ? <FullSeasonStandings
-            standings={standings as FullSeasonStanding[]}
-            qualifierCount={league.playoffQualifierCount ?? 0}
-            seasonPhase={league.seasonPhase}
-            currentUserId={user?.id}
-            textMain={textMain}
-            textMuted={textMuted}
-            cardBg={cardBg}
-            cardBorder={cardBorder}
-            accent={accent}
-            isDark={isDark}
-          /> : <div className="space-y-4">
+          isFullSeason ? <div className="space-y-4">
+            <section
+              data-testid="league-standings-context"
+              className="league-page-intro"
+              style={{ "--league-accent": accent, "--league-text-main": textMain, "--league-text-muted": textMuted } as CSSProperties}
+            >
+              <div>
+                <p className="league-page-intro__eyebrow">Season table</p>
+                <h2 className="league-page-intro__title">League standings</h2>
+                <p className="league-page-intro__description">Review championship qualification, player form, and the regular-season order from one clear standings surface.</p>
+              </div>
+              <div className="league-page-intro__metrics" aria-label="League standings summary">
+                <div className="league-page-intro__metric"><p className="league-page-intro__metric-label">Matches played</p><p className="league-page-intro__metric-value">{completedMatchCount}/{totalMatches}</p></div>
+                <div className="league-page-intro__metric"><p className="league-page-intro__metric-label">Season phase</p><p className="league-page-intro__metric-value">{league.seasonPhase === "playoffs" ? "Playoffs" : league.seasonPhase === "complete" ? "Complete" : "Regular season"}</p></div>
+              </div>
+            </section>
+            <FullSeasonStandings
+              standings={standings as FullSeasonStanding[]}
+              qualifierCount={league.playoffQualifierCount ?? 0}
+              seasonPhase={league.seasonPhase}
+              currentUserId={user?.id}
+              textMain={textMain}
+              textMuted={textMuted}
+              cardBg={cardBg}
+              cardBorder={cardBorder}
+              accent={accent}
+              isDark={isDark}
+            />
+          </div> : <div className="space-y-4">
+            <section
+              data-testid="league-standings-context"
+              className="league-page-intro"
+              style={{ "--league-accent": accent, "--league-text-main": textMain, "--league-text-muted": textMuted } as CSSProperties}
+            >
+              <div>
+                <p className="league-page-intro__eyebrow">Season table</p>
+                <h2 className="league-page-intro__title">League standings</h2>
+                <p className="league-page-intro__description">Track points, recent form, and opponent preparation from one clear ranking view.</p>
+              </div>
+              <div className="league-page-intro__metrics" aria-label="League standings summary">
+                <div className="league-page-intro__metric"><p className="league-page-intro__metric-label">Matches played</p><p className="league-page-intro__metric-value">{completedMatchCount}/{totalMatches}</p></div>
+                <div className="league-page-intro__metric"><p className="league-page-intro__metric-label">Leading</p><p className="league-page-intro__metric-value">{standings[0]?.displayName ?? "—"}</p></div>
+              </div>
+            </section>
             {/* Compact standings table */}
-            <div className="rounded-2xl overflow-hidden" style={{ background: cardBg, border: `1px solid ${cardBorder}` }}>
+            <div className="league-data-surface rounded-2xl overflow-hidden" style={{ background: cardBg, border: `1px solid ${cardBorder}` }}>
               {/* Table header */}
               <div
                 className="hidden lg:grid items-center px-4 py-3 text-xs font-bold uppercase tracking-widest"
@@ -3073,6 +3137,21 @@ export default function LeagueDashboard() {
         {/* ── SCHEDULE ──────────────────────────────────────────────────────── */}
         {activeTab === "schedule" && (
           <div className="space-y-5">
+            <section
+              data-testid="league-schedule-context"
+              className="league-page-intro"
+              style={{ "--league-accent": accent, "--league-text-main": textMain, "--league-text-muted": textMuted } as CSSProperties}
+            >
+              <div>
+                <p className="league-page-intro__eyebrow">Season planner</p>
+                <h2 className="league-page-intro__title">League schedule</h2>
+                <p className="league-page-intro__description">Select a week to review its published boards and see the season’s pace at a glance.</p>
+              </div>
+              <div className="league-page-intro__metrics" aria-label="League schedule summary">
+                <div className="league-page-intro__metric"><p className="league-page-intro__metric-label">Selected</p><p className="league-page-intro__metric-value">Week {selectedWeek}</p></div>
+                <div className="league-page-intro__metric"><p className="league-page-intro__metric-label">Season</p><p className="league-page-intro__metric-value">{league.currentWeek}/{league.totalWeeks} weeks</p></div>
+              </div>
+            </section>
             <LeagueMonthCalendar
               leagueName={league.name}
               seasonStartAt={league.createdAt}
@@ -3097,7 +3176,7 @@ export default function LeagueDashboard() {
               const selectedScheduleWeek = weeks.find((week) => week.weekNumber === selectedWeek);
               const selectedMatches = selectedScheduleWeek?.matches ?? [];
               return (
-                <section className="rounded-2xl overflow-hidden" style={{ background: cardBg, border: `1px solid ${cardBorder}` }} aria-labelledby="league-schedule-week-details">
+                <section className="league-data-surface rounded-2xl overflow-hidden" style={{ background: cardBg, border: `1px solid ${cardBorder}` }} aria-labelledby="league-schedule-week-details">
                   <div className="flex flex-col gap-3 px-4 py-4 sm:flex-row sm:items-center sm:justify-between" style={{ borderBottom: `1px solid ${cardBorder}` }}>
                     <div>
                       <p className="text-xs font-semibold uppercase tracking-[0.14em]" style={{ color: accent }}>Selected schedule</p>
@@ -3144,10 +3223,16 @@ export default function LeagueDashboard() {
         {/* ── HISTORY / SEASON SUMMARY ─────────────────────────────────────── */}
         {activeTab === "history" && (
           <div className="space-y-5">
+            <section
+              data-testid="league-history-context"
+              className="league-page-intro"
+              style={{ "--league-accent": accent, "--league-text-main": textMain, "--league-text-muted": textMuted } as CSSProperties}
+            >
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div>
-                <p className="text-base font-bold" style={{ color: textMain }}>Season Summary</p>
-                <p className="mt-0.5 text-xs leading-5" style={{ color: textMuted }}>
+                <p className="league-page-intro__eyebrow">Season archive</p>
+                <h2 className="league-page-intro__title">Season summary</h2>
+                <p className="league-page-intro__description">
                   {league.status === "completed"
                     ? "Final standings and results from this completed season."
                     : "Standings and results will be ready to share after the season is complete."}
@@ -3166,6 +3251,11 @@ export default function LeagueDashboard() {
                 </button>
               )}
             </div>
+            <div className="league-page-intro__metrics" aria-label="Season archive summary">
+              <div className="league-page-intro__metric"><p className="league-page-intro__metric-label">Season state</p><p className="league-page-intro__metric-value">{league.status === "completed" ? "Complete" : "In progress"}</p></div>
+              <div className="league-page-intro__metric"><p className="league-page-intro__metric-label">Weeks recorded</p><p className="league-page-intro__metric-value">{weeks.filter((week) => week.isComplete).length}/{league.totalWeeks}</p></div>
+            </div>
+            </section>
             {/* Champion card */}
             {standings[0] && (
               <div
