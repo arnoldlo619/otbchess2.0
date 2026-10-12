@@ -10,7 +10,7 @@ import { useAuthContext } from "@/context/AuthContext";
 import {
   Trophy, Users, Calendar, ChevronRight, ArrowLeft,
   Crown, BarChart3, ListOrdered, CheckCircle2,
-  Clock, Shield, ChevronUp, ChevronDown, Minus, Zap, Target, Binoculars, Medal,
+  Clock, ChevronUp, ChevronDown, Minus, Zap, Target, Binoculars,
   Share2, Copy, Check, QrCode, X, Settings, Pencil,
   AlertTriangle, Download
 } from "lucide-react";
@@ -662,7 +662,7 @@ export default function LeagueDashboard() {
   const [fullSeasonDetail, setFullSeasonDetail] = useState<FullSeasonDetail | null>(null);
   const [standings, setStandings] = useState<LeagueStanding[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<"overview" | "matchups" | "standings" | "schedule" | "history" | "requests" | "settings">("overview");
+  const [activeTab, setActiveTab] = useState<"overview" | "commissioner" | "matchups" | "standings" | "schedule" | "history" | "requests" | "settings">("overview");
   // Settings panel state (commissioner-only)
   const [settingsName, setSettingsName] = useState("");
   const [settingsMaxPlayers, setSettingsMaxPlayers] = useState("");
@@ -713,9 +713,6 @@ export default function LeagueDashboard() {
   const textMain  = isDark ? "oklch(0.95 0.02 145)" : "oklch(0.18 0.06 145)";
   const textMuted = isDark ? "oklch(0.72 0.04 145)" : "oklch(0.38 0.05 145)";
   const accent    = isDark ? "oklch(0.62 0.16 145)" : "oklch(0.42 0.13 145)";
-  const surfaceHover = isDark ? "oklch(0.22 0.06 145)" : "oklch(0.94 0.02 145)";
-  const tabBg     = isDark ? "oklch(0.22 0.05 145)" : "oklch(0.93 0.02 145)";
-  const tabActive = isDark ? "oklch(0.28 0.08 145)" : "oklch(1.00 0.00 145)";
 
   function showToast(msg: string, type: "success" | "error" = "success") {
     setToast({ msg, type });
@@ -1194,10 +1191,11 @@ export default function LeagueDashboard() {
     return "Draw";
   }
   function canReport(match: LeagueMatch) {
-    // Only the commissioner can report results — matches are played in person
+    // Result entry lives in the dedicated commissioner workspace so player
+    // Matchups remains a clear, read-only week view.
     if (match.resultStatus === "completed") return false;
     if (!user) return false;
-    return league?.commissionerId === user.id;
+    return league?.commissionerId === user.id && activeTab === "commissioner";
   }
   function isMyMatch(match: LeagueMatch) {
     return !!(user && (match.playerWhiteId === user.id || match.playerBlackId === user.id));
@@ -1219,11 +1217,6 @@ export default function LeagueDashboard() {
   // My match this week
   const myMatchThisWeek = league
     ? weeks.find((w) => w.weekNumber === league.currentWeek)?.matches.find((m) => isMyMatch(m))
-    : undefined;
-
-  // Next opponent (next week)
-  const nextWeekMatch = league
-    ? weeks.find((w) => w.weekNumber === league.currentWeek + 1)?.matches.find((m) => isMyMatch(m))
     : undefined;
 
   // My standing
@@ -1285,12 +1278,6 @@ export default function LeagueDashboard() {
       });
   }
 
-  // Recent completed matches (last 5)
-  const recentResults = [...allMatches]
-    .filter((m) => m.resultStatus === "completed")
-    .sort((a, b) => (b.weekNumber - a.weekNumber) || (b.id - a.id))
-    .slice(0, 5);
-
   if (loading) {
     return <OTBLoader fullPage isDark />;
   }
@@ -1306,6 +1293,7 @@ export default function LeagueDashboard() {
 
   const tabs = [
     { id: "overview" as const, label: "Overview", icon: DashboardIcon },
+    ...(isCommissioner ? [{ id: "commissioner" as const, label: "Commissioner", icon: Crown }] : []),
     { id: "matchups" as const, label: "Matchups", icon: BattleIcon },
     { id: "standings" as const, label: "Standings", icon: RatingIcon },
     { id: "schedule" as const, label: "Schedule", icon: EventsIcon },
@@ -1375,7 +1363,10 @@ export default function LeagueDashboard() {
                 return (
                   <button
                     key={tab.id}
-                    onClick={() => setActiveTab(tab.id)}
+                    onClick={() => {
+                      setActiveTab(tab.id);
+                      if (tab.id === "commissioner") setSelectedWeek(league.currentWeek);
+                    }}
                     className="relative w-10 h-10 rounded-xl flex items-center justify-center transition-all group"
                     style={{
                       background: isActive ? accent : "transparent",
@@ -1450,7 +1441,7 @@ export default function LeagueDashboard() {
               {isCommissioner && league.status === "active" && (
                 <>
                   <button
-                    onClick={() => setActiveTab("matchups")}
+                    onClick={() => { setSelectedWeek(league.currentWeek); setActiveTab("commissioner"); }}
                     className="league-header-action flex min-h-11 min-w-11 items-center justify-center rounded-xl border"
                     style={{ background: accent, color: "oklch(0.98 0.01 145)", borderColor: `${accent}99` }}
                     aria-label="Report League Result"
@@ -1458,7 +1449,7 @@ export default function LeagueDashboard() {
                     <span className="league-header-action__content"><CheckCircle2 size={17} aria-hidden="true" /></span>
                   </button>
                   <button
-                    onClick={() => setShowAdvanceConfirm(true)}
+                    onClick={() => { setSelectedWeek(league.currentWeek); setActiveTab("commissioner"); }}
                     className="league-header-action flex min-h-11 min-w-11 items-center justify-center rounded-xl border"
                     style={{ background: isDark ? "oklch(0.22 0.07 145)" : "#f3f4f6", color: textMain, borderColor: `${accent}66` }}
                     aria-label="Close current week and advance"
@@ -1512,7 +1503,7 @@ export default function LeagueDashboard() {
                       Commissioner
                     </span>
                     <button
-                      onClick={() => setActiveTab("matchups")}
+                      onClick={() => { setSelectedWeek(league.currentWeek); setActiveTab("commissioner"); }}
                       className="league-header-action min-h-10 rounded-xl border px-4 text-sm font-bold"
                       style={{ background: `linear-gradient(135deg, ${accent}, oklch(0.51 0.15 145))`, color: "oklch(0.98 0.01 145)", borderColor: `${accent}99` }}
                       title="Report results"
@@ -1524,7 +1515,7 @@ export default function LeagueDashboard() {
                       </span>
                     </button>
                     <button
-                      onClick={() => setShowAdvanceConfirm(true)}
+                      onClick={() => { setSelectedWeek(league.currentWeek); setActiveTab("commissioner"); }}
                       className="league-header-action min-h-10 rounded-xl border px-4 text-sm font-semibold"
                       style={{ background: isDark ? "oklch(0.22 0.07 145)" : "#f3f4f6", color: textMain, borderColor: `${accent}66` }}
                       title="Close Week and Advance"
@@ -1947,125 +1938,6 @@ export default function LeagueDashboard() {
               );
             })()}
 
-            {/* Week Results Summary Card */}
-            {league.status === "active" && league.currentWeek > 1 && (() => {
-              const prevWeekNum = league.currentWeek - 1;
-              const prevWeek = weeks.find((w) => w.weekNumber === prevWeekNum);
-              if (!prevWeek?.isComplete) return null;
-              const prevMatches = prevWeek.matches.filter(m => m.resultStatus === "completed");
-              if (!prevMatches.length) return null;
-              return (
-                <div
-                  className="rounded-2xl overflow-hidden"
-                  style={{ background: cardBg, border: `1.5px solid ${accent}44` }}
-                >
-                  {/* Header */}
-                  <div
-                    className="px-4 py-2.5 flex items-center gap-2"
-                    style={{ background: `${accent}18`, borderBottom: `1px solid ${accent}33` }}
-                  >
-                    <CheckCircle2 size={13} style={{ color: accent }} />
-                    <span className="text-xs font-semibold uppercase tracking-wide" style={{ color: accent }}>
-                      Week {prevWeekNum} Results
-                    </span>
-                    <span className="ml-auto text-xs font-medium px-2 py-0.5 rounded-full" style={{ background: `${accent}22`, color: accent }}>
-                      {prevMatches.length} match{prevMatches.length !== 1 ? "es" : ""}
-                    </span>
-                  </div>
-                  {/* Match rows */}
-                  <div className="divide-y" style={{ borderColor: `${cardBorder}` }}>
-                    {prevMatches.map((m) => {
-                      const isMyMatch = user && (m.playerWhiteId === user.id || m.playerBlackId === user.id);
-                      const iWon = user && (
-                        (m.result === "white_win" && m.playerWhiteId === user.id) ||
-                        (m.result === "black_win" && m.playerBlackId === user.id)
-                      );
-                      const isDraw = m.result === "draw";
-                      const iLost = isMyMatch && !iWon && !isDraw;
-                      const outcomeColor = iWon ? accent : isDraw ? "oklch(0.65 0.15 60)" : iLost ? "oklch(0.55 0.18 25)" : textMuted;
-                      const whiteScore = m.result === "white_win" ? "1" : m.result === "draw" ? "½" : "0";
-                      const blackScore = m.result === "black_win" ? "1" : m.result === "draw" ? "½" : "0";
-                      return (
-                        <div
-                          key={m.id}
-                          className="px-4 py-2.5 flex items-center gap-2"
-                          style={isMyMatch ? { background: `${accent}08` } : undefined}
-                        >
-                          {/* White player */}
-                          <div className="flex items-center gap-1.5 flex-1 min-w-0">
-                            <Avatar
-                              url={league.players.find(p => p.playerId === m.playerWhiteId)?.avatarUrl}
-                              chesscomUrl={getChesscomAvatar(league.players.find(p => p.playerId === m.playerWhiteId)?.chesscomUsername)}
-                              name={m.playerWhiteName}
-                              size={7}
-                              loading={isChesscomAvatarLoading(league.players.find(p => p.playerId === m.playerWhiteId)?.chesscomUsername)}
-                            />
-                            <span
-                              className="text-xs truncate"
-                              style={{
-                                color: m.result === "white_win" ? textMain : textMuted,
-                                fontWeight: m.result === "white_win" ? 700 : 400,
-                              }}
-                            >
-                              {m.playerWhiteName}
-                            </span>
-                          </div>
-                          {/* Score */}
-                          <div className="flex items-center gap-1.5 flex-shrink-0">
-                            <span className="text-sm font-black w-4 text-center" style={{ color: m.result === "white_win" ? accent : textMuted }}>{whiteScore}</span>
-                            <span className="text-[10px] font-medium" style={{ color: textMuted }}>–</span>
-                            <span className="text-sm font-black w-4 text-center" style={{ color: m.result === "black_win" ? accent : textMuted }}>{blackScore}</span>
-                          </div>
-                          {/* Black player */}
-                          <div className="flex items-center gap-1.5 flex-1 min-w-0 justify-end">
-                            <span
-                              className="text-xs truncate text-right"
-                              style={{
-                                color: m.result === "black_win" ? textMain : textMuted,
-                                fontWeight: m.result === "black_win" ? 700 : 400,
-                              }}
-                            >
-                              {m.playerBlackName}
-                            </span>
-                            <Avatar
-                              url={league.players.find(p => p.playerId === m.playerBlackId)?.avatarUrl}
-                              chesscomUrl={getChesscomAvatar(league.players.find(p => p.playerId === m.playerBlackId)?.chesscomUsername)}
-                              name={m.playerBlackName}
-                              size={7}
-                              loading={isChesscomAvatarLoading(league.players.find(p => p.playerId === m.playerBlackId)?.chesscomUsername)}
-                            />
-                          </div>
-                          {/* My outcome pill */}
-                          {isMyMatch && (
-                            <span
-                              className="ml-2 text-[10px] font-bold px-1.5 py-0.5 rounded-full flex-shrink-0"
-                              style={{ background: `${outcomeColor}22`, color: outcomeColor }}
-                            >
-                              {iWon ? "W" : isDraw ? "D" : "L"}
-                            </span>
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
-                  {/* Footer */}
-                  <div
-                    className="px-4 py-2 flex items-center justify-between"
-                    style={{ background: `${accent}08`, borderTop: `1px solid ${accent}22` }}
-                  >
-                    <span className="text-[10px]" style={{ color: textMuted }}>Week {league.currentWeek} is now active</span>
-                    <button
-                      onClick={() => { setActiveTab("matchups"); setSelectedWeek(prevWeekNum); }}
-                      className="text-[10px] font-semibold flex items-center gap-1"
-                      style={{ color: accent }}
-                    >
-                      Full details <ChevronRight size={11} />
-                    </button>
-                  </div>
-                </div>
-              );
-            })()}
-
             {/* Your Match This Week */}
             {myMatchThisWeek && (
               <div
@@ -2127,7 +1999,6 @@ export default function LeagueDashboard() {
                           const iWon = (myMatchThisWeek.result === "white_win" && myMatchThisWeek.playerWhiteId === user?.id) ||
                                        (myMatchThisWeek.result === "black_win" && myMatchThisWeek.playerBlackId === user?.id);
                           const isDraw = myMatchThisWeek.result === "draw";
-                          const iLost = !iWon && !isDraw;
                           const outcomeColor = iWon ? accent : isDraw ? (isDark ? "oklch(0.75 0.15 60)" : "oklch(0.45 0.15 60)") : (isDark ? "oklch(0.70 0.18 25)" : "oklch(0.42 0.18 25)");
                           const outcomeLabel = iWon ? "You Won!" : isDraw ? "Draw" : "You Lost";
                           return (
@@ -2225,263 +2096,106 @@ export default function LeagueDashboard() {
               </div>
             )}
 
-            {/* Competition snapshot */}
-            {(myStanding || nextWeekMatch) && (
-              <section className="space-y-3">
-                <div className="flex items-end justify-between gap-3 px-1">
-                  <div>
-                    <p className="text-xs font-bold uppercase tracking-[0.14em]" style={{ color: textMuted }}>Your league</p>
-                    <h2 className="mt-1 text-lg font-bold tracking-tight" style={{ color: textMain }}>Competition snapshot</h2>
-                  </div>
-                  <button onClick={() => setActiveTab("standings")} className="flex items-center gap-1 text-xs font-semibold" style={{ color: accent }}>
-                    Full standings <ChevronRight size={13} />
-                  </button>
+            {!myMatchThisWeek && league.status === "active" && (
+              <section
+                data-testid="league-player-matchup-empty-state"
+                className="rounded-2xl px-5 py-7 text-center"
+                style={{ background: cardBg, border: `1px solid ${cardBorder}` }}
+              >
+                <div className="mx-auto flex h-11 w-11 items-center justify-center rounded-2xl" style={{ background: `${accent}18`, color: accent }}>
+                  <BattleIcon size={19} aria-hidden="true" />
                 </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {myStanding && (
-                  <div className="rounded-2xl p-4" style={{ background: cardBg, border: `1px solid ${cardBorder}` }}>
-                    <div className="flex items-center gap-1.5 mb-2">
-                      <Medal size={13} style={{ color: accent }} />
-                      <span className="text-sm font-semibold" style={{ color: textMuted }}>My Standing</span>
-                    </div>
-                    <div className="flex items-baseline gap-1">
-                      <span className="text-3xl font-black" style={{ color: accent }}>#{myStanding.rank}</span>
-                      <MovementIcon movement={myStanding.movement} />
-                    </div>
-                    <div className="text-xs mt-1" style={{ color: textMuted }}>
-                      {myStanding.wins}W {myStanding.draws}D {myStanding.losses}L · {myStanding.points}pts
-                    </div>
-                    {myStanding.lastResults && (
-                      <div className="flex gap-1 mt-2">
-                        {parseLastResults(myStanding.lastResults).map((r, i) => <ResultDot key={i} r={r} />)}
-                      </div>
-                    )}
-                  </div>
+                <h2 className="mt-3 text-lg font-bold" style={{ color: textMain }}>Your matchup will appear here</h2>
+                <p className="mx-auto mt-1 max-w-md text-sm" style={{ color: textMuted }}>
+                  {user ? "There is no scheduled matchup attached to this account for the current week." : "Sign in to see your current matchup and personal League form."}
+                </p>
+                {!user && (
+                  <button onClick={() => setAuthOpen(true)} className="mt-4 min-h-10 rounded-xl px-4 text-sm font-semibold" style={{ background: accent, color: "#fff" }}>Sign in to view your match</button>
                 )}
-                {nextWeekMatch && (
-                  <div className="rounded-2xl p-4" style={{ background: cardBg, border: `1px solid ${cardBorder}` }}>
-                    <div className="flex items-center gap-1.5 mb-2">
-                      <Shield size={13} style={{ color: accent }} />
-                      <span className="text-sm font-semibold" style={{ color: textMuted }}>Next Opponent</span>
-                    </div>
-                    {(() => {
-                      const oppId = nextWeekMatch.playerWhiteId === user?.id
-                        ? nextWeekMatch.playerBlackId
-                        : nextWeekMatch.playerWhiteId;
-                      const oppName = nextWeekMatch.playerWhiteId === user?.id
-                        ? nextWeekMatch.playerBlackName
-                        : nextWeekMatch.playerWhiteName;
-                      const oppPlayer = league.players.find(p => p.playerId === oppId);
-                      const oppStanding = standings.find(s => s.playerId === oppId);
-                      return (
-                        <>
-                          <div className="flex items-center gap-2">
-                            <Avatar url={oppPlayer?.avatarUrl} chesscomUrl={getChesscomAvatar(oppPlayer?.chesscomUsername)} name={oppName} size={10} loading={isChesscomAvatarLoading(oppPlayer?.chesscomUsername)} />
-                            <div className="min-w-0">
-                              <div className="text-sm font-semibold truncate" style={{ color: textMain }}>{oppName}</div>
-                              {oppStanding && (
-                                <div className="text-xs" style={{ color: textMuted }}>
-                                  Rank #{oppStanding.rank} · {oppStanding.points}pts
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                          <div className="text-xs mt-2" style={{ color: textMuted }}>Week {league.currentWeek + 1}</div>
-                          {oppPlayer?.chesscomUsername && (
-                            <button
-                              onClick={() => navigate(`/prep/${encodeURIComponent(oppPlayer.chesscomUsername!)}`)}
-                              className="mt-2 w-full flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-semibold transition-all hover:opacity-90"
-                              style={{ background: `${accent}18`, color: accent, border: `1px solid ${accent}33` }}
-                            >
-                              <Target size={11} />
-                              Prep
-                            </button>
-                          )}
-                        </>
-                      );
-                    })()}
-                  </div>
-                )}
-                </div>
               </section>
             )}
 
-
-
-            {/* Recent results */}
-            {recentResults.length > 0 && (
-              <div className="rounded-2xl overflow-hidden" style={{ background: cardBg, border: `1px solid ${cardBorder}` }}>
-                <div className="px-4 py-3 flex items-center gap-2" style={{ borderBottom: `1px solid ${cardBorder}` }}>
-                  <Clock size={14} style={{ color: accent }} />
-                  <span className="font-semibold text-base" style={{ color: textMain }}>Recent Results</span>
-                </div>
-                <div className="divide-y" style={{ borderColor: cardBorder }}>
-                  {recentResults.map((m) => (
-                    <div
-                      key={m.id}
-                      className="flex items-center gap-3 px-4 py-3"
-                      style={isMyMatch(m) ? { background: `${accent}08` } : {}}
-                    >
-                      <span className="text-xs flex-shrink-0 w-6" style={{ color: textMuted }}>W{m.weekNumber}</span>
-                      <div className="flex-1 flex items-center gap-2 min-w-0">
-                        <span
-                          className="text-sm truncate"
-                          style={{ color: textMain, fontWeight: m.result === "white_win" ? 600 : 400 }}
-                        >
-                          {m.playerWhiteName}
-                        </span>
-                        <span className="text-xs flex-shrink-0" style={{ color: textMuted }}>vs</span>
-                        <span
-                          className="text-sm truncate"
-                          style={{ color: textMain, fontWeight: m.result === "black_win" ? 600 : 400 }}
-                        >
-                          {m.playerBlackName}
-                        </span>
-                      </div>
-                      <span
-                        className="text-xs font-semibold px-2 py-0.5 rounded-full flex-shrink-0"
-                        style={{
-                          background: m.result === "draw" ? "#facc1522" : `${accent}22`,
-                          color: m.result === "draw" ? "#facc15" : accent,
-                        }}
-                      >
-                        {m.result === "white_win" ? "1-0" : m.result === "black_win" ? "0-1" : "½-½"}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Top 3 standings preview */}
-            {standings.length > 0 && (
-              <div className="rounded-2xl p-5" style={{ background: cardBg, border: `1px solid ${cardBorder}` }}>
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center gap-2">
-                    <Trophy size={15} style={{ color: accent }} />
-                    <span className="font-semibold text-base" style={{ color: textMain }}>Standings</span>
+            {/* Personal recent form — player-only context belongs on Overview. */}
+            {user && myStanding && (
+              <section
+                data-testid="league-player-recent-form"
+                className="rounded-2xl overflow-hidden"
+                style={{ background: cardBg, border: `1px solid ${cardBorder}` }}
+              >
+                <div className="flex items-center justify-between gap-3 px-5 py-4" style={{ borderBottom: `1px solid ${cardBorder}` }}>
+                  <div>
+                    <p className="text-xs font-bold uppercase tracking-[0.14em]" style={{ color: accent }}>Your form</p>
+                    <h2 className="mt-1 text-lg font-bold tracking-tight" style={{ color: textMain }}>Recent league results</h2>
                   </div>
-                  <button
-                    onClick={() => setActiveTab("standings")}
-                    className="flex items-center gap-1 text-xs font-medium"
-                    style={{ color: accent }}
-                  >
-                    Full standings <ChevronRight size={12} />
-                  </button>
+                  <div className="text-right">
+                    <p className="text-sm font-black tabular-nums" style={{ color: textMain }}>{myStanding.wins}W {myStanding.draws}D {myStanding.losses}L</p>
+                    <p className="text-xs" style={{ color: textMuted }}>{myStanding.points} pts</p>
+                  </div>
                 </div>
-                <div className="space-y-2">
-                  {standings.slice(0, 3).map((s, i) => {
-                    const podiumColor = i === 0 ? "#f59e0b" : i === 1 ? "#9ca3af" : "#cd7c2f";
-                    const isMe = s.playerId === user?.id;
-                    return (
-                      <div
-                        key={s.playerId}
-                        className="flex items-center gap-3 py-2.5 px-3 rounded-xl transition-colors"
-                        style={{ background: isMe ? `${accent}0a` : `${podiumColor}06` }}
-                      >
-                        <div
-                          className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-black flex-shrink-0"
-                          style={{ background: `${podiumColor}20`, color: podiumColor, boxShadow: i === 0 ? `0 0 8px ${podiumColor}33` : "none" }}
-                        >
-                          {i + 1}
-                        </div>
-                        <div className="relative flex-shrink-0">
-                          <button onClick={() => openPlayerProfile(s.playerId)} className="block rounded-full transition-transform hover:scale-105 focus:outline-none" title={`View ${s.displayName}'s profile`}>
-                            <Avatar url={s.avatarUrl} chesscomUrl={getChesscomAvatar(s.chesscomUsername)} name={s.displayName} size={10} glow={i < 3} ring={isMe} loading={isChesscomAvatarLoading(s.chesscomUsername)} />
-                          </button>
-                          {isMe && (
-                            <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full pointer-events-none" style={{ background: accent, border: `2px solid ${cardBg}` }} />
-                          )}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-1">
-                            <MovementIcon movement={s.movement} />
-                            <span className="font-semibold text-sm truncate" style={{ color: isMe ? accent : textMain }}>{s.displayName}</span>
-                            {s.streak && s.streak.length >= 3 && (
-                              <span
-                                className="text-xs font-bold px-1.5 py-0.5 rounded"
-                                style={{
-                                  background: s.streak.startsWith("W") ? "#4ade8022" : "#ef444422",
-                                  color: s.streak.startsWith("W") ? "#4ade80" : "#ef4444",
-                                }}
-                              >
-                                {s.streak}
-                              </span>
-                            )}
-                          </div>
-                          <div className="flex items-center gap-2 mt-0.5">
-                            <span className="text-xs" style={{ color: textMuted }}>{s.wins}W {s.draws}D {s.losses}L</span>
-                            {s.chesscomRating && (
-                              <span className="text-xs font-medium" style={{ color: textMuted }}>{s.chesscomRating} ELO</span>
-                            )}
-                          </div>
-                        </div>
-                        <span className="font-black text-lg" style={{ color: accent }}>{s.points}</span>
+                <div className="px-5 py-4">
+                  {getPlayerProfileRecentMatches(user.id).length > 0 ? (
+                    <div className="space-y-2.5">
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        {parseLastResults(myStanding.lastResults).slice(-5).map((result, index) => <ResultDot key={`${result}-${index}`} r={result} />)}
                       </div>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
-
-            {/* Players */}
-            <div className="rounded-2xl p-5" style={{ background: cardBg, border: `1px solid ${cardBorder}` }}>
-              <div className="flex items-center gap-2 mb-4">
-                <Users size={16} style={{ color: accent }} />
-                <span className="font-semibold text-base" style={{ color: textMain }}>
-                  Players ({league.players.length})
-                </span>
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                {league.players.map((p) => {
-                  const isMe = p.playerId === user?.id;
-                  return (
-                    <div
-                      key={p.playerId}
-                      className="flex items-center gap-2.5 rounded-xl p-2.5 transition-colors"
-                      style={{
-                        background: isDark ? "oklch(0.25 0.06 145)" : "#f9fafb",
-                        border: isMe ? `1px solid ${accent}55` : "1px solid transparent",
-                      }}
-                    >
-                      <div className="relative flex-shrink-0">
-                        <button onClick={() => openPlayerProfile(p.playerId)} className="block rounded-full transition-transform hover:scale-105 focus:outline-none" title={`View ${p.displayName}'s profile`}>
-                          <Avatar url={p.avatarUrl} chesscomUrl={getChesscomAvatar(p.chesscomUsername)} name={p.displayName} size={10} ring={isMe} loading={isChesscomAvatarLoading(p.chesscomUsername)} />
-                        </button>
-                        {isMe && (
-                          <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full pointer-events-none" style={{ background: accent, border: `2px solid ${cardBg}` }} />
-                        )}
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <div className="text-sm font-semibold truncate" style={{ color: isMe ? accent : textMain }}>{p.displayName}</div>
-                        <div className="flex items-center gap-1.5 mt-0.5">
-                          {p.chesscomUsername && (
-                            <span className="text-xs truncate" style={{ color: textMuted }}>@{p.chesscomUsername}</span>
-                          )}
-                          {p.rating && (
-                            <span className="text-xs font-medium px-1.5 py-0.5 rounded-full" style={{ background: isDark ? "oklch(0.3 0.06 145)" : "oklch(0.88 0.03 145)", color: textMuted }}>
-                              {p.rating}
-                            </span>
-                          )}
-                        </div>
+                      <div className="divide-y rounded-xl" style={{ border: `1px solid ${cardBorder}`, borderColor: cardBorder }}>
+                        {getPlayerProfileRecentMatches(user.id).slice(0, 3).map((match) => (
+                          <div key={match.id} className="flex items-center gap-3 px-3 py-2.5">
+                            <span className="w-7 text-xs font-bold" style={{ color: textMuted }}>W{match.weekNumber}</span>
+                            <span className="min-w-0 flex-1 truncate text-sm font-medium" style={{ color: textMain }}>vs {match.opponentName}</span>
+                            <span className="text-xs" style={{ color: textMuted }}>{match.color === "white" ? "White" : "Black"}</span>
+                            <span className="rounded-full px-2 py-0.5 text-xs font-bold" style={{ background: match.outcome === "win" ? `${accent}22` : match.outcome === "loss" ? "oklch(0.55 0.18 25 / 0.18)" : "oklch(0.55 0.15 60 / 0.18)", color: match.outcome === "win" ? accent : match.outcome === "loss" ? "oklch(0.65 0.18 25)" : "oklch(0.65 0.15 60)" }}>{match.score}</span>
+                          </div>
+                        ))}
                       </div>
                     </div>
-                  );
-                })}
-              </div>
-            </div>
+                  ) : (
+                    <p className="text-sm" style={{ color: textMuted }}>Your completed League results will appear here after your first match.</p>
+                  )}
+                </div>
+              </section>
+            )}
           </>
         )}
 
         {/* ── MATCHUPS ──────────────────────────────────────────────────────── */}
-        {activeTab === "matchups" && (
-          isFullSeason && fullSeasonDetail ? (
+        {(activeTab === "matchups" || activeTab === "commissioner") && (
+          <>
+          {activeTab === "commissioner" && isCommissioner && (
+            <section
+              data-testid="league-commissioner-workspace"
+              className="rounded-2xl overflow-hidden"
+              style={{ background: cardBg, border: `1.5px solid ${accent}55` }}
+            >
+              <div className="flex flex-col gap-4 px-5 py-5 sm:flex-row sm:items-center sm:justify-between" style={{ background: isDark ? "linear-gradient(135deg, oklch(0.23 0.08 145), oklch(0.18 0.05 145))" : "linear-gradient(135deg, oklch(0.93 0.07 145), #fff)" }}>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="flex h-8 w-8 items-center justify-center rounded-xl" style={{ background: `${accent}22`, color: accent }}><Crown size={15} aria-hidden="true" /></span>
+                    <p className="text-xs font-bold uppercase tracking-[0.14em]" style={{ color: accent }}>Commissioner workspace</p>
+                  </div>
+                  <h2 className="mt-2 text-xl font-black tracking-tight" style={{ color: textMain }}>Week {league.currentWeek} operations</h2>
+                  <p className="mt-1 text-sm" style={{ color: textMuted }}>Report this week’s board results, then close the week when every matchup is complete.</p>
+                </div>
+                <div className="grid grid-cols-2 gap-2 sm:min-w-[220px]">
+                  <div className="rounded-xl px-3 py-2.5" style={{ background: `${accent}12`, border: `1px solid ${accent}22` }}>
+                    <p className="text-[10px] font-bold uppercase tracking-wider" style={{ color: textMuted }}>Reported</p>
+                    <p className="mt-1 text-lg font-black tabular-nums" style={{ color: textMain }}>{currentWeekMatches.filter((match) => match.resultStatus === "completed").length}/{currentWeekMatches.length}</p>
+                  </div>
+                  <div className="rounded-xl px-3 py-2.5" style={{ background: `${accent}12`, border: `1px solid ${accent}22` }}>
+                    <p className="text-[10px] font-bold uppercase tracking-wider" style={{ color: textMuted }}>Next step</p>
+                    <p className="mt-1 text-sm font-bold" style={{ color: textMain }}>{currentWeekMatches.every((match) => match.resultStatus === "completed") ? "Advance week" : "Report boards"}</p>
+                  </div>
+                </div>
+              </div>
+            </section>
+          )}
+          {isFullSeason && fullSeasonDetail ? (
             <FullSeasonMatchSet
               league={league}
               detail={fullSeasonDetail}
               selectedWeek={selectedWeek}
               onSelectWeek={setSelectedWeek}
-              isCommissioner={isCommissioner}
+              isCommissioner={isCommissioner && activeTab === "commissioner"}
               isBusy={advancingWeek}
               onWeekAction={handleFullSeasonWeekAction}
               onReport={(game: FullSeasonGame) => { setIsCommissionerReport(true); setReportingMatch(game as unknown as LeagueMatch); }}
@@ -2856,7 +2570,7 @@ export default function LeagueDashboard() {
                   ) : (
                     <span className="text-xs" style={{ color: textMuted }}>No deadline set</span>
                   )}
-                  {isCommissioner && selectedWeekObj && !selectedWeekObj.isComplete && (
+                  {isCommissioner && activeTab === "commissioner" && selectedWeekObj && !selectedWeekObj.isComplete && (
                     <div className="flex items-center gap-2">
                       <input
                         aria-label="Set week deadline"
@@ -2932,7 +2646,7 @@ export default function LeagueDashboard() {
                                 {match.result === "white_win" ? "1 – 0" : match.result === "black_win" ? "0 – 1" : "½ – ½"}
                               </span>
                               <span className="text-xs" style={{ color: textMuted }}>{label}</span>
-                              {isCommissioner && (
+                              {isCommissioner && activeTab === "commissioner" && (
                                 <button
                                   onClick={(e) => { e.stopPropagation(); setEditingMatch(match); }}
                                   className="mt-1 p-1 rounded-full opacity-50 hover:opacity-100 transition-opacity"
@@ -2948,7 +2662,7 @@ export default function LeagueDashboard() {
                               <span className="text-xs font-semibold px-2 py-0.5 rounded-full" style={{ background: "oklch(0.45 0.18 25)", color: "#fff" }}>
                                 Disputed
                               </span>
-                              {isCommissioner && (
+                              {isCommissioner && activeTab === "commissioner" && (
                                 <div className="flex gap-1 mt-1">
                                   {(["white_win", "black_win", "draw"] as const).map((r) => (
                                     <button
@@ -3024,7 +2738,7 @@ export default function LeagueDashboard() {
                         );
                       })()}
                       {/* Commissioner: Submit Report button — locks in result for any non-completed match */}
-                      {isCommissioner && match.resultStatus !== "completed" && (
+                      {isCommissioner && activeTab === "commissioner" && match.resultStatus !== "completed" && (
                         <div className="px-4 pb-3">
                           <button
                             onClick={(e) => { e.stopPropagation(); setIsCommissionerReport(true); setReportingMatch(match); }}
@@ -3047,7 +2761,7 @@ export default function LeagueDashboard() {
             </div>
 
             {/* Commissioner: Advance Week button */}
-            {isCommissioner && league.status === "active" && league.currentWeek < league.totalWeeks && selectedWeek === league.currentWeek && (
+            {isCommissioner && activeTab === "commissioner" && league.status === "active" && league.currentWeek < league.totalWeeks && selectedWeek === league.currentWeek && (
               <div
                 className="rounded-2xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3"
                 style={{ background: isDark ? "oklch(0.22 0.07 145)" : "#f0fdf4", border: `1.5px solid ${accent}44` }}
@@ -3079,6 +2793,7 @@ export default function LeagueDashboard() {
                 </button>
               </div>
             )}
+          </>}
           </>
         )}
 
@@ -4087,7 +3802,7 @@ export default function LeagueDashboard() {
           {/* ── RIGHT PANEL: Upcoming Matchups (desktop only) ─────────────── */}
           <aside
             aria-label="Upcoming league matchups"
-            className={`${activeTab === "overview" || activeTab === "matchups" ? "hidden lg:flex" : "hidden"} flex-col gap-3 w-80 flex-shrink-0`}
+            className={`${activeTab === "matchups" ? "hidden lg:flex" : "hidden"} flex-col gap-3 w-80 flex-shrink-0`}
           >
 
             {/* Header row */}

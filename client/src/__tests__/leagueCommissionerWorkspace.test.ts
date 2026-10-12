@@ -1,0 +1,40 @@
+import { describe, expect, it } from "vitest";
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
+
+const clientRoot = resolve(__dirname, "..");
+const dashboardSource = readFileSync(resolve(clientRoot, "pages/LeagueDashboard.tsx"), "utf8");
+const demoSource = readFileSync(resolve(clientRoot, "pages/LeagueDemo.tsx"), "utf8");
+
+describe("League player and commissioner workspace separation", () => {
+  it("adds a dedicated commissioner tab only for live League commissioners", () => {
+    expect(dashboardSource).toContain('"commissioner" | "matchups"');
+    expect(dashboardSource).toContain('label: "Commissioner", icon: Crown');
+    expect(dashboardSource).toContain('data-testid="league-commissioner-workspace"');
+    expect(dashboardSource).toContain("Week {league.currentWeek} operations");
+  });
+
+  it("routes hero reporting and advancement actions into the commissioner workspace", () => {
+    expect(dashboardSource).toContain('setActiveTab("commissioner")');
+    expect(dashboardSource).toContain('setSelectedWeek(league.currentWeek)');
+    expect(dashboardSource).toContain('activeTab === "commissioner" && league.status === "active"');
+    expect(dashboardSource).toContain('return league?.commissionerId === user.id && activeTab === "commissioner"');
+  });
+
+  it("keeps the player overview focused on the current matchup and personal form", () => {
+    expect(dashboardSource).toContain('data-testid="league-player-recent-form"');
+    expect(dashboardSource).toContain('data-testid="league-player-matchup-empty-state"');
+    expect(dashboardSource).toContain("Your completed League results will appear here after your first match.");
+    expect(dashboardSource).not.toContain("{/* Week Results Summary Card */}");
+    expect(dashboardSource).not.toContain("{/* Competition snapshot */}");
+  });
+
+  it("keeps the interactive demo aligned with the commissioner workflow", () => {
+    expect(demoSource).toContain('type TabId = "overview" | "commissioner"');
+    expect(demoSource).toContain('label: "Commissioner", icon: Crown');
+    expect(demoSource).toContain('data-testid="league-demo-commissioner-workspace"');
+    expect(demoSource).toContain("Results reported");
+    expect(demoSource).toContain("Generate Week 15");
+    expect(demoSource).not.toContain("{/* Compact Standings Preview */}");
+  });
+});

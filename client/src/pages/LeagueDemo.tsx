@@ -12,7 +12,7 @@ import { useAuthContext } from "@/context/AuthContext";
 import AuthModal from "@/components/AuthModal";
 import {
   Trophy, Users as _Users, Calendar, BarChart3 as _BarChart3, ListOrdered as _ListOrdered,
-  Clock, Swords as _Swords, Target as _Target, ArrowLeft, Crown, ChevronRight,
+  Clock, Swords as _Swords, Target as _Target, ArrowLeft, Crown,
   History as _History, Shield as _Shield, Plus, Users2,
 } from "lucide-react";
 import {
@@ -160,10 +160,11 @@ function FormBadge({ result, isDark = true }: { result: string; isDark?: boolean
 
 // ── Main Component ────────────────────────────────────────────────────────────
 
-type TabId = "overview" | "matchup" | "standings" | "schedule" | "history";
+type TabId = "overview" | "commissioner" | "matchup" | "standings" | "schedule" | "history";
 
 const TABS: { id: TabId; label: string; icon: React.ComponentType<{ size?: number }> }[] = [
-  { id: "overview",  label: "Dashboard",  icon: DashboardIcon },
+  { id: "overview",  label: "Overview",   icon: DashboardIcon },
+  { id: "commissioner", label: "Commissioner", icon: Crown },
   { id: "matchup",   label: "Matchup",    icon: BattleIcon },
   { id: "standings", label: "Standings",  icon: RatingIcon },
   { id: "schedule",  label: "Schedule",   icon: EventsIcon },
@@ -177,6 +178,7 @@ export default function LeagueDemo() {
   const [activeTab, setActiveTab] = useState<TabId>("standings");
   const [standingsView, setStandingsView] = useState<"table" | "bracket">("bracket");
   const [selectedScheduleWeek, setSelectedScheduleWeek] = useState(14);
+  const [commissionerResults, setCommissionerResults] = useState<Record<number, "white_win" | "black_win" | "draw">>({});
   const { user } = useAuthContext();
   // Determine if the user already has a league and/or a club (to conditionally show CTAs)
   const [hasLeague, setHasLeague] = useState(false);
@@ -598,135 +600,6 @@ export default function LeagueDemo() {
                     </div>
                   </div>
 
-                  {/* Compact Standings Preview */}
-                  <div
-                    className="rounded-2xl overflow-hidden transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5"
-                    style={{ background: cardBg, border: `1px solid ${cardBorder}` }}
-                  >
-                    <div className="px-5 py-3 flex items-center justify-between" style={{ borderBottom: `1px solid ${cardBorder}` }}>
-                      <div className="flex items-center gap-2">
-                        <Trophy size={14} style={{ color: accent }} />
-                        <span className="text-base font-bold" style={{ color: textMain }}>Premier Chess League Standings</span>
-                      </div>
-                      <button
-                        onClick={() => setActiveTab("standings")}
-                        className="text-xs font-semibold flex items-center gap-1 transition-opacity hover:opacity-70"
-                        style={{ color: accent }}
-                      >
-                        View all <ChevronRight size={12} />
-                      </button>
-                    </div>
-
-                    {/* Table header */}
-                    <div
-                      className="hidden sm:grid items-center px-4 py-2.5 text-xs font-bold uppercase tracking-widest"
-                      style={{
-                        borderBottom: `1px solid ${cardBorder}`,
-                        color: textMuted,
-                        background: isDark ? "oklch(0.17 0.05 145)" : "#f3f4f6",
-                        gridTemplateColumns: "2.5rem 1fr 4rem 2.5rem 2.5rem 2.5rem 3rem 4.5rem",
-                        gap: "0.5rem",
-                      }}
-                    >
-                      <span className="text-center">POS</span>
-                      <span>Player</span>
-                      <span className="text-center">Rating</span>
-                      <span className="text-center">W</span>
-                      <span className="text-center">D</span>
-                      <span className="text-center">L</span>
-                      <span className="text-center">PTS</span>
-                      <span className="text-center">Form</span>
-                    </div>
-
-                    {/* Top 8 rows */}
-                    {DEMO_PLAYERS.slice(0, 8).map((p, i) => {
-                      const podiumColor = i === 0 ? "#f59e0b" : i === 1 ? "#9ca3af" : i === 2 ? "#cd7c2f" : null;
-                      const lastArr = p.lastResults.split(",");
-                      return (
-                        <div
-                          key={p.id}
-                          role="button"
-                          tabIndex={0}
-                          aria-label={`Open ${p.displayName}'s League profile`}
-                          onClick={() => setSelectedPlayer(p)}
-                          onKeyDown={(event) => {
-                            if (event.key === "Enter" || event.key === " ") {
-                              event.preventDefault();
-                              setSelectedPlayer(p);
-                            }
-                          }}
-                          className="hidden sm:grid items-center px-4 py-3 transition-all duration-200 hover:bg-white/5 hover:scale-[1.005] cursor-pointer focus:outline-none focus:ring-2"
-                          style={{
-                            gridTemplateColumns: "2.5rem 1fr 4rem 2.5rem 2.5rem 2.5rem 3rem 4.5rem",
-                            gap: "0.5rem",
-                            borderBottom: i < 7 ? `1px solid ${cardBorder}` : "none",
-                            background: i < 3 && podiumColor ? `${podiumColor}06` : "transparent",
-                          }}
-                        >
-                          <div className="flex justify-center">
-                            {podiumColor ? (
-                              <div className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-black" style={{ background: `${podiumColor}20`, color: podiumColor }}>
-                                {i + 1}
-                              </div>
-                            ) : (
-                              <span className="text-xs font-medium" style={{ color: textMuted }}>{i + 1}</span>
-                            )}
-                          </div>
-                          <div className="flex items-center gap-2 min-w-0">
-                            <Avatar name={p.displayName} size={8} url={getAvatar(p.chesscomUsername)} />
-                            <div className="min-w-0">
-                              <div className="flex items-center gap-1">
-                                <MovementIcon movement={p.movement} isDark={isDark} />
-                                <span className="text-sm font-semibold truncate" style={{ color: textMain }}>{p.displayName}</span>
-                              </div>
-                              <span className="text-xs truncate block" style={{ color: textMuted }}>@{p.chesscomUsername}</span>
-                            </div>
-                          </div>
-                          <span className="text-center text-sm font-bold" style={{ color: textMain }}>{p.rating}</span>
-                          <span className="text-center text-sm font-semibold" style={{ color: "oklch(0.65 0.2 145)" }}>{p.wins}</span>
-                          <span className="text-center text-sm" style={{ color: textMuted }}>{p.draws}</span>
-                          <span className="text-center text-sm" style={{ color: "oklch(0.6 0.2 25)" }}>{p.losses}</span>
-                          <div className="flex justify-center">
-                            <span className="text-sm font-black px-1.5 py-0.5 rounded" style={{ color: accent, background: `${accent}18` }}>{p.points}</span>
-                          </div>
-                          <div className="flex gap-0.5 justify-center">
-                            {lastArr.map((r, j) => <ResultDot key={j} r={r} isDark={isDark} />)}
-                          </div>
-                        </div>
-                      );
-                    })}
-
-                    {/* Mobile rows */}
-                    {DEMO_PLAYERS.slice(0, 8).map((p, i) => (
-                      <div
-                        key={`m-${p.id}`}
-                        role="button"
-                        tabIndex={0}
-                        aria-label={`Open ${p.displayName}'s League profile`}
-                        onClick={() => setSelectedPlayer(p)}
-                        onKeyDown={(event) => {
-                          if (event.key === "Enter" || event.key === " ") {
-                            event.preventDefault();
-                            setSelectedPlayer(p);
-                          }
-                        }}
-                        className="sm:hidden flex items-center gap-3 px-4 py-3.5 transition-all duration-200 hover:bg-white/5 cursor-pointer focus:outline-none focus:ring-2"
-                        style={{ borderBottom: i < 7 ? `1px solid ${cardBorder}` : "none" }}
-                      >
-                        <span className="text-xs font-bold w-5 text-center flex-shrink-0" style={{ color: textMuted }}>{i + 1}</span>
-                        <Avatar name={p.displayName} size={9} url={getAvatar(p.chesscomUsername)} />
-                        <div className="flex-1 min-w-0">
-                          <div className="text-sm font-semibold truncate" style={{ color: textMain }}>{p.displayName}</div>
-                          <div className="text-xs" style={{ color: textMuted }}>{p.rating} ELO</div>
-                        </div>
-                        <div className="text-right flex-shrink-0">
-                          <div className="text-lg font-black" style={{ color: accent }}>{p.points}</div>
-                          <div className="text-xs" style={{ color: textMuted }}>{p.wins}W {p.draws}D {p.losses}L</div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-
                   {/* ── League CTAs (shown only to users without a league) ── */}
                   {!hasLeague && (
                     <div
@@ -788,56 +661,55 @@ export default function LeagueDemo() {
                     </div>
                   )}
                 </div>
-                {/* ── RIGHT PANEL: Upcoming Matchups ─────────────────────────── */}
-                <div
-                  className="hidden xl:flex flex-col w-72 flex-shrink-0 border-l "
-                  style={{ borderColor: cardBorder, background: isDark ? "oklch(0.17 0.05 145)" : "#f9fafb" }}
-                >
-                  <div className="px-4 py-3 flex items-center justify-between sticky top-0 z-10" style={{ borderBottom: `1px solid ${cardBorder}`, background: isDark ? "oklch(0.17 0.05 145)" : "#f9fafb" }}>
-                    <span className="text-sm font-bold" style={{ color: textMain }}>Week 14 Matchups</span>
-                    <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full" style={{ background: `${accent}22`, color: accent }}>
-                      {CURRENT_WEEK_MATCHUPS.filter(m => !m.result).length} pending
-                    </span>
-                  </div>
-                  <div className="p-3 space-y-2">
-                    {CURRENT_WEEK_MATCHUPS.map((m, i) => {
-                      const resultLabel = m.result === "white_win" ? `${m.white.displayName.split(" ")[0]} won` : m.result === "black_win" ? `${m.black.displayName.split(" ")[0]} won` : m.result === "draw" ? "Draw" : null;
-                      const resultColor = m.result === "white_win" ? "oklch(0.65 0.2 145)" : m.result === "black_win" ? "oklch(0.65 0.2 145)" : m.result === "draw" ? textMuted : null;
-                      return (
-                        <div
-                          key={i}
-                          className="rounded-xl p-3 transition-all duration-250 hover:shadow-md hover:-translate-y-0.5 cursor-pointer"
-                          style={{
-                            background: cardBg,
-                            border: `1px solid ${m.result ? cardBorder : `${accent}33`}`,
-                          }}
-                        >
-                          <div className="flex items-center justify-between mb-2">
-                            <span className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: textMuted }}>Board {i + 1}</span>
-                            {resultLabel ? (
-                              <span className="text-[10px] font-bold" style={{ color: resultColor ?? textMuted }}>{resultLabel}</span>
-                            ) : (
-                              <span className="text-[10px] font-semibold animate-pulse" style={{ color: accent }}>Pending</span>
-                            )}
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <Avatar name={m.white.displayName} size={7} url={getAvatar(m.white.chesscomUsername)} />
-                            <span className="text-xs font-semibold flex-1 truncate" style={{ color: textMain }}>{m.white.displayName}</span>
-                            <span className="text-[10px] font-bold" style={{ color: textMuted }}>vs</span>
-                            <span className="text-xs font-semibold flex-1 truncate text-right" style={{ color: textMain }}>{m.black.displayName}</span>
-                            <Avatar name={m.black.displayName} size={7} url={getAvatar(m.black.chesscomUsername)} />
-                          </div>
-                          <div className="flex items-center justify-between mt-1.5">
-                            <span className="text-[10px]" style={{ color: textMuted }}>{m.white.rating}</span>
-                            <span className="text-[10px]" style={{ color: textMuted }}>{m.black.rating}</span>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
               </div>
             )}
+
+            {/* ── COMMISSIONER TAB ─────────────────────────────────────────── */}
+            {activeTab === "commissioner" && (() => {
+              const reportedCount = CURRENT_WEEK_MATCHUPS.filter((match, index) => commissionerResults[index] ?? match.result).length;
+              const allReported = reportedCount === CURRENT_WEEK_MATCHUPS.length;
+              return (
+                <div data-testid="league-demo-commissioner-workspace" className="mx-auto max-w-4xl space-y-5 px-4 pb-4 lg:px-6 lg:pb-6">
+                  <section className="rounded-2xl overflow-hidden" style={{ background: cardBg, border: `1.5px solid ${accent}55` }}>
+                    <div className="flex flex-col gap-4 px-5 py-5 sm:flex-row sm:items-center sm:justify-between" style={{ background: isDark ? "linear-gradient(135deg, oklch(0.23 0.08 145), oklch(0.18 0.05 145))" : "linear-gradient(135deg, oklch(0.93 0.07 145), #fff)" }}>
+                      <div>
+                        <div className="flex items-center gap-2"><Crown size={15} style={{ color: accent }} /><p className="text-xs font-bold uppercase tracking-[0.14em]" style={{ color: accent }}>Commissioner workspace</p></div>
+                        <h2 className="mt-2 text-xl font-black tracking-tight" style={{ color: textMain }}>Week 14 operations</h2>
+                        <p className="mt-1 text-sm" style={{ color: textMuted }}>Report each board, review the completed week, then generate the next set of matchups.</p>
+                      </div>
+                      <div className="rounded-xl px-4 py-3 text-center" style={{ background: `${accent}12`, border: `1px solid ${accent}22` }}>
+                        <p className="text-[10px] font-bold uppercase tracking-wider" style={{ color: textMuted }}>Results reported</p>
+                        <p className="mt-1 text-xl font-black tabular-nums" style={{ color: textMain }}>{reportedCount}/{CURRENT_WEEK_MATCHUPS.length}</p>
+                      </div>
+                    </div>
+                  </section>
+
+                  <section className="overflow-hidden rounded-2xl" style={{ background: cardBg, border: `1px solid ${cardBorder}` }}>
+                    <div className="flex items-center justify-between px-5 py-4" style={{ borderBottom: `1px solid ${cardBorder}` }}>
+                      <div><p className="text-xs font-bold uppercase tracking-[0.14em]" style={{ color: accent }}>Active week</p><h2 className="mt-1 text-lg font-bold" style={{ color: textMain }}>Board reporting</h2></div>
+                      <span className="rounded-full px-2.5 py-1 text-xs font-semibold" style={{ background: allReported ? `${accent}22` : "oklch(0.55 0.15 60 / 0.18)", color: allReported ? accent : "oklch(0.65 0.15 60)" }}>{allReported ? "Ready to advance" : "Results pending"}</span>
+                    </div>
+                    <div className="divide-y" style={{ borderColor: cardBorder }}>
+                      {CURRENT_WEEK_MATCHUPS.map((match, index) => {
+                        const result = commissionerResults[index] ?? match.result;
+                        return (
+                          <div key={`${match.white.id}-${match.black.id}`} className="px-5 py-4">
+                            <div className="mb-3 flex items-center justify-between gap-3"><span className="text-xs font-bold uppercase tracking-wider" style={{ color: textMuted }}>Board {index + 1}</span><span className="text-xs font-semibold" style={{ color: result ? accent : textMuted }}>{result === "white_win" ? `${match.white.displayName.split(" ")[0]} won` : result === "black_win" ? `${match.black.displayName.split(" ")[0]} won` : result === "draw" ? "Draw" : "Awaiting result"}</span></div>
+                            <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-3"><span className="truncate text-sm font-semibold" style={{ color: textMain }}>{match.white.displayName}</span><span className="text-xs font-bold" style={{ color: textMuted }}>vs</span><span className="truncate text-right text-sm font-semibold" style={{ color: textMain }}>{match.black.displayName}</span></div>
+                            {!result && <div className="mt-3 grid grid-cols-3 gap-2">{([
+                              ["white_win", `${match.white.displayName.split(" ")[0]} wins`],
+                              ["draw", "Draw"],
+                              ["black_win", `${match.black.displayName.split(" ")[0]} wins`],
+                            ] as const).map(([value, label]) => <button key={value} onClick={() => setCommissionerResults((current) => ({ ...current, [index]: value }))} className="min-h-10 rounded-xl px-2 text-xs font-semibold transition-opacity hover:opacity-80" style={{ background: value === "draw" ? (isDark ? "oklch(0.25 0.06 145)" : "#f3f4f6") : `${accent}18`, border: `1px solid ${value === "draw" ? cardBorder : `${accent}33`}`, color: value === "draw" ? textMain : accent }}>{label}</button>)}</div>}
+                          </div>
+                        );
+                      })}
+                    </div>
+                    <div className="flex flex-col gap-3 px-5 py-4 sm:flex-row sm:items-center sm:justify-between" style={{ background: `${accent}08`, borderTop: `1px solid ${accent}18` }}><p className="text-sm" style={{ color: textMuted }}>{allReported ? "All board results are reported. The next week can be generated." : "Report every board to unlock next week generation."}</p><button disabled={!allReported} className="min-h-11 rounded-xl px-4 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-45" style={{ background: accent, color: "#fff" }}>Generate Week 15</button></div>
+                  </section>
+                </div>
+              );
+            })()}
 
             {/* ── MATCHUP TAB ───────────────────────────────────────────────── */}
             {activeTab === "matchup" && (

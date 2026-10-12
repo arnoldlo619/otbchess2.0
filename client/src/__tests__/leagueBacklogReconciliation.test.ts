@@ -26,10 +26,12 @@ describe("League Dashboard implementation", () => {
     expect(dashboard).toContain("transition-opacity z-[60]");
   });
 
-  it("renders the overview, roster, progress, standings, and upcoming matchup surfaces", () => {
+  it("separates player overview, commissioner operations, and standings surfaces", () => {
     expect(dashboard).toContain("Upcoming Matchups");
     expect(dashboard).toContain("League Form");
-    expect(dashboard).toContain("Roster:");
+    expect(dashboard).toContain('data-testid="league-player-recent-form"');
+    expect(dashboard).toContain('data-testid="league-commissioner-workspace"');
+    expect(dashboard).toContain("Commissioner workspace");
     expect(dashboard).toContain("Season Final Standings");
     expect(dashboard).toContain(">POS</span>");
     expect(dashboard).toContain(">MP</span>");
@@ -59,22 +61,20 @@ describe("League Dashboard implementation", () => {
   });
 
   it("keeps League content readable, contextual, and free of emoji warning glyphs", () => {
-    expect(dashboard).toContain("Competition snapshot");
+    expect(dashboard).not.toContain("Competition snapshot");
     expect(dashboard).toContain("Grow the roster");
     expect(dashboard).toContain('aria-label="Upcoming league matchups"');
-    expect(dashboard).toContain('activeTab === "overview" || activeTab === "matchups"');
+    expect(dashboard).toContain('activeTab === "matchups" ? "hidden lg:flex" : "hidden"');
     expect(dashboard).toContain('hidden lg:grid items-center px-4 py-3 text-xs');
     expect(dashboard).toContain('className="lg:hidden px-4 py-4"');
     expect(dashboard).toContain("<AlertTriangle");
     expect(dashboard).not.toContain("⚠ Changing format");
   });
 
-  it("uses one guest join conversion surface and organized season detail", () => {
+  it("uses one guest join conversion surface and organized history detail", () => {
     expect(dashboard).not.toContain("Sign In to Request a Spot");
     expect(dashboard).toContain("Join this League");
-    expect(dashboard).toContain("Season progress");
-    expect(dashboard).toContain("Completed weeks");
-    expect(dashboard).toContain("Upcoming weeks");
+    expect(dashboard).toContain("All Results by Week");
     expect(dashboard).toContain("expandedHistoryWeek");
     expect(dashboard).toContain('aria-expanded={isExpanded}');
   });
@@ -92,12 +92,13 @@ describe("League Demo implementation", () => {
   it("registers the public route and landing-page destination", () => {
     expect(app).toContain('<Route path={"/league-demo"} component={LeagueDemo} />');
     expect(home).toContain('href="/league-demo"');
-    expect(home).toContain('return "/league-demo"');
+    expect(home).toContain('tooltip: isGuest ? "View League Demo" : "Open your Club Leagues"');
   });
 
-  it("includes 23 mock players plus overview, matchup, standings, schedule, and bracket views", () => {
+  it("includes 23 mock players plus player, commissioner, matchup, standings, schedule, and bracket views", () => {
     expect(demo).toContain('id: "23"');
-    expect(demo).toContain('type TabId = "overview" | "matchup" | "standings" | "schedule" | "history"');
+    expect(demo).toContain('type TabId = "overview" | "commissioner" | "matchup" | "standings" | "schedule" | "history"');
+    expect(demo).toContain('data-testid="league-demo-commissioner-workspace"');
     expect(demo).toContain("Current week matchups");
     expect(demo).toContain("League Form");
     expect(demo).toContain("LeagueBracket");

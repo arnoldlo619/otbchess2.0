@@ -44,20 +44,20 @@ describe("League commissioner header action cluster", () => {
     expect(topBarSource).toContain("min-h-11 min-w-11");
   });
 
-  it("uses Lucide icons for prep, standing, and standings actions", () => {
+  it("keeps player overview actions focused on matchup preparation and moves operations to the commissioner workspace", () => {
     const overviewSource = dashboardSource.slice(
       dashboardSource.indexOf("Prep for Next Round CTA"),
-      dashboardSource.indexOf("Top 3 standings preview")
+      dashboardSource.indexOf('data-testid="league-player-recent-form"')
     );
-    const standingsSource = dashboardSource.slice(
-      dashboardSource.indexOf("Top 3 standings preview"),
-      dashboardSource.indexOf("MATCHUPS")
+    const commissionerSource = dashboardSource.slice(
+      dashboardSource.indexOf('data-testid="league-commissioner-workspace"'),
+      dashboardSource.indexOf("STANDINGS")
     );
 
     expect(overviewSource).toContain("<Binoculars size={16} />");
-    expect(overviewSource).toContain("<Medal size={13}");
-    expect(standingsSource).toContain("<Trophy size={15}");
-    expect(standingsSource).not.toContain("<Crown size={15}");
+    expect(overviewSource).not.toContain("My Standing");
+    expect(commissionerSource).toContain("Commissioner workspace");
+    expect(commissionerSource).toContain("<Crown size={15}");
   });
 
   it("uses a reduced-motion-safe gradient glow interaction rather than continuous animation", () => {
