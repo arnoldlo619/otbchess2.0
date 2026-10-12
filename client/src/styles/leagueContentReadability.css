@@ -85,6 +85,17 @@
   pointer-events: none;
 }
 
+/* The interactive League Demo uses a flatter context band so the information,
+ * rather than a decorative center bloom, carries the hierarchy. */
+.league-page-intro--demo::before {
+  display: none;
+}
+
+.league-page-intro--demo {
+  background: oklch(0.98 0.018 145);
+  box-shadow: 0 8px 20px rgba(15, 40, 22, 0.045);
+}
+
 .dark .league-page-intro,
 .league-content-scale--dark .league-page-intro {
   border-color: rgba(122, 245, 98, 0.18);
@@ -97,6 +108,12 @@
 .dark .league-page-intro::before,
 .league-content-scale--dark .league-page-intro::before {
   background: radial-gradient(circle, rgba(124, 245, 98, 0.18), transparent 69%);
+}
+
+.dark .league-page-intro--demo,
+.league-content-scale--dark .league-page-intro--demo {
+  background: oklch(0.17 0.05 145);
+  box-shadow: 0 8px 20px rgba(0, 9, 3, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.035);
 }
 
 .league-page-intro__eyebrow {

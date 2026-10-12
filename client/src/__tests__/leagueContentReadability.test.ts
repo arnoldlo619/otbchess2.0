@@ -48,6 +48,9 @@ describe("League dashboard content readability", () => {
     expect(styleSource).toContain(".league-page-intro");
     expect(styleSource).toContain(".league-page-intro__metrics");
     expect(styleSource).toContain(".league-data-surface");
+    expect(styleSource).toContain(".league-page-intro--demo::before");
+    expect(styleSource).toContain(".league-content-scale--dark .league-page-intro--demo");
+    expect(demoSource).toContain('className="league-page-intro league-page-intro--demo"');
     expect(styleSource).toContain("@media (hover: hover) and (pointer: fine)");
   });
 

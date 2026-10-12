@@ -467,7 +467,7 @@ export default function LeagueDemo() {
                 <div data-testid="league-demo-content-shell" className="flex-1 px-4 pt-0 pb-4 lg:px-6 lg:pt-0 lg:pb-6 space-y-5">
                   <section
                     data-testid="league-demo-overview-context"
-                    className="league-page-intro"
+                    className="league-page-intro league-page-intro--demo"
                     style={{ "--league-accent": accent, "--league-text-main": textMain, "--league-text-muted": textMuted } as CSSProperties}
                   >
                     <div>
@@ -744,7 +744,7 @@ export default function LeagueDemo() {
               <div className="px-4 pt-0 pb-4 lg:px-6 lg:pt-0 lg:pb-6 max-w-3xl mx-auto space-y-5">
                 <section
                   data-testid="league-demo-matchup-context"
-                  className="league-page-intro"
+                  className="league-page-intro league-page-intro--demo"
                   style={{ "--league-accent": accent, "--league-text-main": textMain, "--league-text-muted": textMuted } as CSSProperties}
                 >
                   <div>
@@ -886,7 +886,7 @@ export default function LeagueDemo() {
               <div className="px-4 pt-0 pb-4 lg:px-6 lg:pt-0 lg:pb-6 space-y-5">
                 <section
                   data-testid="league-demo-standings-context"
-                  className="league-page-intro"
+                  className="league-page-intro league-page-intro--demo"
                   style={{ "--league-accent": accent, "--league-text-main": textMain, "--league-text-muted": textMuted } as CSSProperties}
                 >
                   <div>
@@ -1130,7 +1130,7 @@ export default function LeagueDemo() {
               <div className="px-4 pt-0 pb-4 lg:px-6 lg:pt-0 lg:pb-6 space-y-5">
                 <section
                   data-testid="league-demo-schedule-context"
-                  className="league-page-intro"
+                  className="league-page-intro league-page-intro--demo"
                   style={{ "--league-accent": accent, "--league-text-main": textMain, "--league-text-muted": textMuted } as CSSProperties}
                 >
                   <div>
@@ -1195,7 +1195,7 @@ export default function LeagueDemo() {
               <div className="px-4 pt-0 pb-4 lg:px-6 lg:pt-0 lg:pb-6 space-y-5">
                 <section
                   data-testid="league-demo-history-context"
-                  className="league-page-intro"
+                  className="league-page-intro league-page-intro--demo"
                   style={{ "--league-accent": accent, "--league-text-main": textMain, "--league-text-muted": textMuted } as CSSProperties}
                 >
                   <div>
