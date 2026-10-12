@@ -19,6 +19,7 @@ export type ClubDashboardSidebarItem = {
 type ClubDashboardSidebarProps = {
   accent: string;
   background: string;
+  expandedBackground?: string;
   borderColor: string;
   brandActionLabel?: string;
   items: ClubDashboardSidebarItem[];
@@ -38,6 +39,7 @@ function badgeLabel(value: number) {
 export function ClubDashboardSidebar({
   accent,
   background,
+  expandedBackground,
   borderColor,
   brandActionLabel = "Back to all clubs",
   items,
@@ -169,14 +171,17 @@ export function ClubDashboardSidebar({
     // eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions
     <aside
       aria-label="Club dashboard sidebar"
-      className="absolute inset-y-0 left-0 z-50 hidden flex-col overflow-hidden border-r shadow-none transition-[width,box-shadow] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none lg:flex"
+      data-club-sidebar-expanded={expanded ? "true" : "false"}
+      className="absolute inset-y-0 left-0 z-[60] isolate hidden flex-col overflow-hidden border-r shadow-none transition-[width,box-shadow] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none lg:flex"
       onMouseEnter={() => onPointerExpandedChange(true)}
       onMouseLeave={() => onPointerExpandedChange(false)}
       onFocusCapture={() => onFocusExpandedChange(true)}
       onBlurCapture={handleBlur}
       style={{
         width: expanded ? "264px" : "72px",
-        backgroundColor: background,
+        // The compact rail may retain a translucent tint. Once labels are exposed, use an opaque
+        // surface so glass header chrome can never visually bleed through the expanded navigation.
+        backgroundColor: expanded ? (expandedBackground ?? background) : background,
         backgroundImage: "repeating-conic-gradient(rgb(255 255 255 / 0.018) 0% 25%, transparent 0% 50%)",
         backgroundSize: "12px 12px",
         borderColor,

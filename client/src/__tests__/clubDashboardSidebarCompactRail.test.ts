@@ -59,6 +59,15 @@ describe("Club Dashboard shared sidebar", () => {
     expect(sidebarSource).toContain("motion-reduce:transition-none");
   });
 
+  it("keeps the expanded desktop navigation above translucent Club header chrome", () => {
+    expect(sidebarSource).toContain("expandedBackground?: string;");
+    expect(sidebarSource).toContain('data-club-sidebar-expanded={expanded ? "true" : "false"}');
+    expect(sidebarSource).toContain("z-[60] isolate");
+    expect(sidebarSource).toContain("backgroundColor: expanded ? (expandedBackground ?? background) : background,");
+    expect(dashboardSource).toContain('expandedBackground={navTint ?? "oklch(0.115 0.025 145)"}');
+    expect(demoSource).toContain('expandedBackground="oklch(0.115 0.025 145)"');
+  });
+
   it("renders the OTB thumbnail as the permanent Club dashboard header identity", () => {
     expect(sidebarSource).toContain('const OTB_THUMBNAIL_LOGO = "/manus-storage/otb-logo-exclamation-256_9b50f5ee.webp"');
     expect(sidebarSource).toContain('src={OTB_THUMBNAIL_LOGO}');

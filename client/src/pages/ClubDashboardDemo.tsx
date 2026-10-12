@@ -543,6 +543,7 @@ export default function ClubDashboardDemo() {
         <ClubDashboardSidebar
           accent={DEMO_ACCENT}
           background="oklch(0.115 0.025 145)"
+          expandedBackground="oklch(0.115 0.025 145)"
           borderColor={NAV_BORDER}
           items={DEMO_NAV}
           activeId={tab}

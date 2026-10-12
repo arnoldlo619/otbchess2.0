@@ -86,6 +86,20 @@ describe("ClubDashboardSidebar", () => {
     expect(onFocusExpandedChange).toHaveBeenCalledWith(true);
   });
 
+  it("uses an opaque expanded surface above the Club header layer", () => {
+    renderSidebar({
+      temporarilyExpanded: true,
+      background: "rgba(1, 2, 3, 0.5)",
+      expandedBackground: "rgb(4, 5, 6)",
+    });
+
+    const sidebar = screen.getByRole("complementary", { name: "Club dashboard sidebar" });
+    expect(sidebar.getAttribute("data-club-sidebar-expanded")).toBe("true");
+    expect(sidebar.style.backgroundColor).toBe("rgb(4, 5, 6)");
+    expect(sidebar.className).toContain("z-[60]");
+    expect(sidebar.className).toContain("isolate");
+  });
+
   it("keeps active and hover feedback visible with focus and reduced-motion safeguards", () => {
     renderSidebar();
 

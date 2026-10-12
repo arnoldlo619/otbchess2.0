@@ -4050,6 +4050,7 @@ export default function ClubDashboard() {
         <ClubDashboardSidebar
           accent={accent}
           background={sidebarBg ?? "oklch(0.115 0.025 145)"}
+          expandedBackground={navTint ?? "oklch(0.115 0.025 145)"}
           borderColor={navBorder}
           brandActionLabel="Back to all clubs"
           items={clubTabs.filter((item) => !item.ownerOnly || isOwnerOrDirector)}
