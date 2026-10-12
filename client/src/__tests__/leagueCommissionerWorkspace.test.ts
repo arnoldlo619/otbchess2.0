@@ -36,7 +36,7 @@ describe("League player and commissioner workspace separation", () => {
 
   it("keeps the interactive demo aligned with the commissioner workflow", () => {
     expect(demoSource).toContain('type TabId = "overview" | "commissioner"');
-    expect(demoSource).toContain('label: "Commissioner", icon: Settings');
+    expect(demoSource).toContain('label: "Commissioner", icon: ShieldCheck');
     expect(demoSource).toContain('data-testid="league-demo-commissioner-workspace"');
     expect(demoSource).toContain("Results reported");
     expect(demoSource).toContain('data-testid="league-demo-advance-ready-footer"');

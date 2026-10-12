@@ -107,4 +107,12 @@ describe("Club Dashboard shared sidebar", () => {
     expect(sidebarSource).toContain("<Tooltip key={item.id} delayDuration={250}>");
     expect(sidebarSource).toContain("aria-label={item.label}");
   });
+
+  it("supports branded footer actions and context-specific navigation labels for sibling dashboards", () => {
+    expect(sidebarSource).toContain("footerAction?: ClubDashboardSidebarFooterAction;");
+    expect(sidebarSource).toContain("ariaLabel?: string;");
+    expect(sidebarSource).toContain("footerAriaLabel?: string;");
+    expect(sidebarSource).toContain("function renderFooterAction()");
+    expect(sidebarSource).toContain("{(settingsItem || footerAction) && (");
+  });
 });

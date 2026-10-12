@@ -23,6 +23,7 @@ import { useChessAvatars } from "@/hooks/useChessAvatar";
 import { useAccessibleOverlay } from "@/hooks/useAccessibleOverlay";
 import { LeaguePlayerProfileModal, type LeagueProfileRecentMatch } from "@/components/league/LeaguePlayerProfileModal";
 import { LeagueMonthCalendar } from "@/components/league/LeagueMonthCalendar";
+import { ClubDashboardSidebar, type ClubDashboardSidebarItem } from "@/components/club/ClubDashboardSidebar";
 import "@/styles/leagueContentReadability.css";
 import { logger } from "@/lib/logger";
 import { authFetch } from "@/lib/apiFetch";
@@ -121,6 +122,8 @@ interface League {
   createdAt: string;
   players: LeaguePlayer[];
 }
+
+type LeagueTabId = "overview" | "commissioner" | "matchups" | "standings" | "schedule" | "history" | "requests" | "settings";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 function parseLastResults(raw?: string): string[] {
@@ -662,7 +665,9 @@ export default function LeagueDashboard() {
   const [fullSeasonDetail, setFullSeasonDetail] = useState<FullSeasonDetail | null>(null);
   const [standings, setStandings] = useState<LeagueStanding[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<"overview" | "commissioner" | "matchups" | "standings" | "schedule" | "history" | "requests" | "settings">("overview");
+  const [activeTab, setActiveTab] = useState<LeagueTabId>("overview");
+  const [sidebarHovered, setSidebarHovered] = useState(false);
+  const [sidebarKeyboardExpanded, setSidebarKeyboardExpanded] = useState(false);
   // Settings panel state (commissioner-only)
   const [settingsName, setSettingsName] = useState("");
   const [settingsMaxPlayers, setSettingsMaxPlayers] = useState("");
@@ -1291,16 +1296,17 @@ export default function LeagueDashboard() {
     );
   }
 
-  const tabs = [
-    { id: "overview" as const, label: "Overview", icon: DashboardIcon },
-    ...(isCommissioner ? [{ id: "commissioner" as const, label: "Commissioner", icon: ShieldCheck }] : []),
-    { id: "matchups" as const, label: "Matchups", icon: BattleIcon },
-    { id: "standings" as const, label: "Standings", icon: RatingIcon },
-    { id: "schedule" as const, label: "Schedule", icon: EventsIcon },
-    ...(league.status === "completed" ? [{ id: "history" as const, label: "Summary", icon: TournamentsIcon }] : []),
-    ...(isCommissioner && league.status === "draft" ? [{ id: "requests" as const, label: "Requests", icon: MembersIcon, badge: joinRequests.length }] : []),
-    ...(isCommissioner ? [{ id: "settings" as const, label: "Settings", icon: OtbSettingsIcon }] : []),
+  const tabs: Array<ClubDashboardSidebarItem & { id: LeagueTabId }> = [
+    { id: "overview" as const, label: "Overview", icon: DashboardIcon, group: "workspace" },
+    ...(isCommissioner ? [{ id: "commissioner" as const, label: "Commissioner", icon: ShieldCheck, group: "workspace" as const }] : []),
+    { id: "matchups" as const, label: "Matchups", icon: BattleIcon, group: "workspace" },
+    { id: "standings" as const, label: "Standings", icon: RatingIcon, group: "workspace" },
+    { id: "schedule" as const, label: "Schedule", icon: EventsIcon, group: "workspace" },
+    ...(league.status === "completed" ? [{ id: "history" as const, label: "Summary", icon: TournamentsIcon, group: "workspace" as const }] : []),
+    ...(isCommissioner && league.status === "draft" ? [{ id: "requests" as const, label: "Requests", icon: MembersIcon, badge: joinRequests.length, group: "workspace" as const }] : []),
+    ...(isCommissioner ? [{ id: "settings" as const, label: "Settings", icon: OtbSettingsIcon, group: "manage" as const }] : []),
   ];
+  const sidebarExpanded = sidebarHovered || sidebarKeyboardExpanded;
 
   const configurationItems = [
     { label: "League Name", value: league.name },
@@ -1329,87 +1335,38 @@ export default function LeagueDashboard() {
       {/* ── MAIN LAYOUT: icon rail + content ──────────────────────────────── */}
       <div className="flex h-[100dvh] w-full max-w-full overflow-hidden overscroll-x-none">
 
-        {/* ── LEFT ICON RAIL (desktop) ─────────────────────────────────────── */}
-        <aside
-          data-testid="league-desktop-sidebar"
-          className="hidden lg:flex flex-col items-center w-[60px] flex-shrink-0 py-4 gap-1 relative z-50 overflow-visible chess-board-bg sticky top-0 self-start h-screen"
-          style={{
-            borderRight: `1px solid ${isDark ? "oklch(0.22 0.06 145)" : "oklch(0.25 0.08 145)"}`,
+        {/* Desktop League navigation — compact by default; hover or focus reveals labels. */}
+        <div
+          aria-hidden="true"
+          className="hidden flex-shrink-0 transition-[width,min-width] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none lg:block"
+          style={{ width: sidebarExpanded ? "264px" : "72px", minWidth: sidebarExpanded ? "264px" : "72px" }}
+        />
+        <ClubDashboardSidebar
+          accent={accent}
+          background="oklch(0.115 0.025 145)"
+          expandedBackground={isDark ? "oklch(0.115 0.025 145)" : "oklch(0.15 0.04 145)"}
+          borderColor={isDark ? "oklch(0.22 0.06 145)" : "oklch(0.25 0.08 145)"}
+          brandActionLabel="Back to club"
+          ariaLabel="League dashboard sidebar"
+          footerAriaLabel="League dashboard footer navigation"
+          items={tabs}
+          activeId={activeTab}
+          collapsed
+          temporarilyExpanded={sidebarExpanded}
+          onPointerExpandedChange={setSidebarHovered}
+          onFocusExpandedChange={setSidebarKeyboardExpanded}
+          onSelect={(nextTab) => {
+            const tab = nextTab as LeagueTabId;
+            setActiveTab(tab);
+            if (tab === "commissioner") setSelectedWeek(league.currentWeek);
           }}
-        >
-          <div
-            className="absolute inset-0 pointer-events-none z-0"
-            style={{ background: isDark ? "oklch(0.15 0.04 145 / 0.80)" : "oklch(0.12 0.06 145 / 0.86)" }}
-          />
-          <div className="relative z-10 flex flex-col items-center w-full h-full">
-            <button
-              onClick={() => navigate(`/clubs/${league.clubId}`)}
-              className="w-10 h-10 rounded-xl flex items-center justify-center mb-3 flex-shrink-0 overflow-hidden transition-opacity hover:opacity-80"
-              title={league.clubName ?? "Back to Club"}
-            >
-              <img
-                src="/manus-storage/otb-logo-exclamation-256_9b50f5ee.webp"
-                alt="OTB!!"
-                className="w-8 h-8 object-contain"
-              />
-            </button>
-
-            <div className="w-8 h-px mb-2" style={{ background: "oklch(0.30 0.06 145)" }} />
-
-            <nav aria-label="League dashboard navigation" className="flex flex-col items-center justify-center gap-1 flex-1">
-              {tabs.map((tab) => {
-                const Icon = tab.icon;
-                const isActive = activeTab === tab.id;
-                return (
-                  <button
-                    key={tab.id}
-                    onClick={() => {
-                      setActiveTab(tab.id);
-                      if (tab.id === "commissioner") setSelectedWeek(league.currentWeek);
-                    }}
-                    className="relative w-10 h-10 rounded-xl flex items-center justify-center transition-all group"
-                    style={{
-                      background: isActive ? accent : "transparent",
-                      color: isActive ? (isDark ? "oklch(0.12 0.04 145)" : "#fff") : isDark ? "oklch(0.68 0.08 145)" : "oklch(0.40 0.08 145)",
-                    }}
-                    title={tab.label}
-                  >
-                    <span className={`otb-icon${isActive ? " otb-icon--active" : ""}`}>
-                      <Icon size={17} />
-                    </span>
-                    {((tab as { id: string; label: string; icon: React.ElementType; badge?: number }).badge ?? 0) > 0 && (
-                      <span
-                        className="absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full flex items-center justify-center text-[8px] font-bold"
-                        style={{ background: "#ef4444", color: "#fff" }}
-                      >
-                        {(tab as { id: string; label: string; icon: React.ElementType; badge?: number }).badge}
-                      </span>
-                    )}
-                    <span
-                      data-testid="league-sidebar-tooltip"
-                      className="absolute left-full ml-2 px-2 py-1 rounded-lg text-xs font-medium whitespace-nowrap pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity z-[60]"
-                      style={{ background: isDark ? "oklch(0.25 0.06 145)" : "#1a2e1f", color: "#fff" }}
-                    >
-                      {tab.label}
-                    </span>
-                  </button>
-                );
-              })}
-            </nav>
-
-            <div className="w-8 h-px mt-2 mb-2" style={{ background: "oklch(0.30 0.06 145)" }} />
-            <div className="flex flex-col items-center gap-1">
-              <button
-                onClick={() => navigate(`/clubs/${league.clubId}`)}
-                className="w-10 h-10 rounded-xl flex items-center justify-center transition-all hover:opacity-80"
-                style={{ color: isDark ? "oklch(0.68 0.08 145)" : "oklch(0.40 0.08 145)" }}
-                title="Back to Club"
-              >
-                <ArrowLeft size={16} />
-              </button>
-            </div>
-          </div>
-        </aside>
+          onBackToClubs={() => navigate(`/clubs/${league.clubId}`)}
+          footerAction={{
+            label: "Back to club",
+            icon: ArrowLeft,
+            onClick: () => navigate(`/clubs/${league.clubId}`),
+          }}
+        />
 
         {/* ── MAIN CONTENT AREA ────────────────────────────────────────── */}
         <div className="flex-1 flex flex-col min-w-0 overflow-hidden">

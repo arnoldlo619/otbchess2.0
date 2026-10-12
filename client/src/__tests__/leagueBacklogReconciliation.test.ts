@@ -20,10 +20,19 @@ describe("League Dashboard implementation", () => {
     expect(dashboard).toContain('label: "Schedule"');
   });
 
-  it("keeps desktop sidebar tooltips above the League content layer", () => {
-    expect(dashboard).toContain('data-testid="league-sidebar-tooltip"');
-    expect(dashboard).toContain("relative z-50 overflow-visible chess-board-bg");
-    expect(dashboard).toContain("transition-opacity z-[60]");
+  it("uses the shared opaque expanding rail above League content", () => {
+    expect(dashboard).toContain('import { ClubDashboardSidebar, type ClubDashboardSidebarItem }');
+    expect(dashboard).toContain('<ClubDashboardSidebar');
+    expect(dashboard).toContain("const sidebarExpanded = sidebarHovered || sidebarKeyboardExpanded;");
+    expect(dashboard).toContain('style={{ width: sidebarExpanded ? "264px" : "72px", minWidth: sidebarExpanded ? "264px" : "72px" }}');
+    expect(dashboard).toContain('temporarilyExpanded={sidebarExpanded}');
+    expect(dashboard).toContain('ariaLabel="League dashboard sidebar"');
+    expect(dashboard).toContain('footerAction={{');
+    expect(demo).toContain('<ClubDashboardSidebar');
+    expect(demo).toContain("const sidebarExpanded = sidebarHovered || sidebarKeyboardExpanded;");
+    expect(demo).toContain('style={{ width: sidebarExpanded ? "264px" : "72px", minWidth: sidebarExpanded ? "264px" : "72px" }}');
+    expect(demo).toContain('temporarilyExpanded={sidebarExpanded}');
+    expect(demo).toContain('ariaLabel="League demo sidebar"');
   });
 
   it("separates player overview, commissioner operations, and standings surfaces", () => {
@@ -47,10 +56,9 @@ describe("League Dashboard implementation", () => {
     expect(dashboard).toContain("Save Changes");
   });
 
-  it("uses the demo's centered rail and a single production league identity/action cluster", () => {
-    expect(dashboard).toContain('data-testid="league-desktop-sidebar"');
-    expect(dashboard).toContain('w-[60px] flex-shrink-0 py-4');
-    expect(dashboard).toContain('justify-center gap-1 flex-1');
+  it("keeps a compact League rail reservation and a single production identity/action cluster", () => {
+    expect(dashboard).toContain('transition-[width,min-width] duration-300');
+    expect(demo).toContain('transition-[width,min-width] duration-300');
     expect(dashboard).toContain('data-testid="league-dashboard-hero"');
     expect(dashboard).toContain('h-[132px] sm:h-[144px] lg:h-[156px]');
     expect(dashboard).toContain('otb-header-safe lg:hidden');

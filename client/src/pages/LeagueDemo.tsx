@@ -12,7 +12,7 @@ import { useAuthContext } from "@/context/AuthContext";
 import AuthModal from "@/components/AuthModal";
 import {
   Trophy, Users as _Users, Calendar, BarChart3 as _BarChart3, ListOrdered as _ListOrdered,
-  Clock, Swords as _Swords, Target as _Target, ArrowLeft, Crown, Settings,
+  Clock, Swords as _Swords, Target as _Target, ArrowLeft, Crown, Settings, ShieldCheck,
   History as _History, Shield as _Shield, Plus, Users2,
 } from "lucide-react";
 import {
@@ -22,6 +22,7 @@ import { AsciiArt } from "@/components/ui/d60-hero";
 import { LeagueBracket } from "@/components/LeagueBracket";
 import { LeaguePlayerProfileModal, type LeagueProfileRecentMatch } from "@/components/league/LeaguePlayerProfileModal";
 import { LeagueMonthCalendar } from "@/components/league/LeagueMonthCalendar";
+import { ClubDashboardSidebar, type ClubDashboardSidebarItem } from "@/components/club/ClubDashboardSidebar";
 import "@/styles/leagueContentReadability.css";
 
 // ── Mock Data ─────────────────────────────────────────────────────────────────
@@ -162,13 +163,13 @@ function FormBadge({ result, isDark = true }: { result: string; isDark?: boolean
 
 type TabId = "overview" | "commissioner" | "matchup" | "standings" | "schedule" | "history";
 
-const TABS: { id: TabId; label: string; icon: React.ComponentType<{ size?: number }> }[] = [
-  { id: "overview",  label: "Overview",   icon: DashboardIcon },
-  { id: "commissioner", label: "Commissioner", icon: Settings },
-  { id: "matchup",   label: "Matchup",    icon: BattleIcon },
-  { id: "standings", label: "Standings",  icon: RatingIcon },
-  { id: "schedule",  label: "Schedule",   icon: EventsIcon },
-  { id: "history",   label: "History",    icon: TournamentsIcon },
+const TABS: Array<ClubDashboardSidebarItem & { id: TabId }> = [
+  { id: "overview", label: "Overview", icon: DashboardIcon, group: "workspace" },
+  { id: "commissioner", label: "Commissioner", icon: ShieldCheck, group: "workspace" },
+  { id: "matchup", label: "Matchup", icon: BattleIcon, group: "workspace" },
+  { id: "standings", label: "Standings", icon: RatingIcon, group: "workspace" },
+  { id: "schedule", label: "Schedule", icon: EventsIcon, group: "workspace" },
+  { id: "history", label: "History", icon: TournamentsIcon, group: "workspace" },
 ];
 
 export default function LeagueDemo() {
@@ -176,6 +177,8 @@ export default function LeagueDemo() {
   const { theme } = useTheme();
   const isDark = theme === "dark";
   const [activeTab, setActiveTab] = useState<TabId>("standings");
+  const [sidebarHovered, setSidebarHovered] = useState(false);
+  const [sidebarKeyboardExpanded, setSidebarKeyboardExpanded] = useState(false);
   const [standingsView, setStandingsView] = useState<"table" | "bracket">("bracket");
   const [selectedScheduleWeek, setSelectedScheduleWeek] = useState(14);
   const [commissionerResults, setCommissionerResults] = useState<Record<number, "white_win" | "black_win" | "draw">>({});
@@ -223,6 +226,7 @@ export default function LeagueDemo() {
   const textMain  = isDark ? "#f0f5ee" : "#111827";
   const textMuted = isDark ? "oklch(0.78 0.04 145)" : "#374151";
   const accent    = isDark ? "oklch(0.68 0.16 145)" : "oklch(0.38 0.13 145)";
+  const sidebarExpanded = sidebarHovered || sidebarKeyboardExpanded;
   const demoSeasonStart = new Date();
   demoSeasonStart.setDate(demoSeasonStart.getDate() - 13 * 7);
   const demoScheduleWeeks = Array.from({ length: 16 }, (_, index) => {
@@ -287,85 +291,34 @@ export default function LeagueDemo() {
       {/* ── MAIN LAYOUT ─────────────────────────────────────────────────────── */}
       <div className="flex min-h-screen">
 
-        {/* ── LEFT ICON RAIL (desktop) ──────────────────────────────────────── */}
-        <aside
-          className="hidden lg:flex flex-col items-center w-[60px] flex-shrink-0 py-4 gap-1 relative chess-board-bg sticky top-0 self-start h-screen"
-          style={{
-            borderRight: `1px solid ${isDark ? "oklch(0.22 0.06 145)" : "oklch(0.25 0.08 145)"}`,
+        {/* Desktop League demo navigation — compact by default; hover or focus reveals labels. */}
+        <div
+          aria-hidden="true"
+          className="hidden flex-shrink-0 transition-[width,min-width] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none lg:block"
+          style={{ width: sidebarExpanded ? "264px" : "72px", minWidth: sidebarExpanded ? "264px" : "72px" }}
+        />
+        <ClubDashboardSidebar
+          accent={accent}
+          background="oklch(0.115 0.025 145)"
+          expandedBackground={isDark ? "oklch(0.115 0.025 145)" : "oklch(0.15 0.04 145)"}
+          borderColor={isDark ? "oklch(0.22 0.06 145)" : "oklch(0.25 0.08 145)"}
+          brandActionLabel="Back to home"
+          ariaLabel="League demo sidebar"
+          footerAriaLabel="League demo footer navigation"
+          items={TABS}
+          activeId={activeTab}
+          collapsed
+          temporarilyExpanded={sidebarExpanded}
+          onPointerExpandedChange={setSidebarHovered}
+          onFocusExpandedChange={setSidebarKeyboardExpanded}
+          onSelect={(nextTab) => setActiveTab(nextTab as TabId)}
+          onBackToClubs={() => navigate("/")}
+          footerAction={{
+            label: "Back to home",
+            icon: ArrowLeft,
+            onClick: () => navigate("/"),
           }}
-        >
-          {/* Chess-pattern dark overlay */}
-          <div
-            className="absolute inset-0 pointer-events-none z-0"
-            style={{ background: isDark ? "oklch(0.15 0.04 145 / 0.80)" : "oklch(0.12 0.06 145 / 0.86)" }}
-          />
-          {/* Sidebar content — sits above the chess-pattern overlay */}
-          <div className="relative z-10 flex flex-col items-center w-full h-full">
-
-          {/* Logo / back to home */}
-          <button
-            onClick={() => navigate("/")}
-            className="w-10 h-10 rounded-xl flex items-center justify-center mb-3 flex-shrink-0 overflow-hidden hover:opacity-80 transition-opacity"
-            title="Back to home"
-          >
-            <img
-              src="/manus-storage/otb-logo-exclamation-256_9b50f5ee.webp"
-              alt="OTB!!"
-              className="w-8 h-8 object-contain"
-            />
-          </button>
-
-          {/* Divider */}
-          <div className="w-8 h-px mb-2" style={{ background: "oklch(0.30 0.06 145)" }} />
-
-          {/* Nav icons */}
-          <nav aria-label="League demo navigation" className="flex flex-col items-center justify-center gap-1 flex-1">
-            {TABS.map((tab) => {
-              const Icon = tab.icon;
-              const isActive = activeTab === tab.id;
-              return (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
-                  className="relative w-10 h-10 rounded-xl flex items-center justify-center transition-all group"
-                  style={{
-                    background: isActive ? accent : "transparent",
-                    color: isActive ? (isDark ? "oklch(0.12 0.04 145)" : "#fff") : isDark ? "oklch(0.68 0.08 145)" : "oklch(0.40 0.08 145)",
-                  }}
-                  title={tab.label}
-                >
-                  <span className={`otb-icon${isActive ? " otb-icon--active" : ""}`}>
-                    <Icon size={17} />
-                  </span>
-                  {/* Tooltip */}
-                  <span
-                    className="absolute left-full ml-2 px-2 py-1 rounded-lg text-xs font-medium whitespace-nowrap pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity z-50"
-                    style={{ background: isDark ? "oklch(0.25 0.06 145)" : "#1a2e1f", color: "#fff" }}
-                  >
-                    {tab.label}
-                  </span>
-                </button>
-              );
-            })}
-          </nav>
-
-          {/* Divider */}
-          <div className="w-8 h-px mt-2 mb-2" style={{ background: "oklch(0.30 0.06 145)" }} />
-
-          {/* Bottom actions */}
-          <div className="flex flex-col items-center gap-1">
-            <button
-              onClick={() => navigate("/")}
-              className="w-10 h-10 rounded-xl flex items-center justify-center transition-all hover:opacity-80"
-              style={{ color: isDark ? "oklch(0.68 0.08 145)" : "oklch(0.40 0.08 145)" }}
-              title="Back to Home"
-            >
-              <ArrowLeft size={16} />
-            </button>
-          </div>
-
-          </div>{/* end z-10 sidebar content wrapper */}
-        </aside>
+        />
 
         {/* ── MAIN CONTENT AREA ─────────────────────────────────────────────── */}
         <div className="flex-1 flex flex-col min-w-0 overflow-hidden">

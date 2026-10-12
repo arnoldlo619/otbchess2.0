@@ -16,12 +16,20 @@ export type ClubDashboardSidebarItem = {
   group: "workspace" | "manage";
 };
 
+type ClubDashboardSidebarFooterAction = {
+  label: string;
+  icon: ElementType;
+  onClick: () => void;
+};
+
 type ClubDashboardSidebarProps = {
   accent: string;
   background: string;
   expandedBackground?: string;
   borderColor: string;
   brandActionLabel?: string;
+  ariaLabel?: string;
+  footerAriaLabel?: string;
   items: ClubDashboardSidebarItem[];
   activeId: string;
   collapsed: boolean;
@@ -30,6 +38,7 @@ type ClubDashboardSidebarProps = {
   onFocusExpandedChange: (expanded: boolean) => void;
   onSelect: (id: string) => void;
   onBackToClubs: () => void;
+  footerAction?: ClubDashboardSidebarFooterAction;
 };
 
 function badgeLabel(value: number) {
@@ -42,6 +51,8 @@ export function ClubDashboardSidebar({
   expandedBackground,
   borderColor,
   brandActionLabel = "Back to all clubs",
+  ariaLabel = "Club dashboard sidebar",
+  footerAriaLabel = "Club dashboard footer navigation",
   items,
   activeId,
   collapsed,
@@ -50,6 +61,7 @@ export function ClubDashboardSidebar({
   onFocusExpandedChange,
   onSelect,
   onBackToClubs,
+  footerAction,
 }: ClubDashboardSidebarProps) {
   const expanded = !collapsed || temporarilyExpanded;
   const [hoveredItemId, setHoveredItemId] = useState<string | null>(null);
@@ -166,11 +178,75 @@ export function ClubDashboardSidebar({
     return settingsItem ? renderItem(settingsItem) : null;
   }
 
+  function renderFooterAction() {
+    if (!footerAction) return null;
+    const Icon = footerAction.icon;
+    const isHovered = hoveredItemId === "footer-action";
+
+    return (
+      <button
+        type="button"
+        onClick={footerAction.onClick}
+        onPointerEnter={(event) => {
+          if (event.pointerType !== "touch") setHoveredItemId("footer-action");
+        }}
+        onPointerLeave={() => setHoveredItemId(null)}
+        aria-label={footerAction.label}
+        className="group relative flex cursor-pointer items-center rounded-xl text-left outline-none transition-[width,height,margin,padding,gap,background-color,color,transform] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-[#07140c] motion-reduce:transition-none"
+        style={{
+          justifyContent: expanded ? "flex-start" : "center",
+          gap: expanded ? "12px" : 0,
+          paddingInline: expanded ? "12px" : 0,
+          width: expanded ? "calc(100% - 4px)" : "52px",
+          height: "52px",
+          alignSelf: "center",
+          marginInlineStart: expanded ? "2px" : 0,
+          color: isHovered ? accent : "rgba(229, 238, 232, 0.68)",
+          background: isHovered ? `color-mix(in srgb, ${accent} 8%, transparent)` : "transparent",
+          border: isHovered ? `1px solid color-mix(in srgb, ${accent} 27%, transparent)` : "1px solid transparent",
+          boxShadow: isHovered ? `inset 0 1px 0 color-mix(in srgb, ${accent} 16%, transparent)` : "none",
+          // @ts-expect-error CSS custom property is supported by React at runtime.
+          "--tw-ring-color": accent,
+        }}
+      >
+        <span
+          aria-hidden="true"
+          className="flex shrink-0 items-center justify-center rounded-xl transition-[background-color,border-color,color,transform,opacity] duration-200 ease-out motion-reduce:transition-none"
+          style={{
+            width: "40px",
+            height: "40px",
+            color: isHovered ? accent : "inherit",
+            background: isHovered ? `color-mix(in srgb, ${accent} 8%, rgba(255,255,255,0.045))` : "transparent",
+            border: "1px solid transparent",
+            opacity: isHovered ? 1 : 0.82,
+            transform: isHovered ? "translateY(-1px) scale(1.04)" : "scale(1)",
+          }}
+        >
+          <Icon size={22} strokeWidth={1.7} />
+        </span>
+        <span
+          className="min-w-0 flex-1 truncate text-base font-semibold tracking-[-0.01em] transition-[opacity,transform] duration-200 ease-out motion-reduce:transition-none"
+          style={{
+            flex: expanded ? "1 1 0%" : "0 0 0",
+            overflow: expanded ? "visible" : "hidden",
+            opacity: expanded ? 1 : 0,
+            transform: expanded ? "translateX(0)" : "translateX(-5px)",
+            transitionDelay: expanded ? "95ms" : "0ms",
+            pointerEvents: "none",
+          }}
+          aria-hidden={!expanded}
+        >
+          {footerAction.label}
+        </span>
+      </button>
+    );
+  }
+
   return (
     // Pointer hover temporarily reveals labels; the equivalent focus-capture path preserves keyboard access.
     // eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions
     <aside
-      aria-label="Club dashboard sidebar"
+      aria-label={ariaLabel}
       data-club-sidebar-expanded={expanded ? "true" : "false"}
       className="absolute inset-y-0 left-0 z-[60] isolate hidden flex-col overflow-hidden border-r shadow-none transition-[width,box-shadow] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none lg:flex"
       onMouseEnter={() => onPointerExpandedChange(true)}
@@ -224,9 +300,10 @@ export function ClubDashboardSidebar({
         {renderGroup(primaryItems)}
       </nav>
 
-      {settingsItem && (
-        <footer aria-label="Club dashboard footer navigation" className="border-t border-white/[0.065] px-3 py-3">
+      {(settingsItem || footerAction) && (
+        <footer aria-label={footerAriaLabel} className="border-t border-white/[0.065] px-3 py-3">
           {renderFooter()}
+          {renderFooterAction()}
         </footer>
       )}
     </aside>
