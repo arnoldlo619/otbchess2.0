@@ -24,7 +24,8 @@ describe("League player and commissioner workspace separation", () => {
   it("keeps the player overview focused on the current matchup and personal form", () => {
     expect(dashboardSource).toContain('data-testid="league-player-recent-form"');
     expect(dashboardSource).toContain('data-testid="league-player-matchup-empty-state"');
-    expect(dashboardSource).toContain("Your completed League results will appear here after your first match.");
+    expect(dashboardSource).toContain(">League form</p>");
+    expect(dashboardSource).not.toContain("Recent league results");
     expect(dashboardSource).not.toContain("{/* Week Results Summary Card */}");
     expect(dashboardSource).not.toContain("{/* Competition snapshot */}");
   });

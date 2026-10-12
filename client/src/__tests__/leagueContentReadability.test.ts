@@ -45,7 +45,7 @@ describe("League dashboard content readability", () => {
     }
 
     expect(dashboardSource).not.toContain('data-testid="league-overview-context"');
-    expect(dashboardSource).toContain('<h2 className="text-2xl font-black tracking-tight sm:text-3xl"');
+    expect(dashboardSource).toContain('<h2 className="max-w-[calc(100%-5.5rem)] text-center text-2xl font-black leading-tight tracking-tight sm:text-3xl"');
     expect(dashboardSource).toContain('className="relative flex w-full items-center justify-center gap-3');
     expect(dashboardSource).toContain('className="absolute right-4"');
     expect(styleSource).toContain(".league-page-intro");

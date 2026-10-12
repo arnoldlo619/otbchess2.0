@@ -10,7 +10,7 @@ import { useAuthContext } from "@/context/AuthContext";
 import {
   Trophy, Users, Calendar, ChevronRight, ArrowLeft,
   Crown, BarChart3, ListOrdered, CheckCircle2,
-  Clock, ChevronUp, ChevronDown, Minus, Zap, Target, Binoculars,
+  Clock, ChevronUp, ChevronDown, Minus, Target, Binoculars, ShieldCheck,
   Share2, Copy, Check, QrCode, X, Settings, Pencil,
   AlertTriangle, Download
 } from "lucide-react";
@@ -1446,7 +1446,7 @@ export default function LeagueDashboard() {
                   aria-label="Open Commissioner workspace"
                   title="Commissioner"
                 >
-                  <span className="league-header-action__content"><Settings size={17} aria-hidden="true" /></span>
+                  <span className="league-header-action__content"><ShieldCheck size={17} aria-hidden="true" /></span>
                 </button>
               )}
             </div>
@@ -1497,7 +1497,7 @@ export default function LeagueDashboard() {
                       aria-label="Open Commissioner workspace"
                     >
                       <span className="league-header-action__content flex items-center gap-2">
-                        <Settings size={15} aria-hidden="true" />
+                        <ShieldCheck size={15} aria-hidden="true" />
                         Commissioner
                       </span>
                     </button>
@@ -1920,15 +1920,12 @@ export default function LeagueDashboard() {
                 style={{ background: cardBg, border: `1.5px solid ${accent}55` }}
               >
                 <div
-                  className="flex flex-col gap-2 px-5 py-4 sm:flex-row sm:items-center sm:justify-between"
+                  className="relative flex min-h-[4.5rem] items-center justify-center px-5 py-4"
                   style={{ background: `${accent}18`, borderBottom: `1px solid ${accent}33` }}
                 >
-                  <div className="flex items-center gap-2.5">
-                    <Zap size={18} aria-hidden="true" style={{ color: accent }} />
-                    <h2 className="text-2xl font-black tracking-tight sm:text-3xl" style={{ color: textMain }}>
-                      Your Match · Week {league.currentWeek}
-                    </h2>
-                  </div>
+                  <h2 className="max-w-[calc(100%-5.5rem)] text-center text-2xl font-black leading-tight tracking-tight sm:text-3xl" style={{ color: textMain }}>
+                    Your Match · Week {league.currentWeek}
+                  </h2>
                   {(() => {
                     const cw = weeks.find(w => w.weekNumber === league.currentWeek);
                     if (!cw?.deadline) return null;
@@ -1936,14 +1933,14 @@ export default function LeagueDashboard() {
                     const now = new Date();
                     const diff = dl.getTime() - now.getTime();
                     if (diff <= 0) return (
-                      <span className="ml-auto text-[10px] font-semibold px-2 py-0.5 rounded-full" style={{ background: "oklch(0.45 0.18 25)", color: "#fff" }}>Overdue</span>
+                      <span className="absolute right-5 top-1/2 -translate-y-1/2 rounded-full px-2 py-0.5 text-[10px] font-semibold" style={{ background: "oklch(0.45 0.18 25)", color: "#fff" }}>Overdue</span>
                     );
                     const days = Math.floor(diff / (1000 * 60 * 60 * 24));
                     const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
                     const isUrgent = diff < 48 * 60 * 60 * 1000;
                     const timeStr = days > 0 ? `${days}d ${hours}h left` : `${hours}h left`;
                     return (
-                      <span className="ml-auto flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full" style={{ background: isUrgent ? "oklch(0.65 0.18 60)22" : `${accent}22`, color: isUrgent ? "oklch(0.65 0.18 60)" : accent }}>
+                      <span className="absolute right-5 top-1/2 flex -translate-y-1/2 items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold" style={{ background: isUrgent ? "oklch(0.65 0.18 60)22" : `${accent}22`, color: isUrgent ? "oklch(0.65 0.18 60)" : accent }}>
                         <Clock size={10} />{timeStr}
                       </span>
                     );
@@ -2004,7 +2001,7 @@ export default function LeagueDashboard() {
                         >
                           VS
                         </div>
-                        {canReport(myMatchThisWeek) ? (
+                        {canReport(myMatchThisWeek) && (
                           <button
                             onClick={() => setReportingMatch(myMatchThisWeek)}
                             className="text-xs font-semibold px-2 py-0.5 rounded-full mt-1"
@@ -2012,8 +2009,6 @@ export default function LeagueDashboard() {
                           >
                             Report
                           </button>
-                        ) : (
-                          <span className="text-xs mt-0.5 text-center" style={{ color: textMuted }}>Play your match &amp; tell the commissioner the result</span>
                         )}
                       </>
                     )}
@@ -2037,12 +2032,26 @@ export default function LeagueDashboard() {
                     <span className="text-[10px]" style={{ color: textMuted }}>Black</span>
                   </div>
                 </div>
+                {user && myStanding && (
+                  <div
+                    data-testid="league-player-recent-form"
+                    className="mx-4 flex flex-wrap items-center justify-center gap-x-4 gap-y-2 border-t py-3 sm:justify-between"
+                    style={{ borderColor: cardBorder }}
+                  >
+                    <div className="text-center sm:text-left">
+                      <p className="text-[10px] font-bold uppercase tracking-[0.14em]" style={{ color: textMuted }}>League form</p>
+                      <p className="mt-0.5 text-sm font-black tabular-nums" style={{ color: textMain }}>{myStanding.wins}W {myStanding.draws}D {myStanding.losses}L · {myStanding.points} pts</p>
+                    </div>
+                    {parseLastResults(myStanding.lastResults).length > 0 && (
+                      <div className="flex flex-wrap items-center justify-center gap-1.5" aria-label="Recent League results">
+                        {parseLastResults(myStanding.lastResults).slice(-5).map((result, index) => <ResultDot key={`${result}-${index}`} r={result} />)}
+                      </div>
+                    )}
+                  </div>
+                )}
                 {/* Prep for Next Round CTA */}
                 {(() => {
                   const oppChessCom = myMatchThisWeek ? getOpponentChesscom(myMatchThisWeek) : null;
-                  const oppName = myMatchThisWeek
-                    ? (myMatchThisWeek.playerWhiteId === user?.id ? myMatchThisWeek.playerBlackName : myMatchThisWeek.playerWhiteName)
-                    : null;
                   if (!oppChessCom) return null;
                   return (
                     <div className="px-4 pb-4">
@@ -2062,7 +2071,6 @@ export default function LeagueDashboard() {
                           </div>
                           <div className="text-center">
                             <div className="text-sm font-bold" style={{ color: accent }}>Prep for Next Round</div>
-                            <div className="text-xs font-normal" style={{ color: `${accent}99` }}>Analyse {oppName ?? oppChessCom}'s openings &amp; tendencies</div>
                           </div>
                         </div>
                         <ChevronRight className="absolute right-4" size={16} style={{ color: `${accent}88` }} />
@@ -2092,46 +2100,6 @@ export default function LeagueDashboard() {
               </section>
             )}
 
-            {/* Personal recent form — player-only context belongs on Overview. */}
-            {user && myStanding && (
-              <section
-                data-testid="league-player-recent-form"
-                className="rounded-2xl overflow-hidden"
-                style={{ background: cardBg, border: `1px solid ${cardBorder}` }}
-              >
-                <div className="flex items-center justify-between gap-3 px-5 py-4" style={{ borderBottom: `1px solid ${cardBorder}` }}>
-                  <div>
-                    <p className="text-xs font-bold uppercase tracking-[0.14em]" style={{ color: accent }}>Your form</p>
-                    <h2 className="mt-1 text-lg font-bold tracking-tight" style={{ color: textMain }}>Recent league results</h2>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-sm font-black tabular-nums" style={{ color: textMain }}>{myStanding.wins}W {myStanding.draws}D {myStanding.losses}L</p>
-                    <p className="text-xs" style={{ color: textMuted }}>{myStanding.points} pts</p>
-                  </div>
-                </div>
-                <div className="px-5 py-4">
-                  {getPlayerProfileRecentMatches(user.id).length > 0 ? (
-                    <div className="space-y-2.5">
-                      <div className="flex flex-wrap items-center gap-1.5">
-                        {parseLastResults(myStanding.lastResults).slice(-5).map((result, index) => <ResultDot key={`${result}-${index}`} r={result} />)}
-                      </div>
-                      <div className="divide-y rounded-xl" style={{ border: `1px solid ${cardBorder}`, borderColor: cardBorder }}>
-                        {getPlayerProfileRecentMatches(user.id).slice(0, 3).map((match) => (
-                          <div key={match.id} className="flex items-center gap-3 px-3 py-2.5">
-                            <span className="w-7 text-xs font-bold" style={{ color: textMuted }}>W{match.weekNumber}</span>
-                            <span className="min-w-0 flex-1 truncate text-sm font-medium" style={{ color: textMain }}>vs {match.opponentName}</span>
-                            <span className="text-xs" style={{ color: textMuted }}>{match.color === "white" ? "White" : "Black"}</span>
-                            <span className="rounded-full px-2 py-0.5 text-xs font-bold" style={{ background: match.outcome === "win" ? `${accent}22` : match.outcome === "loss" ? "oklch(0.55 0.18 25 / 0.18)" : "oklch(0.55 0.15 60 / 0.18)", color: match.outcome === "win" ? accent : match.outcome === "loss" ? "oklch(0.65 0.18 25)" : "oklch(0.65 0.15 60)" }}>{match.score}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  ) : (
-                    <p className="text-sm" style={{ color: textMuted }}>Your completed League results will appear here after your first match.</p>
-                  )}
-                </div>
-              </section>
-            )}
           </>
         )}
 

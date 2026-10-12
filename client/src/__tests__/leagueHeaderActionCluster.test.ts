@@ -25,6 +25,8 @@ describe("League commissioner header action cluster", () => {
     expect(heroSource).not.toContain(">\n                        Report");
     expect(heroSource).not.toContain(">\n                        Advance");
     expect(heroSource).not.toContain("<Crown size");
+    expect(heroSource).toContain("<ShieldCheck size={15}");
+    expect(heroSource).not.toContain("<Settings size={15}");
     expect(heroSource).not.toContain("Live · Week");
     expect(heroSource).toContain('league.status !== "active" ? (');
   });
@@ -43,12 +45,13 @@ describe("League commissioner header action cluster", () => {
     expect(heroSource).toContain('linear-gradient(135deg, ${accent}, oklch(0.51 0.15 145))');
     expect(topBarSource).toContain('className="ml-auto flex items-center gap-1.5 lg:hidden"');
     expect(topBarSource).toContain("min-h-11 min-w-11");
+    expect(topBarSource).toContain("<ShieldCheck size={17}");
   });
 
   it("keeps player overview actions focused on matchup preparation and moves operations to the commissioner workspace", () => {
     const overviewSource = dashboardSource.slice(
-      dashboardSource.indexOf("Prep for Next Round CTA"),
-      dashboardSource.indexOf('data-testid="league-player-recent-form"')
+      dashboardSource.indexOf("Your Match This Week"),
+      dashboardSource.indexOf('data-testid="league-player-matchup-empty-state"')
     );
     const commissionerSource = dashboardSource.slice(
       dashboardSource.indexOf('data-testid="league-commissioner-workspace"'),
@@ -56,6 +59,8 @@ describe("League commissioner header action cluster", () => {
     );
 
     expect(overviewSource).toContain("<Binoculars size={16} />");
+    expect(overviewSource).toContain("League form");
+    expect(overviewSource).not.toContain("Recent league results");
     expect(overviewSource).not.toContain("My Standing");
     expect(commissionerSource).toContain("Commissioner workspace");
     expect(commissionerSource).toContain("<Settings size={15}");
