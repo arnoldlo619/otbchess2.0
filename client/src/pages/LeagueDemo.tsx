@@ -4,7 +4,7 @@
  * using popular chess.com usernames as mock players.
  * Mirrors the exact UI design system of LeagueDashboard.tsx.
  */
-import { useState, useEffect, type CSSProperties } from "react";
+import { useState, useEffect } from "react";
 import { useChessAvatars } from "@/hooks/useChessAvatar";
 import { useLocation } from "wouter";
 import { useTheme } from "@/contexts/ThemeContext";
@@ -465,21 +465,6 @@ export default function LeagueDemo() {
               <div className="flex">
                 {/* Main content */}
                 <div data-testid="league-demo-content-shell" className="flex-1 px-4 pt-0 pb-4 lg:px-6 lg:pt-0 lg:pb-6 space-y-5">
-                  <section
-                    data-testid="league-demo-overview-context"
-                    className="league-page-intro league-page-intro--demo"
-                    style={{ "--league-accent": accent, "--league-text-main": textMain, "--league-text-muted": textMuted } as CSSProperties}
-                  >
-                    <div>
-                      <p className="league-page-intro__eyebrow">Player dashboard</p>
-                      <h2 className="league-page-intro__title">Your week at a glance</h2>
-                      <p className="league-page-intro__description">A focused player view for the active matchup and the decisions that matter before you play.</p>
-                    </div>
-                    <div className="league-page-intro__metrics" aria-label="Demo League overview">
-                      <div className="league-page-intro__metric"><p className="league-page-intro__metric-label">Current week</p><p className="league-page-intro__metric-value">14 of 16</p></div>
-                      <div className="league-page-intro__metric"><p className="league-page-intro__metric-label">Matchups</p><p className="league-page-intro__metric-value">{CURRENT_WEEK_MATCHUPS.length} boards</p></div>
-                    </div>
-                  </section>
                   {/* Featured Matchup Hero */}
                   <div
                     className="league-matchup-card league-data-surface rounded-2xl overflow-hidden"
@@ -742,21 +727,6 @@ export default function LeagueDemo() {
             {/* ── MATCHUP TAB ───────────────────────────────────────────────── */}
             {activeTab === "matchup" && (
               <div className="px-4 pt-0 pb-4 lg:px-6 lg:pt-0 lg:pb-6 max-w-3xl mx-auto space-y-5">
-                <section
-                  data-testid="league-demo-matchup-context"
-                  className="league-page-intro league-page-intro--demo"
-                  style={{ "--league-accent": accent, "--league-text-main": textMain, "--league-text-muted": textMuted } as CSSProperties}
-                >
-                  <div>
-                    <p className="league-page-intro__eyebrow">Match center</p>
-                    <h2 className="league-page-intro__title">Your active board</h2>
-                    <p className="league-page-intro__description">Review colors, ratings, head-to-head context, and recent League form before the clock starts.</p>
-                  </div>
-                  <div className="league-page-intro__metrics" aria-label="Active matchup summary">
-                    <div className="league-page-intro__metric"><p className="league-page-intro__metric-label">Week</p><p className="league-page-intro__metric-value">14</p></div>
-                    <div className="league-page-intro__metric"><p className="league-page-intro__metric-label">Time control</p><p className="league-page-intro__metric-value">90m + 30s</p></div>
-                  </div>
-                </section>
                 {/* Hero card */}
                 <div
                   className="league-matchup-card rounded-2xl overflow-hidden"
@@ -884,21 +854,6 @@ export default function LeagueDemo() {
             {/* ── STANDINGS TAB ─────────────────────────────────────────────── */}
             {activeTab === "standings" && (
               <div className="px-4 pt-0 pb-4 lg:px-6 lg:pt-0 lg:pb-6 space-y-5">
-                <section
-                  data-testid="league-demo-standings-context"
-                  className="league-page-intro league-page-intro--demo"
-                  style={{ "--league-accent": accent, "--league-text-main": textMain, "--league-text-muted": textMuted } as CSSProperties}
-                >
-                  <div>
-                    <p className="league-page-intro__eyebrow">Season table</p>
-                    <h2 className="league-page-intro__title">League standings</h2>
-                    <p className="league-page-intro__description">Rankings keep points, form, and player profile access in one clear comparison view.</p>
-                  </div>
-                  <div className="league-page-intro__metrics" aria-label="Demo League standings summary">
-                    <div className="league-page-intro__metric"><p className="league-page-intro__metric-label">Players</p><p className="league-page-intro__metric-value">{DEMO_PLAYERS.length}</p></div>
-                    <div className="league-page-intro__metric"><p className="league-page-intro__metric-label">Leader</p><p className="league-page-intro__metric-value">{DEMO_PLAYERS[0].points} pts</p></div>
-                  </div>
-                </section>
                 {/* Standings subtab toggle */}
                 <div className="flex items-center gap-2 mb-4">
                   {(["table", "bracket"] as const).map((sub) => (
@@ -1128,21 +1083,6 @@ export default function LeagueDemo() {
             {/* ── SCHEDULE TAB ──────────────────────────────────────────────── */}
             {activeTab === "schedule" && (
               <div className="px-4 pt-0 pb-4 lg:px-6 lg:pt-0 lg:pb-6 space-y-5">
-                <section
-                  data-testid="league-demo-schedule-context"
-                  className="league-page-intro league-page-intro--demo"
-                  style={{ "--league-accent": accent, "--league-text-main": textMain, "--league-text-muted": textMuted } as CSSProperties}
-                >
-                  <div>
-                    <p className="league-page-intro__eyebrow">Season planner</p>
-                    <h2 className="league-page-intro__title">League schedule</h2>
-                    <p className="league-page-intro__description">Move from the month view into a concise selected-week board list without losing season context.</p>
-                  </div>
-                  <div className="league-page-intro__metrics" aria-label="Demo League schedule summary">
-                    <div className="league-page-intro__metric"><p className="league-page-intro__metric-label">Selected</p><p className="league-page-intro__metric-value">Week {selectedScheduleWeek}</p></div>
-                    <div className="league-page-intro__metric"><p className="league-page-intro__metric-label">Season</p><p className="league-page-intro__metric-value">14/16 weeks</p></div>
-                  </div>
-                </section>
                 <LeagueMonthCalendar
                   leagueName="Demo League"
                   seasonStartAt={demoSeasonStart.toISOString()}
@@ -1193,21 +1133,6 @@ export default function LeagueDemo() {
             {/* ── HISTORY TAB ───────────────────────────────────────────────── */}
             {activeTab === "history" && (
               <div className="px-4 pt-0 pb-4 lg:px-6 lg:pt-0 lg:pb-6 space-y-5">
-                <section
-                  data-testid="league-demo-history-context"
-                  className="league-page-intro league-page-intro--demo"
-                  style={{ "--league-accent": accent, "--league-text-main": textMain, "--league-text-muted": textMuted } as CSSProperties}
-                >
-                  <div>
-                    <p className="league-page-intro__eyebrow">Season archive</p>
-                    <h2 className="league-page-intro__title">Results and champions</h2>
-                    <p className="league-page-intro__description">Keep the current season status visible while making completed League history easy to scan.</p>
-                  </div>
-                  <div className="league-page-intro__metrics" aria-label="Demo League history summary">
-                    <div className="league-page-intro__metric"><p className="league-page-intro__metric-label">Current season</p><p className="league-page-intro__metric-value">Season 4</p></div>
-                    <div className="league-page-intro__metric"><p className="league-page-intro__metric-label">Remaining</p><p className="league-page-intro__metric-value">2 weeks</p></div>
-                  </div>
-                </section>
                 <div className="league-data-surface rounded-2xl p-6 text-center" style={{ background: cardBg, border: `1px solid ${cardBorder}` }}>
                   <TournamentsIcon size={36} className="mx-auto mb-3 opacity-40" style={{ color: accent }} />
                   <div className="text-base font-bold mb-1" style={{ color: textMain }}>Season in Progress</div>

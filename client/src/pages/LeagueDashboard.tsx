@@ -3,7 +3,7 @@
  * Phase 2: Your Match This Week · Next Opponent · Recent Results ·
  *          Streak/Movement Standings · Schedule Highlights
  */
-import { useState, useEffect, useCallback, useRef, type CSSProperties } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useParams, useLocation } from "wouter";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useAuthContext } from "@/context/AuthContext";
@@ -2105,24 +2105,7 @@ export default function LeagueDashboard() {
 
         {/* ── MATCHUPS ──────────────────────────────────────────────────────── */}
         {(activeTab === "matchups" || activeTab === "commissioner") && (
-          <>
-          {activeTab === "matchups" && (
-            <section
-              data-testid="league-matchups-context"
-              className="league-page-intro"
-              style={{ "--league-accent": accent, "--league-text-main": textMain, "--league-text-muted": textMuted } as CSSProperties}
-            >
-              <div>
-                <p className="league-page-intro__eyebrow">Match center</p>
-                <h2 className="league-page-intro__title">Week {selectedWeek} pairings</h2>
-                <p className="league-page-intro__description">Follow every board in the selected week. Your own pairing stays highlighted for quick preparation.</p>
-              </div>
-              <div className="league-page-intro__metrics" aria-label="Selected week status">
-                <div className="league-page-intro__metric"><p className="league-page-intro__metric-label">Boards</p><p className="league-page-intro__metric-value">{currentWeekMatches.length} scheduled</p></div>
-                <div className="league-page-intro__metric"><p className="league-page-intro__metric-label">Reported</p><p className="league-page-intro__metric-value">{currentWeekMatches.filter((match) => match.resultStatus === "completed").length}/{currentWeekMatches.length}</p></div>
-              </div>
-            </section>
-          )}
+          <div className="space-y-4">
           {activeTab === "commissioner" && isCommissioner && (
             <section
               data-testid="league-commissioner-workspace"
@@ -2756,27 +2739,12 @@ export default function LeagueDashboard() {
               </div>
             )}
           </>}
-          </>
+          </div>
         )}
 
         {/* ── STANDINGS ─────────────────────────────────────────────────────── */}
         {activeTab === "standings" && (
           isFullSeason ? <div className="space-y-4">
-            <section
-              data-testid="league-standings-context"
-              className="league-page-intro"
-              style={{ "--league-accent": accent, "--league-text-main": textMain, "--league-text-muted": textMuted } as CSSProperties}
-            >
-              <div>
-                <p className="league-page-intro__eyebrow">Season table</p>
-                <h2 className="league-page-intro__title">League standings</h2>
-                <p className="league-page-intro__description">Review championship qualification, player form, and the regular-season order from one clear standings surface.</p>
-              </div>
-              <div className="league-page-intro__metrics" aria-label="League standings summary">
-                <div className="league-page-intro__metric"><p className="league-page-intro__metric-label">Matches played</p><p className="league-page-intro__metric-value">{completedMatchCount}/{totalMatches}</p></div>
-                <div className="league-page-intro__metric"><p className="league-page-intro__metric-label">Season phase</p><p className="league-page-intro__metric-value">{league.seasonPhase === "playoffs" ? "Playoffs" : league.seasonPhase === "complete" ? "Complete" : "Regular season"}</p></div>
-              </div>
-            </section>
             <FullSeasonStandings
               standings={standings as FullSeasonStanding[]}
               qualifierCount={league.playoffQualifierCount ?? 0}
@@ -2790,21 +2758,6 @@ export default function LeagueDashboard() {
               isDark={isDark}
             />
           </div> : <div className="space-y-4">
-            <section
-              data-testid="league-standings-context"
-              className="league-page-intro"
-              style={{ "--league-accent": accent, "--league-text-main": textMain, "--league-text-muted": textMuted } as CSSProperties}
-            >
-              <div>
-                <p className="league-page-intro__eyebrow">Season table</p>
-                <h2 className="league-page-intro__title">League standings</h2>
-                <p className="league-page-intro__description">Track points, recent form, and opponent preparation from one clear ranking view.</p>
-              </div>
-              <div className="league-page-intro__metrics" aria-label="League standings summary">
-                <div className="league-page-intro__metric"><p className="league-page-intro__metric-label">Matches played</p><p className="league-page-intro__metric-value">{completedMatchCount}/{totalMatches}</p></div>
-                <div className="league-page-intro__metric"><p className="league-page-intro__metric-label">Leading</p><p className="league-page-intro__metric-value">{standings[0]?.displayName ?? "—"}</p></div>
-              </div>
-            </section>
             {/* Compact standings table */}
             <div className="league-data-surface rounded-2xl overflow-hidden" style={{ background: cardBg, border: `1px solid ${cardBorder}` }}>
               {/* Table header */}
@@ -3092,21 +3045,6 @@ export default function LeagueDashboard() {
         {/* ── SCHEDULE ──────────────────────────────────────────────────────── */}
         {activeTab === "schedule" && (
           <div className="space-y-5">
-            <section
-              data-testid="league-schedule-context"
-              className="league-page-intro"
-              style={{ "--league-accent": accent, "--league-text-main": textMain, "--league-text-muted": textMuted } as CSSProperties}
-            >
-              <div>
-                <p className="league-page-intro__eyebrow">Season planner</p>
-                <h2 className="league-page-intro__title">League schedule</h2>
-                <p className="league-page-intro__description">Select a week to review its published boards and see the season’s pace at a glance.</p>
-              </div>
-              <div className="league-page-intro__metrics" aria-label="League schedule summary">
-                <div className="league-page-intro__metric"><p className="league-page-intro__metric-label">Selected</p><p className="league-page-intro__metric-value">Week {selectedWeek}</p></div>
-                <div className="league-page-intro__metric"><p className="league-page-intro__metric-label">Season</p><p className="league-page-intro__metric-value">{league.currentWeek}/{league.totalWeeks} weeks</p></div>
-              </div>
-            </section>
             <LeagueMonthCalendar
               leagueName={league.name}
               seasonStartAt={league.createdAt}
@@ -3178,50 +3116,31 @@ export default function LeagueDashboard() {
         {/* ── HISTORY / SEASON SUMMARY ─────────────────────────────────────── */}
         {activeTab === "history" && (
           <div className="space-y-5">
-            <section
-              data-testid="league-history-context"
-              className="league-page-intro"
-              style={{ "--league-accent": accent, "--league-text-main": textMain, "--league-text-muted": textMuted } as CSSProperties}
-            >
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <div>
-                <p className="league-page-intro__eyebrow">Season archive</p>
-                <h2 className="league-page-intro__title">Season summary</h2>
-                <p className="league-page-intro__description">
-                  {league.status === "completed"
-                    ? "Final standings and results from this completed season."
-                    : "Standings and results will be ready to share after the season is complete."}
-                </p>
-              </div>
-              {league.status === "completed" && standings.length > 0 && (
-                <button
-                  type="button"
-                  onClick={() => void shareSeasonCard()}
-                  disabled={sharingSeasonCard}
-                  className="min-h-11 inline-flex items-center justify-center gap-2 rounded-xl px-4 text-sm font-semibold transition-all hover:opacity-90 disabled:cursor-wait disabled:opacity-70"
-                  style={{ background: `${accent}18`, color: accent, border: `1px solid ${accent}3d` }}
-                >
-                  {sharingSeasonCard ? <Clock size={15} className="animate-spin" aria-hidden="true" /> : <Share2 size={15} aria-hidden="true" />}
-                  {sharingSeasonCard ? "Preparing card" : "Share Season Card"}
-                </button>
-              )}
-            </div>
-            <div className="league-page-intro__metrics" aria-label="Season archive summary">
-              <div className="league-page-intro__metric"><p className="league-page-intro__metric-label">Season state</p><p className="league-page-intro__metric-value">{league.status === "completed" ? "Complete" : "In progress"}</p></div>
-              <div className="league-page-intro__metric"><p className="league-page-intro__metric-label">Weeks recorded</p><p className="league-page-intro__metric-value">{weeks.filter((week) => week.isComplete).length}/{league.totalWeeks}</p></div>
-            </div>
-            </section>
             {/* Champion card */}
             {standings[0] && (
               <div
                 className="rounded-2xl overflow-hidden"
                 style={{ background: `linear-gradient(135deg, oklch(0.22 0.09 85), oklch(0.18 0.06 145))`, border: `1.5px solid oklch(0.7 0.18 85 / 0.5)` }}
               >
-                <div className="px-4 py-3 flex items-center gap-2" style={{ borderBottom: `1px solid oklch(0.7 0.18 85 / 0.2)` }}>
-                  <Trophy size={14} style={{ color: "oklch(0.82 0.18 85)" }} />
-                  <span className="text-xs font-semibold uppercase tracking-wide" style={{ color: "oklch(0.82 0.18 85)" }}>
-                    {league.name} — Season Champion
-                  </span>
+                <div className="flex items-center justify-between gap-3 px-4 py-3" style={{ borderBottom: `1px solid oklch(0.7 0.18 85 / 0.2)` }}>
+                  <div className="flex min-w-0 items-center gap-2">
+                    <Trophy size={14} style={{ color: "oklch(0.82 0.18 85)" }} />
+                    <span className="truncate text-xs font-semibold uppercase tracking-wide" style={{ color: "oklch(0.82 0.18 85)" }}>
+                      {league.name} — Season Champion
+                    </span>
+                  </div>
+                  {league.status === "completed" && (
+                    <button
+                      type="button"
+                      onClick={shareSeasonCard}
+                      disabled={sharingSeasonCard}
+                      className="inline-flex min-h-10 flex-shrink-0 items-center gap-1.5 rounded-xl px-3 text-xs font-semibold transition-opacity hover:opacity-80 disabled:cursor-wait disabled:opacity-60"
+                      style={{ background: "oklch(0.82 0.18 85 / 0.16)", color: "oklch(0.88 0.18 85)", border: "1px solid oklch(0.82 0.18 85 / 0.35)" }}
+                    >
+                      {sharingSeasonCard ? <Clock size={14} className="animate-spin" aria-hidden="true" /> : <Share2 size={14} aria-hidden="true" />}
+                      {sharingSeasonCard ? "Preparing" : "Share season"}
+                    </button>
+                  )}
                 </div>
                 <div className="px-4 py-4 flex items-center gap-4">
                   <div className="relative flex-shrink-0">

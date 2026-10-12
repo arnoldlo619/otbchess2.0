@@ -24,14 +24,14 @@ describe("League dashboard content readability", () => {
     expect(styleSource).not.toContain(".league-header");
   });
 
-  it("keeps context bands on secondary League tabs while the live player overview stays direct", () => {
+  it("removes redundant context bands so every League tab opens directly on its working surface", () => {
     for (const testId of [
       "league-matchups-context",
       "league-standings-context",
       "league-schedule-context",
       "league-history-context",
     ]) {
-      expect(dashboardSource).toContain(`data-testid="${testId}"`);
+      expect(dashboardSource).not.toContain(`data-testid="${testId}"`);
     }
 
     for (const testId of [
@@ -41,19 +41,21 @@ describe("League dashboard content readability", () => {
       "league-demo-schedule-context",
       "league-demo-history-context",
     ]) {
-      expect(demoSource).toContain(`data-testid="${testId}"`);
+      expect(demoSource).not.toContain(`data-testid="${testId}"`);
     }
 
     expect(dashboardSource).not.toContain('data-testid="league-overview-context"');
+    expect(dashboardSource).not.toContain("league-page-intro");
+    expect(demoSource).not.toContain("league-page-intro");
     expect(dashboardSource).toContain('<h2 className="max-w-[calc(100%-5.5rem)] text-center text-2xl font-black leading-tight tracking-tight sm:text-3xl"');
     expect(dashboardSource).toContain('className="relative flex w-full items-center justify-center gap-3');
     expect(dashboardSource).toContain('className="absolute right-4"');
-    expect(styleSource).toContain(".league-page-intro");
-    expect(styleSource).toContain(".league-page-intro__metrics");
+    expect(dashboardSource).toContain("<LeagueMonthCalendar");
+    expect(demoSource).toContain("league-matchup-card league-data-surface");
+    expect(dashboardSource).toContain("onClick={shareSeasonCard}");
+    expect(dashboardSource).toContain('"Share season"');
+    expect(styleSource).not.toContain(".league-page-intro");
     expect(styleSource).toContain(".league-data-surface");
-    expect(styleSource).toContain(".league-page-intro--demo::before");
-    expect(styleSource).toContain(".league-content-scale--dark .league-page-intro--demo");
-    expect(demoSource).toContain('className="league-page-intro league-page-intro--demo"');
     expect(styleSource).toContain("@media (hover: hover) and (pointer: fine)");
   });
 
@@ -61,7 +63,6 @@ describe("League dashboard content readability", () => {
     expect(styleSource).toContain("font-size: 0.875rem;");
     expect(styleSource).toContain("font-size: 1.0625rem;");
     expect(styleSource).toContain(".league-operations-panel");
-    expect(styleSource).toContain(".league-content-scale--dark .league-page-intro");
     expect(demoSource).toContain('const isDark = theme === "dark";');
     expect(styleSource).toContain("@media (prefers-reduced-motion: reduce)");
   });
