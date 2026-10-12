@@ -24,9 +24,8 @@ describe("League dashboard content readability", () => {
     expect(styleSource).not.toContain(".league-header");
   });
 
-  it("gives every League dashboard surface a concise context band before dense data", () => {
+  it("keeps context bands on secondary League tabs while the live player overview stays direct", () => {
     for (const testId of [
-      "league-overview-context",
       "league-matchups-context",
       "league-standings-context",
       "league-schedule-context",
@@ -45,6 +44,10 @@ describe("League dashboard content readability", () => {
       expect(demoSource).toContain(`data-testid="${testId}"`);
     }
 
+    expect(dashboardSource).not.toContain('data-testid="league-overview-context"');
+    expect(dashboardSource).toContain('<h2 className="text-2xl font-black tracking-tight sm:text-3xl"');
+    expect(dashboardSource).toContain('className="relative flex w-full items-center justify-center gap-3');
+    expect(dashboardSource).toContain('className="absolute right-4"');
     expect(styleSource).toContain(".league-page-intro");
     expect(styleSource).toContain(".league-page-intro__metrics");
     expect(styleSource).toContain(".league-data-surface");

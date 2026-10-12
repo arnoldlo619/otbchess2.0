@@ -1619,21 +1619,6 @@ export default function LeagueDashboard() {
         {/* ── OVERVIEW ──────────────────────────────────────────────────────── */}
         {activeTab === "overview" && (
           <>
-            <section
-              data-testid="league-overview-context"
-              className="league-page-intro"
-              style={{ "--league-accent": accent, "--league-text-main": textMain, "--league-text-muted": textMuted } as CSSProperties}
-            >
-              <div>
-                <p className="league-page-intro__eyebrow">Player dashboard</p>
-                <h2 className="league-page-intro__title">Your week in {league.name}</h2>
-                <p className="league-page-intro__description">Your current matchup and League form are kept together, so the next move is always easy to find.</p>
-              </div>
-              <div className="league-page-intro__metrics" aria-label="Your League overview">
-                <div className="league-page-intro__metric"><p className="league-page-intro__metric-label">Season</p><p className="league-page-intro__metric-value">{league.status === "active" ? `Week ${league.currentWeek}/${league.totalWeeks}` : league.status === "draft" ? "Setup" : "Complete"}</p></div>
-                <div className="league-page-intro__metric"><p className="league-page-intro__metric-label">Your record</p><p className="league-page-intro__metric-value">{myStanding ? `${myStanding.wins}W ${myStanding.draws}D ${myStanding.losses}L` : "No results yet"}</p></div>
-              </div>
-            </section>
             {isFullSeason && (
               <section className="rounded-2xl overflow-hidden" style={{ background: cardBg, border: `1px solid ${accent}33` }}>
                 <div className="flex items-center gap-2 px-4 py-2.5" style={{ background: `${accent}12`, borderBottom: `1px solid ${accent}22` }}>
@@ -1935,13 +1920,15 @@ export default function LeagueDashboard() {
                 style={{ background: cardBg, border: `1.5px solid ${accent}55` }}
               >
                 <div
-                  className="px-4 py-2.5 flex items-center gap-2"
+                  className="flex flex-col gap-2 px-5 py-4 sm:flex-row sm:items-center sm:justify-between"
                   style={{ background: `${accent}18`, borderBottom: `1px solid ${accent}33` }}
                 >
-                  <Zap size={13} style={{ color: accent }} />
-                  <span className="text-xs font-semibold uppercase tracking-wide" style={{ color: accent }}>
-                    Your Match · Week {league.currentWeek}
-                  </span>
+                  <div className="flex items-center gap-2.5">
+                    <Zap size={18} aria-hidden="true" style={{ color: accent }} />
+                    <h2 className="text-2xl font-black tracking-tight sm:text-3xl" style={{ color: textMain }}>
+                      Your Match · Week {league.currentWeek}
+                    </h2>
+                  </div>
                   {(() => {
                     const cw = weeks.find(w => w.weekNumber === league.currentWeek);
                     if (!cw?.deadline) return null;
@@ -2061,7 +2048,7 @@ export default function LeagueDashboard() {
                     <div className="px-4 pb-4">
                       <button
                         onClick={() => navigate(`/prep/${encodeURIComponent(oppChessCom)}`)}
-                        className="w-full flex items-center justify-between gap-3 px-4 py-3 rounded-xl font-semibold transition-all hover:opacity-90 hover:-translate-y-0.5 active:translate-y-0"
+                        className="relative flex w-full items-center justify-center gap-3 rounded-xl px-4 py-3 text-center font-semibold transition-all hover:-translate-y-0.5 hover:opacity-90 active:translate-y-0"
                         style={{
                           background: `linear-gradient(135deg, ${accent}22 0%, ${accent}10 100%)`,
                           color: accent,
@@ -2069,16 +2056,16 @@ export default function LeagueDashboard() {
                           boxShadow: `0 2px 12px ${accent}18`,
                         }}
                       >
-                        <div className="flex items-center gap-2.5">
-                          <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: `${accent}22` }}>
+                        <div className="flex items-center justify-center gap-2.5">
+                          <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg" style={{ background: `${accent}22` }}>
                             <Binoculars size={16} />
                           </div>
-                          <div className="text-left">
+                          <div className="text-center">
                             <div className="text-sm font-bold" style={{ color: accent }}>Prep for Next Round</div>
                             <div className="text-xs font-normal" style={{ color: `${accent}99` }}>Analyse {oppName ?? oppChessCom}'s openings &amp; tendencies</div>
                           </div>
                         </div>
-                        <ChevronRight size={16} style={{ color: `${accent}88` }} />
+                        <ChevronRight className="absolute right-4" size={16} style={{ color: `${accent}88` }} />
                       </button>
                     </div>
                   );
