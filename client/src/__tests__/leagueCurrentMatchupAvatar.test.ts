@@ -6,12 +6,12 @@ const dashboardSource = readFileSync(
   resolve(import.meta.dirname, "../pages/LeagueDashboard.tsx"),
   "utf8"
 );
-const currentMatchupSource = dashboardSource.slice(
-  dashboardSource.indexOf("/* ── Current Matchup Hero"),
-  dashboardSource.indexOf("/* H2H Record strip */")
+const matchCardSource = dashboardSource.slice(
+  dashboardSource.indexOf("{/* Match cards */}"),
+  dashboardSource.indexOf("{/* Appears only after the Commissioner")
 );
 
-describe("League current matchup Chess.com avatars", () => {
+describe("League report card Chess.com avatars", () => {
   it("uses the shared cached Chess.com avatar source for the active matchup", () => {
     expect(dashboardSource).toContain("const { avatars: allPlayerChesscomAvatars, allLoaded: allAvatarsLoaded } = useChessAvatars(allPlayerChesscomUsernames)");
     expect(dashboardSource).not.toContain("matchupChesscomAvatars");
@@ -19,12 +19,12 @@ describe("League current matchup Chess.com avatars", () => {
   });
 
   it("prioritizes Chess.com photos, reserves loading space, and keeps stored avatars as fallback", () => {
-    expect(currentMatchupSource).toContain("chesscomUrl={getChesscomAvatar(whitePlayer?.chesscomUsername)}");
-    expect(currentMatchupSource).toContain("loading={isChesscomAvatarLoading(whitePlayer?.chesscomUsername)}");
-    expect(currentMatchupSource).toContain("url={whitePlayer?.avatarUrl}");
-    expect(currentMatchupSource).toContain("chesscomUrl={getChesscomAvatar(blackPlayer?.chesscomUsername)}");
-    expect(currentMatchupSource).toContain("loading={isChesscomAvatarLoading(blackPlayer?.chesscomUsername)}");
-    expect(currentMatchupSource).toContain("url={blackPlayer?.avatarUrl}");
+    expect(matchCardSource).toContain("chesscomUrl={getChesscomAvatar(league.players.find(p => p.playerId === match.playerWhiteId)?.chesscomUsername)}");
+    expect(matchCardSource).toContain("loading={isChesscomAvatarLoading(league.players.find(p => p.playerId === match.playerWhiteId)?.chesscomUsername)}");
+    expect(matchCardSource).toContain("url={league.players.find(p => p.playerId === match.playerWhiteId)?.avatarUrl}");
+    expect(matchCardSource).toContain("chesscomUrl={getChesscomAvatar(league.players.find(p => p.playerId === match.playerBlackId)?.chesscomUsername)}");
+    expect(matchCardSource).toContain("loading={isChesscomAvatarLoading(league.players.find(p => p.playerId === match.playerBlackId)?.chesscomUsername)}");
+    expect(matchCardSource).toContain("url={league.players.find(p => p.playerId === match.playerBlackId)?.avatarUrl}");
   });
 
   it("renders a contained object-fit profile image before initials fallback", () => {

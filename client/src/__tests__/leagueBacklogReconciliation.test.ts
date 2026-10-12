@@ -28,10 +28,10 @@ describe("League Dashboard implementation", () => {
 
   it("separates player overview, commissioner operations, and standings surfaces", () => {
     expect(dashboard).toContain("Upcoming Matchups");
-    expect(dashboard).toContain("League Form");
+    expect(dashboard).toContain(">League form</p>");
     expect(dashboard).toContain('data-testid="league-player-recent-form"');
-    expect(dashboard).toContain('data-testid="league-commissioner-workspace"');
-    expect(dashboard).toContain("Commissioner workspace");
+    expect(dashboard).not.toContain('data-testid="league-commissioner-workspace"');
+    expect(dashboard).toContain("Submit Report");
     expect(dashboard).toContain("Season Final Standings");
     expect(dashboard).toContain(">POS</span>");
     expect(dashboard).toContain(">MP</span>");

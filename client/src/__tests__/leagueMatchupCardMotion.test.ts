@@ -8,11 +8,8 @@ const demoSource = readFileSync(resolve(clientRoot, "pages/LeagueDemo.tsx"), "ut
 const motionStyleSource = readFileSync(resolve(clientRoot, "styles/leagueContentReadability.css"), "utf8");
 
 describe("League matchup card motion", () => {
-  it("uses the shared motion class on every expanded live and demo matchup hero", () => {
-    const liveMatchup = dashboardSource.slice(
-      dashboardSource.indexOf("/* ── Current Matchup Hero"),
-      dashboardSource.indexOf("/* H2H Record strip */")
-    );
+  it("uses the shared motion class on the retained demo matchup highlights", () => {
+    expect(dashboardSource).not.toContain("/* ── Current Matchup Hero");
     const demoFeaturedMatchup = demoSource.slice(
       demoSource.indexOf("/* Featured Matchup Hero */"),
       demoSource.indexOf("/* Compact Standings Preview */")
@@ -22,7 +19,6 @@ describe("League matchup card motion", () => {
       demoSource.indexOf("/* ── STANDINGS TAB")
     );
 
-    expect(liveMatchup).toContain('className="league-matchup-card rounded-3xl overflow-hidden mb-4"');
     expect(demoFeaturedMatchup).toContain('className="league-matchup-card rounded-2xl overflow-hidden"');
     expect(demoMatchupTab).toContain('className="league-matchup-card rounded-2xl overflow-hidden"');
   });

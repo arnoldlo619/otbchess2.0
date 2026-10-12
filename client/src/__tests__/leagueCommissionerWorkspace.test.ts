@@ -7,11 +7,13 @@ const dashboardSource = readFileSync(resolve(clientRoot, "pages/LeagueDashboard.
 const demoSource = readFileSync(resolve(clientRoot, "pages/LeagueDemo.tsx"), "utf8");
 
 describe("League player and commissioner workspace separation", () => {
-  it("adds a dedicated commissioner tab only for live League commissioners", () => {
+  it("adds a dedicated commissioner tab without a duplicate operations banner", () => {
     expect(dashboardSource).toContain('"commissioner" | "matchups"');
     expect(dashboardSource).toContain('label: "Commissioner", icon: Settings');
-    expect(dashboardSource).toContain('data-testid="league-commissioner-workspace"');
-    expect(dashboardSource).toContain("Week {league.currentWeek} operations");
+    expect(dashboardSource).not.toContain('data-testid="league-commissioner-workspace"');
+    expect(dashboardSource).not.toContain("Week {league.currentWeek} operations");
+    expect(dashboardSource).toContain("{/* Match cards */}");
+    expect(dashboardSource).toContain("Submit Report");
   });
 
   it("routes hero reporting and advancement actions into the commissioner workspace", () => {

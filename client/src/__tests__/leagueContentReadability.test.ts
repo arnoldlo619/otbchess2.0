@@ -51,6 +51,9 @@ describe("League dashboard content readability", () => {
     expect(dashboardSource).toContain('className="relative flex w-full items-center justify-center gap-3');
     expect(dashboardSource).toContain('className="absolute right-4"');
     expect(dashboardSource).toContain("<LeagueMonthCalendar");
+    expect(dashboardSource).not.toContain("/* ── Current Matchup Hero");
+    expect(dashboardSource).not.toContain('data-testid="league-commissioner-workspace"');
+    expect(dashboardSource).toContain("{/* Match cards */}");
     expect(demoSource).toContain("league-matchup-card league-data-surface");
     expect(dashboardSource).toContain("onClick={shareSeasonCard}");
     expect(dashboardSource).toContain('"Share season"');
