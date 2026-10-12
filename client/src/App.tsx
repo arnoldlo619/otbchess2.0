@@ -85,7 +85,7 @@ const RsvpFormBuilderPage = lazy(() => import("./pages/RsvpFormBuilderPage"));
 function PageLoader() {
   return (
     <div className="otb-route-loader" data-route-loader>
-      <OTBLoader size={72} label="Preparing the Board" />
+      <OTBLoader size={168} label="Preparing the Board" />
     </div>
   );
 }
@@ -102,7 +102,7 @@ function QrJoinEntryShell() {
     <div className="min-h-screen flex items-center justify-center px-5 bg-[#07140c] text-white" data-qr-entry-shell>
       <div className="w-full max-w-sm rounded-3xl border border-white/10 bg-white/[0.06] px-6 py-8 text-center shadow-2xl">
         <p className="text-[11px] font-black tracking-[0.22em] uppercase text-[#86dc78]">ChessOTB join</p>
-        <OTBLoader size={56} label="Loading your tournament" />
+        <OTBLoader size={84} label="Loading your tournament" />
         {code && <p className="mt-2 text-xs text-white/55">Invite code: <span className="font-semibold text-white/85">{code}</span></p>}
         <a href="/join" className="mt-5 inline-flex min-h-11 items-center justify-center rounded-xl border border-[#6fcf68]/45 px-4 text-sm font-semibold text-[#a6ec9e] transition-colors hover:bg-[#6fcf68]/10">
           Enter a code manually

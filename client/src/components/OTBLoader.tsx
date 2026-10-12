@@ -4,9 +4,11 @@ import { useEffect, useRef, useState } from "react";
 
 export const OTB_LOADER_VIDEO_SOURCE = "/videos/chessotb-club-loader.mp4";
 export const OTB_LOADER_POSTER_SOURCE = "/videos/chessotb-club-loader-poster.webp";
+/** Deliberate playback lets the brand mark read before the next route arrives. */
+export const OTB_LOADER_PLAYBACK_RATE = 0.72;
 
 interface OTBLoaderProps {
-  /** Width/height of the animated mark in px. Default: 88 (inline) / 132 (full-page). */
+  /** Width/height of the animated mark in px. Default: 136 (inline) / 216 (full-page). */
   size?: number;
   /** Concise status announced to assistive technology. */
   label?: string;
@@ -67,13 +69,16 @@ export function OTBLoader({
       return;
     }
 
+    video.defaultPlaybackRate = OTB_LOADER_PLAYBACK_RATE;
+    video.playbackRate = OTB_LOADER_PLAYBACK_RATE;
     void video.play().catch(() => undefined);
   }, [reducedMotion, videoUnavailable]);
 
   const dark = isDark !== undefined ? isDark : autoDark;
 
-  const resolvedSize = size ?? (fullPage ? 132 : 88);
+  const resolvedSize = size ?? (fullPage ? 216 : 136);
   const statusLabel = label ?? "Loading ChessOTB";
+  const visibleLabel = label ?? (fullPage ? "Loading ChessOTB" : undefined);
 
   const inner = (
     <div
@@ -101,17 +106,21 @@ export function OTBLoader({
             className="otb-loader__video"
             src={OTB_LOADER_VIDEO_SOURCE}
             poster={OTB_LOADER_POSTER_SOURCE}
-            autoPlay={!reducedMotion}
+            autoPlay={false}
             loop={!reducedMotion}
             muted
             playsInline
             preload="auto"
+            onLoadedMetadata={(event) => {
+              event.currentTarget.defaultPlaybackRate = OTB_LOADER_PLAYBACK_RATE;
+              event.currentTarget.playbackRate = OTB_LOADER_PLAYBACK_RATE;
+            }}
             onError={() => setVideoUnavailable(true)}
           />
         )}
       </div>
 
-      {label && <p className="otb-loader__label">{label}</p>}
+      {visibleLabel && <p className="otb-loader__label">{visibleLabel}</p>}
     </div>
   );
 

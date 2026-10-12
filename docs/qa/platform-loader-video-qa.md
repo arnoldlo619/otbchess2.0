@@ -39,3 +39,25 @@ Replaced the shared `OTBLoader` mark with the supplied official ChessOTB Club lo
 ## Notes
 
 The official animation replaces the shared loading mark only. Existing task-specific progress indicators, skeletons, and button-level spinners remain unchanged because they communicate granular work rather than page or application loading.
+
+## Visibility refinement — 2026-10-12
+
+The shared animation was enlarged and slowed so the official Club mark is recognisable during route and page loading rather than reading as a momentary icon.
+
+- **Playback:** Uses a `0.72×` playback rate, extending the 4.38-second source loop to approximately **6.08 seconds** while retaining muted, inline video and the existing reduced-motion still state.
+- **Default scale:** Inline shared loader increased from 88px to **136px**; full-page loading surface increased from 132px to **216px**.
+- **Route loading:** The main lazy-route shell now displays at **168px** with a larger `clamp(22rem, 60vh, 38rem)` loading region, plus a 14px readable status label.
+- **Compact QR entry:** Retains a proportional 84px loader to avoid crowding the small join card.
+- **Page-level states:** Existing full-page/loading-state consumers were raised to 136px where they previously opted into 72–80px sizing.
+- **Accessibility:** Full-page states now visibly render the existing “Loading ChessOTB” status even without a custom label. `role="status"`, `aria-live`, runtime video fallback, theme behavior, and reduced-motion behavior are unchanged.
+
+### Refinement validation
+
+| Check | Result |
+| --- | --- |
+| Focused route-loader contracts | Pass — 3 tests, including playback rate, default scale, route scale, and visible full-page label |
+| TypeScript | Pass — `pnpm exec tsc --noEmit --pretty false` |
+| Production build | Pass — Vite and server bundle completed successfully |
+| Changed-file ESLint | 0 errors; 5 established unrelated warnings in `Report.tsx` and `TournamentRecap.tsx` |
+| Asset health | MP4 and poster both respond HTTP 200 from the dev server |
+| Visual check | Route-loader surface was reviewed before/after scaling; the main stage rises from 120px to 168px, with the static mobile capture remaining contained on 390px width |

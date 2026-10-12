@@ -148,7 +148,7 @@ export default function InviteAccept() {
   if (loadingInvite) {
     return (
       <div className="min-h-screen flex items-center justify-center" style={{ background: "oklch(0.20 0.06 145)" }}>
-        <OTBLoader size={72} />
+        <OTBLoader size={136} />
       </div>
     );
   }

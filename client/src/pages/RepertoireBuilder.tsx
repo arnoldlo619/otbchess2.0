@@ -1683,7 +1683,7 @@ export default function RepertoireBuilder() {
   if (loading) {
     return (
       <div className={`min-h-screen flex items-center justify-center ${isDark ? "bg-[#0d1a0f] text-white" : "bg-[#FBFADA]/70 text-[#12372A]"}`}>
-        <OTBLoader size={80} />
+        <OTBLoader size={136} />
       </div>
     );
   }

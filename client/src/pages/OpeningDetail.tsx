@@ -242,7 +242,7 @@ function OpeningDetailContent() {
     return (
       <div className={`min-h-screen flex items-center justify-center ${isDark ? "bg-[#0a1a0e]" : "bg-[#FBFADA]/70"}`}>
         <div className="flex flex-col items-center gap-3">
-          <OTBLoader size={72} />
+          <OTBLoader size={136} />
           <span className={`text-sm ${isDark ? "text-white/40" : "text-[#436850]"}`}>Loading opening...</span>
         </div>
       </div>

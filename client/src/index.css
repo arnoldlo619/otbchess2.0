@@ -204,7 +204,7 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 1rem;
+  gap: 1.125rem;
   color: #254b32;
   animation: otb-loader-fade-in 260ms ease-out both;
 }
@@ -247,9 +247,9 @@
 .otb-loader__label {
   margin: 0;
   color: color-mix(in oklab, currentColor 68%, transparent);
-  font-size: 0.7rem;
+  font-size: 0.875rem;
   font-weight: 750;
-  letter-spacing: 0.14em;
+  letter-spacing: 0.1em;
   line-height: 1.2;
   text-align: center;
   text-transform: uppercase;
@@ -278,9 +278,9 @@
 
 .otb-route-loader {
   display: grid;
-  min-height: clamp(18rem, 52vh, 34rem);
+  min-height: clamp(22rem, 60vh, 38rem);
   place-items: center;
-  padding: 4rem 1.5rem;
+  padding: 5rem 1.5rem;
   background: var(--background);
 }
 

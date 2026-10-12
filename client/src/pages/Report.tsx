@@ -1042,7 +1042,7 @@ export default function ReportPage() {
           isDark ? "bg-[oklch(0.18_0.05_145)]" : "bg-[#F7FAF8]"
         }`}
       >
-        <OTBLoader size={80} />
+        <OTBLoader size={136} />
       </div>
     );
   }

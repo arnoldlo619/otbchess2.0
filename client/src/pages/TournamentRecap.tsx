@@ -458,7 +458,7 @@ function RecapSkeleton() {
   return (
     <div className="min-h-screen flex items-center justify-center" style={{ background: "oklch(0.12 0.03 145)" }}>
       <div className="text-center">
-        <OTBLoader size={72} className="mb-3" />
+        <OTBLoader size={136} className="mb-5" />
         <div className="hidden w-8 h-8 rounded-full border-2 border-t-transparent animate-spin mx-auto mb-3"
           style={{ borderColor: "oklch(0.45 0.10 145)", borderTopColor: "transparent" }} />
         <p className="text-xs" style={{ color: "oklch(0.55 0.04 145)" }}>Loading recap...</p>
