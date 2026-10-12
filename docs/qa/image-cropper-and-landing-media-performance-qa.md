@@ -6,7 +6,8 @@
 
 - Added a shared `ImageCropDialog` using `react-easy-crop`:
   - Drag to reposition.
-  - Slider to scale from 1x to 3x.
+  - Slider plus explicit 44px Zoom out / Zoom in controls to scale from 1x to 3x in 10% increments.
+  - Announces the current scale percentage and disables the applicable control at each bound.
   - Uses each destination's correct aspect ratio and output dimensions.
   - Uses focus-visible actions, escape/outside dismissal, and canvas-generated JPEG output.
 - Wired the dialog into:
@@ -23,6 +24,7 @@
 - Desktop landing: hero remains legible and structurally unchanged.
 - 390px mobile landing: no horizontal overflow; the decorative divider media is not fetched above the fold.
 - Live tournament wizard: opened the active Name step, uploaded an in-memory SVG, opened the crop editor, confirmed the elevated backdrop/editor, adjusted crop availability, applied the crop, and verified the banner preview rendered.
+- Zoom controls: verified a Zoom in click changes scale from 100% to 110%, a Zoom out click returns it to 100%, and the lower-bound Zoom out control becomes disabled with accessible scale text present.
 
 ## Automated validation
 
@@ -35,6 +37,7 @@
 | Project lint | Passed before full tests continued; established warnings only |
 | Diff integrity | Passed (`git diff --check`) |
 | Full Vitest baseline | 7,265 passing, 2 skipped, 27 known unrelated failures across 18 legacy suites |
+| Zoom-control regression subset | 25 passing tests across 3 relevant suites |
 
 ## Known baseline note
 

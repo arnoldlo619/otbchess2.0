@@ -20,6 +20,14 @@ describe("platform image crop controls", () => {
     expect(cropper).toContain('import Cropper from "react-easy-crop"');
     expect(cropper).toContain("aspect={aspect}");
     expect(cropper).toContain('aria-label="Image scale"');
+    expect(cropper).toContain('aria-label="Zoom out"');
+    expect(cropper).toContain('aria-label="Zoom in"');
+    expect(cropper).toContain("const MIN_ZOOM = 1");
+    expect(cropper).toContain("const MAX_ZOOM = 3");
+    expect(cropper).toContain("const ZOOM_STEP = 0.1");
+    expect(cropper).toContain("adjustZoom(-ZOOM_STEP)");
+    expect(cropper).toContain("adjustZoom(ZOOM_STEP)");
+    expect(cropper).toContain('aria-valuetext={`${Math.round(zoom * 100)}% scale`}');
     expect(cropper).toContain("onCropChange={setCrop}");
     expect(cropper).toContain("onZoomChange={setZoom}");
     expect(cropper).toContain("renderCroppedImage");

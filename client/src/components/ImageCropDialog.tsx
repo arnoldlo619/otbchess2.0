@@ -11,6 +11,10 @@ import {
 
 export type ImageCropShape = "rect" | "round";
 
+const MIN_ZOOM = 1;
+const MAX_ZOOM = 3;
+const ZOOM_STEP = 0.1;
+
 export interface ImageCropOutput {
   width: number;
   height: number;
@@ -108,6 +112,10 @@ export function ImageCropDialog({
     setCroppedAreaPixels(pixels);
   }, []);
 
+  const adjustZoom = (delta: number) => {
+    setZoom((currentZoom) => Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, Number((currentZoom + delta).toFixed(2)))));
+  };
+
   async function handleApply() {
     if (!imageSrc || !croppedAreaPixels || applying) return;
     setApplying(true);
@@ -153,23 +161,46 @@ export function ImageCropDialog({
         </div>
 
         <div className="border-t border-white/10 px-5 py-4 sm:px-6">
-          <div className="mb-4 flex items-center gap-3 text-sm text-white/58">
-            <Move className="h-4 w-4 shrink-0 text-[#83d58a]" aria-hidden="true" />
-            <span className="hidden sm:inline">Drag to position your image</span>
-            <span className="sm:hidden">Drag to position</span>
-            <span className="ml-auto text-xs font-medium text-white/42">Scale</span>
-            <ZoomOut className="h-4 w-4 shrink-0 text-white/42" aria-hidden="true" />
+          <div className="mb-4 space-y-3 text-sm text-white/58">
+            <div className="flex items-center gap-2">
+              <Move className="h-4 w-4 shrink-0 text-[#83d58a]" aria-hidden="true" />
+              <span>Drag to position your image</span>
+              <span className="ml-auto text-xs font-medium text-white/42">Scale</span>
+              <output className="min-w-10 text-right text-xs font-semibold tabular-nums text-white/72" aria-live="polite">{Math.round(zoom * 100)}%</output>
+            </div>
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                aria-label="Zoom out"
+                title="Zoom out"
+                onClick={() => adjustZoom(-ZOOM_STEP)}
+                disabled={zoom <= MIN_ZOOM}
+                className="flex min-h-11 min-w-11 items-center justify-center rounded-xl border border-white/12 bg-white/[0.06] text-white/78 transition-colors hover:bg-white/[0.11] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#83d58a] disabled:cursor-not-allowed disabled:opacity-35"
+              >
+                <ZoomOut className="h-4 w-4" aria-hidden="true" />
+              </button>
             <input
               aria-label="Image scale"
               type="range"
-              min={1}
-              max={3}
+              min={MIN_ZOOM}
+              max={MAX_ZOOM}
               step={0.01}
               value={zoom}
               onChange={(event) => setZoom(Number(event.target.value))}
-              className="h-1.5 min-w-24 flex-1 cursor-pointer accent-[#66bb6a]"
+              aria-valuetext={`${Math.round(zoom * 100)}% scale`}
+              className="h-1.5 min-w-0 flex-1 cursor-pointer accent-[#66bb6a]"
             />
-            <ZoomIn className="h-4 w-4 shrink-0 text-white/42" aria-hidden="true" />
+              <button
+                type="button"
+                aria-label="Zoom in"
+                title="Zoom in"
+                onClick={() => adjustZoom(ZOOM_STEP)}
+                disabled={zoom >= MAX_ZOOM}
+                className="flex min-h-11 min-w-11 items-center justify-center rounded-xl border border-white/12 bg-white/[0.06] text-white/78 transition-colors hover:bg-white/[0.11] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#83d58a] disabled:cursor-not-allowed disabled:opacity-35"
+              >
+                <ZoomIn className="h-4 w-4" aria-hidden="true" />
+              </button>
+            </div>
           </div>
 
           <div className="grid grid-cols-2 gap-3">
