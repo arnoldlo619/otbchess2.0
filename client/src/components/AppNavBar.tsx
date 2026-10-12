@@ -116,7 +116,7 @@ export function AppNavBar({ defaultActive = "Tournaments", onSignInClick, classN
     { name: "League",
       url: leagueNavUrl,
       icon: LeaguesIcon,
-      tooltip: "Open your Club Leagues",
+      tooltip: "Open your League dashboard",
       dropdown: <LeagueDropdown />,
       onClick: async (e: React.MouseEvent) => {
         e.preventDefault();

@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
-import { getClubLeagueWorkspacePath } from "../client/src/lib/leagueWorkspaceNavigation";
+import { getClubLeagueWorkspacePath, getLeagueDashboardPath } from "../client/src/lib/leagueWorkspaceNavigation";
 
 const read = (path: string) => readFileSync(resolve(process.cwd(), path), "utf8");
 const leaguesServer = read("server/leagues.ts");
@@ -16,6 +16,10 @@ describe("Club League workspace navigation", () => {
     expect(getClubLeagueWorkspacePath("club_123")).toBe(
       "/clubs/club_123/home?tab=leagues",
     );
+  });
+
+  it("deep-links signed-in header navigation into the selected League dashboard", () => {
+    expect(getLeagueDashboardPath("league_123")).toBe("/league/league_123");
   });
 
   it("loads canonical League data whenever the dedicated League workspace opens", () => {
@@ -39,7 +43,7 @@ describe("Club League workspace navigation", () => {
     expect(leaguesServer).not.toContain("if (!myPlayers.length) return res.json([]);");
   });
 
-  it("keeps Club League lists member-authorized and prioritizes active workspaces", () => {
+  it("keeps League dashboard routing member-authorized and prioritizes active workspaces", () => {
     expect(leaguesServer).toMatch(/leaguesRouter\.get\("\/club\/:clubId",\s*requireAuth/);
     expect(leaguesServer).toMatch(/leaguesRouter\.get\("\/workspace",\s*requireAuth/);
     expect(leaguesServer).toContain("const leagueStatusPriority");
@@ -47,9 +51,10 @@ describe("Club League workspace navigation", () => {
     expect(leaguesServer).toContain("draft: 1");
     expect(leaguesServer).toContain("completed: 2");
     expect(leaguesServer).toContain("sortLeaguesForWorkspace(scopedLeagues)[0]");
+    expect(leaguesServer).toContain("leagueId: preferredLeague?.id ?? null");
   });
 
-  it("routes desktop and mobile header navigation through the Club workspace resolver", () => {
+  it("routes desktop and mobile header navigation through the League dashboard resolver", () => {
     expect(home).toContain("useLeagueWorkspaceNavigation(user)");
     expect(home).toContain("await refreshLeagueWorkspaceUrl()");
     expect(appNav).toContain("useLeagueWorkspaceNavigation(user)");
@@ -57,6 +62,7 @@ describe("Club League workspace navigation", () => {
     expect(mobileNav).toContain("leagueUrl?: string");
     expect(leagueDropdown).toContain("getClubLeagueWorkspacePath(lg.clubId)");
     expect(leagueDropdown).toContain("e.stopPropagation(); window.location.href = getClubLeagueWorkspacePath(lg.clubId)");
-    expect(leagueDropdown).not.toContain("window.location.href = `/league/${lg.id}`");
+    expect(home).toContain('tooltip: isGuest ? "View League Demo" : "Open your League dashboard"');
+    expect(appNav).toContain('tooltip: "Open your League dashboard"');
   });
 });

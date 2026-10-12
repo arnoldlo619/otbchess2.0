@@ -359,7 +359,7 @@ leaguesRouter.get("/mine", requireAuth, async (req: Request, res: Response) => {
   }
 });
 
-// ── GET /workspace — preferred dedicated Club League destination ─────────────
+// ── GET /workspace — preferred dedicated League dashboard destination ────────
 leaguesRouter.get("/workspace", requireAuth, async (req: Request, res: Response) => {
   const userId = getUser(req, res);
   if (!userId) return;
@@ -373,7 +373,7 @@ leaguesRouter.get("/workspace", requireAuth, async (req: Request, res: Response)
       ...memberships.map((membership) => membership.clubId),
       ...ownedClubs.map((club) => club.id),
     ]));
-    if (!clubIds.length) return res.json({ clubId: null });
+    if (!clubIds.length) return res.json({ clubId: null, leagueId: null });
 
     const clubScope = clubIds.length === 1
       ? eq(leagues.clubId, clubIds[0])
@@ -381,7 +381,10 @@ leaguesRouter.get("/workspace", requireAuth, async (req: Request, res: Response)
     const scopedLeagues = await db.select().from(leagues).where(clubScope);
     const preferredLeague = sortLeaguesForWorkspace(scopedLeagues)[0];
 
-    res.json({ clubId: preferredLeague?.clubId ?? clubIds[0] });
+    res.json({
+      clubId: preferredLeague?.clubId ?? clubIds[0],
+      leagueId: preferredLeague?.id ?? null,
+    });
   } catch (err) {
     logger.error("[leagues] GET /workspace error:", err);
     res.status(500).json({ error: "Failed to resolve League workspace" });

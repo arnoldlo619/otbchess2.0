@@ -2258,7 +2258,7 @@ export default function Home() {
   const navItems = [
     { name: "Clubs",       url: "/clubs",         icon: Building2,      sectionId: "for-clubs" },
     { name: "Tournaments", url: getDashboardUrl(), icon: LayoutDashboard, dropdown: <DashboardDropdown />, onClick: (e: React.MouseEvent) => { e.preventDefault(); window.location.href = getDashboardUrl(); } },
-    { name: "League",      url: leagueNavUrl,    icon: Trophy,         tooltip: isGuest ? "View League Demo" : "Open your Club Leagues", onClick: async (e: React.MouseEvent) => { e.preventDefault(); window.location.href = await refreshLeagueWorkspaceUrl(); } },
+    { name: "League",      url: leagueNavUrl,    icon: Trophy,         tooltip: isGuest ? "View League Demo" : "Open your League dashboard", onClick: async (e: React.MouseEvent) => { e.preventDefault(); window.location.href = await refreshLeagueWorkspaceUrl(); } },
     { name: "Tools",    url: "/training",     icon: GraduationCap },
   ];
 
