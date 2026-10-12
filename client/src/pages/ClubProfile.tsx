@@ -38,7 +38,8 @@ import {
 import { apiGetClub, apiJoinClub, apiLeaveClub, apiUpdateClub } from "@/lib/clubsApi";
 import { useClubPresence } from "@/hooks/useClubPresence";
 import { ClubAvatarUpload } from "@/components/ClubAvatarUpload";
-import { ClubBannerUpload, cropBannerImage, validateBannerFile } from "@/components/ClubBannerUpload";
+import { ClubBannerUpload, validateBannerFile } from "@/components/ClubBannerUpload";
+import { ImageCropDialog, readImageFile } from "@/components/ImageCropDialog";
 import { TournamentWizard } from "@/components/TournamentWizard";
 import { listTournamentsByClub, getTournamentConfig, type TournamentConfig } from "@/lib/tournamentRegistry";
 import { getTournamentFormatLabel } from "@/lib/formatRegistry";
@@ -965,6 +966,7 @@ export default function ClubProfile() {
   const [bannerBroken, setBannerBroken] = useState(false);
   const [bannerUploading, setBannerUploading] = useState(false);
   const [bannerDragOver, setBannerDragOver] = useState(false);
+  const [bannerCropSrc, setBannerCropSrc] = useState<string | null>(null);
   const [savingSettings, setSavingSettings] = useState(false);
   const [deleteStep, setDeleteStep] = useState<number>(0); // 0=hidden, 1=confirm prompt
   const [deleteConfirmText, setDeleteConfirmText] = useState("");
@@ -999,7 +1001,9 @@ export default function ClubProfile() {
   const [showAllUpcoming, setShowAllUpcoming] = useState(false);
   const [eventForm, setEventForm] = useState({ title: "", description: "", startAt: "", venue: "", admissionNote: "", recurrence: "none" as "none" | "weekly" | "biweekly" | "monthly", recurrenceEndDate: "", coverImageUrl: "" });
   const [uploadingCover, setUploadingCover] = useState(false);
+  const [eventCoverCropSrc, setEventCoverCropSrc] = useState<string | null>(null);
   const [uploadingEditCover, setUploadingEditCover] = useState(false);
+  const [editCoverCropSrc, setEditCoverCropSrc] = useState<string | null>(null);
   const [creatingEvent, setCreatingEvent] = useState(false);
   const [editingEvent, setEditingEvent] = useState<ClubEvent | null>(null);
   const [editForm, setEditForm] = useState({ title: "", description: "", startAt: "", venue: "", admissionNote: "", recurrence: "none" as "none" | "weekly" | "biweekly" | "monthly", recurrenceEndDate: "", editScope: "this" as "this" | "all", coverImageUrl: "" });
@@ -1386,13 +1390,21 @@ export default function ClubProfile() {
   };
 
   // ── Hero banner upload handlers ─────────────────────────────────────────────
-  async function handleBannerFile(file: File) {
+  async function openBannerCropper(file: File) {
     if (!club) return;
     const err = validateBannerFile(file);
     if (err) { toast.error(err); return; }
+    try {
+      setBannerCropSrc(await readImageFile(file));
+    } catch {
+      toast.error("Could not read image. Please try another file.");
+    }
+  }
+
+  async function handleCroppedBanner(dataUrl: string) {
+    if (!club) return;
     setBannerUploading(true);
     try {
-      const dataUrl = await cropBannerImage(file);
       const { url } = await apiFetch<{ url: string }>("/api/clubs/upload-banner", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -1683,7 +1695,7 @@ export default function ClubProfile() {
                   onFollow={handleFollow}
                   bannerUploading={bannerUploading}
                   bannerDragOver={bannerDragOver}
-                  onBannerFile={handleBannerFile}
+                  onBannerFile={openBannerCropper}
                   onRemoveBanner={handleRemoveBannerHero}
                   onBannerDragOver={setBannerDragOver}
                   isDark={isDark}
@@ -1705,11 +1717,20 @@ export default function ClubProfile() {
                 className="hidden"
                 onChange={(e) => {
                   const file = e.target.files?.[0];
-                  if (file) handleBannerFile(file);
+                  if (file) void openBannerCropper(file);
                   e.target.value = "";
                 }}
               />
             )}
+            <ImageCropDialog
+              imageSrc={bannerCropSrc}
+              title="Crop club banner"
+              description="Move and scale your image so the club identity stays visible across the profile header."
+              aspect={16 / 5}
+              output={{ width: 1280, height: 400, quality: 0.88, maxDataUrlLength: 45 * 1024 * (4 / 3) }}
+              onApply={async (dataUrl) => { await handleCroppedBanner(dataUrl); setBannerCropSrc(null); }}
+              onCancel={() => setBannerCropSrc(null)}
+            />
 
 
             {/* ── PADDED CONTENT BELOW HERO ─────────────────────────── */}
@@ -2883,18 +2904,21 @@ export default function ClubProfile() {
                             if (file.size > 5 * 1024 * 1024) { toast.error("Image too large (max 5 MB)"); return; }
                             setUploadingCover(true);
                             try {
-                              const reader = new FileReader();
-                              reader.onload = (ev) => {
-                                const dataUrl = ev.target?.result as string;
-                                setEventForm(f => ({ ...f, coverImageUrl: dataUrl }));
-                                setUploadingCover(false);
-                              };
-                              reader.onerror = () => { toast.error("Failed to read image"); setUploadingCover(false); };
-                              reader.readAsDataURL(file);
-                            } catch { toast.error("Upload failed"); setUploadingCover(false); }
+                              setEventCoverCropSrc(await readImageFile(file));
+                            } catch { toast.error("Failed to read image"); setUploadingCover(false); }
+                            e.target.value = "";
                           }} />
                         </label>
                       )}
+                      <ImageCropDialog
+                        imageSrc={eventCoverCropSrc}
+                        title="Crop event cover"
+                        description="Move and scale your image to keep the event card balanced and focused."
+                        aspect={16 / 9}
+                        output={{ width: 1200, height: 675, quality: 0.85 }}
+                        onApply={(coverImageUrl) => { setEventForm(f => ({ ...f, coverImageUrl })); setEventCoverCropSrc(null); setUploadingCover(false); }}
+                        onCancel={() => { setEventCoverCropSrc(null); setUploadingCover(false); }}
+                      />
                     </div>
                     <div>
                       <label className={`text-xs font-semibold uppercase tracking-wider ${textMuted} block mb-1.5`}>Title *</label>
@@ -4252,18 +4276,21 @@ export default function ClubProfile() {
                       if (file.size > 5 * 1024 * 1024) { toast.error("Image too large (max 5 MB)"); return; }
                       setUploadingEditCover(true);
                       try {
-                        const reader = new FileReader();
-                        reader.onload = (ev) => {
-                          const dataUrl = ev.target?.result as string;
-                          setEditForm(f => ({ ...f, coverImageUrl: dataUrl }));
-                          setUploadingEditCover(false);
-                        };
-                        reader.onerror = () => { toast.error("Failed to read image"); setUploadingEditCover(false); };
-                        reader.readAsDataURL(file);
-                      } catch { toast.error("Upload failed"); setUploadingEditCover(false); }
+                        setEditCoverCropSrc(await readImageFile(file));
+                      } catch { toast.error("Failed to read image"); setUploadingEditCover(false); }
+                      e.target.value = "";
                     }} />
                   </label>
                 )}
+                <ImageCropDialog
+                  imageSrc={editCoverCropSrc}
+                  title="Crop event cover"
+                  description="Move and scale your image to keep the event card balanced and focused."
+                  aspect={16 / 9}
+                  output={{ width: 1200, height: 675, quality: 0.85 }}
+                  onApply={(coverImageUrl) => { setEditForm(f => ({ ...f, coverImageUrl })); setEditCoverCropSrc(null); setUploadingEditCover(false); }}
+                  onCancel={() => { setEditCoverCropSrc(null); setUploadingEditCover(false); }}
+                />
               </div>
               <div>
                 <label className={`block text-xs font-semibold mb-1 ${textMuted}`}>Event Title *</label>

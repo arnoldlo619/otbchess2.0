@@ -173,6 +173,14 @@
   to { background-position: 0 0; }
 }
 
+/* Preserve the pattern depth on narrow devices without a continuous paint-heavy background shift. */
+@media (max-width: 639px) {
+  .otb-pattern-text::after {
+    animation: none;
+    background-position: 0 0;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .otb-pattern-text::after {
     animation: none;

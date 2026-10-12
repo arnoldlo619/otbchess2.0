@@ -75,6 +75,7 @@ import { ensureTournamentClubEvent } from "@/lib/clubEventRegistry";
 import { DEFAULT_PAYMENT_METHOD_ORDER, type PaymentMethod } from "@/lib/paymentLinks";
 import { clearDraft, readDraft, sanitizeDraftUrl, writeDraft } from "@/lib/draftStorage";
 import { setTournamentWizardActive } from "@/lib/tournamentWizardActivity";
+import { ImageCropDialog, readImageFile } from "@/components/ImageCropDialog";
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 type WizardMode = "select" | "quickstart" | "schedule" | "large_event" | "brackets" | "quads";
@@ -2859,6 +2860,8 @@ function SegmentedOnboardingStep({
   const roundOptions = [3, 4, 5, 6, 7, 9, 11];
   const isCustomTime = data.timePreset === "custom";
   const activeTime = TIME_PRESETS.find((preset) => preset.sub === data.timePreset);
+  const coverInputRef = useRef<HTMLInputElement>(null);
+  const [coverCropSrc, setCoverCropSrc] = useState<string | null>(null);
   const { quadCount, bottomSwissPlayerCount } = data.format === "quads"
     ? getQuadSectionPlan(data.maxPlayers)
     : { quadCount: 0, bottomSwissPlayerCount: 0 };
@@ -2885,6 +2888,18 @@ function SegmentedOnboardingStep({
     onChange(next);
   };
 
+  const handleCoverFile = async (file: File) => {
+    if (!file.type.startsWith("image/") || file.size > 8 * 1024 * 1024) {
+      toast.error("Use an image under 8 MB for the tournament cover.");
+      return;
+    }
+    try {
+      setCoverCropSrc(await readImageFile(file));
+    } catch {
+      toast.error("Could not read the cover image. Please try another file.");
+    }
+  };
+
   const card = (content: React.ReactNode) => (
     <div className="mx-auto w-full max-w-3xl rounded-[24px] p-6 sm:p-9" style={sectionStyle}>
       {content}
@@ -2899,6 +2914,51 @@ function SegmentedOnboardingStep({
           <p className="mt-3 text-base leading-relaxed" style={{ color: isDark ? T.dMuted : T.lMuted }}>
             This is what players will see on the join page, pairings, and standings.
           </p>
+        </div>
+        <div>
+          <div className="mb-2 flex items-center justify-between">
+            <Label isDark={isDark}>Tournament cover</Label>
+            <span className="text-xs" style={{ color: isDark ? T.dMuted : T.lMuted }}>Optional</span>
+          </div>
+          <input
+            ref={coverInputRef}
+            aria-label="Upload tournament cover"
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={(event) => {
+              const file = event.target.files?.[0];
+              if (file) void handleCoverFile(file);
+              event.target.value = "";
+            }}
+          />
+          <ImageCropDialog
+            imageSrc={coverCropSrc}
+            title="Crop tournament cover"
+            description="Move and scale your image so it fills the tournament banner exactly as intended."
+            aspect={16 / 9}
+            output={{ width: 1200, height: 675, quality: 0.82 }}
+            onApply={(coverImageUrl) => { onChange({ coverImageUrl }); setCoverCropSrc(null); }}
+            onCancel={() => setCoverCropSrc(null)}
+          />
+          {data.coverImageUrl ? (
+            <div className="relative h-36 overflow-hidden rounded-2xl border" style={{ borderColor: isDark ? T.dInputBorder : T.lInputBorder }}>
+              <img src={data.coverImageUrl} alt="Tournament cover preview" className="h-full w-full object-cover" />
+              <div className="absolute inset-0 flex items-center justify-center gap-3 bg-black/45 opacity-0 transition-opacity duration-200 hover:opacity-100 focus-within:opacity-100">
+                <button type="button" onClick={() => coverInputRef.current?.click()} className="rounded-xl bg-white/20 px-4 py-2 text-sm font-semibold text-white backdrop-blur-sm">Adjust</button>
+                <button type="button" onClick={() => onChange({ coverImageUrl: "" })} className="rounded-xl bg-red-700/70 px-4 py-2 text-sm font-semibold text-white backdrop-blur-sm">Remove</button>
+              </div>
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={() => coverInputRef.current?.click()}
+              className="flex min-h-28 w-full items-center justify-center rounded-2xl border-2 border-dashed px-5 text-center text-sm font-medium transition-colors"
+              style={{ borderColor: isDark ? "rgba(255,255,255,0.18)" : "#D1D5DB", color: isDark ? T.dSub : T.lSub, background: isDark ? "rgba(255,255,255,0.035)" : "#F9FAFB" }}
+            >
+              Add a cover photo, then crop to fit the banner
+            </button>
+          )}
         </div>
       </div>,
     );
@@ -3087,28 +3147,15 @@ function StepDetails({
 }) {
   const [isDragging, setIsDragging] = useState(false);
   const coverInputRef = useRef<HTMLInputElement>(null);
+  const [coverCropSrc, setCoverCropSrc] = useState<string | null>(null);
 
-  const handleCoverFile = (file: File) => {
-    if (!file.type.startsWith("image/")) return;
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const dataUrl = e.target?.result as string;
-      // Resize to max 1200px wide
-      const img = new Image();
-      img.onload = () => {
-        const maxW = 1200;
-        const scale = img.width > maxW ? maxW / img.width : 1;
-        const canvas = document.createElement("canvas");
-        canvas.width = Math.round(img.width * scale);
-        canvas.height = Math.round(img.height * scale);
-        const ctx = canvas.getContext("2d")!;
-        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-        const compressed = canvas.toDataURL("image/jpeg", 0.82);
-        onChange({ coverImageUrl: compressed });
-      };
-      img.src = dataUrl;
-    };
-    reader.readAsDataURL(file);
+  const handleCoverFile = async (file: File) => {
+    if (!file.type.startsWith("image/") || file.size > 8 * 1024 * 1024) return;
+    try {
+      setCoverCropSrc(await readImageFile(file));
+    } catch {
+      toast.error("Could not read the cover image. Please try another file.");
+    }
   };
 
   const ratingOptions: { value: WizardData["ratingSystem"]; label: string; sub: string }[] = [
@@ -3130,6 +3177,15 @@ function StepDetails({
           accept="image/*"
           className="hidden"
           onChange={(e) => { const f = e.target.files?.[0]; if (f) handleCoverFile(f); }}
+        />
+        <ImageCropDialog
+          imageSrc={coverCropSrc}
+          title="Crop tournament cover"
+          description="Move and scale your image so it fills the tournament banner exactly as intended."
+          aspect={16 / 9}
+          output={{ width: 1200, height: 675, quality: 0.82 }}
+          onApply={(coverImageUrl) => { onChange({ coverImageUrl }); setCoverCropSrc(null); }}
+          onCancel={() => setCoverCropSrc(null)}
         />
         {data.coverImageUrl ? (
           <div className="relative rounded-2xl overflow-hidden" style={{ height: 160 }}>

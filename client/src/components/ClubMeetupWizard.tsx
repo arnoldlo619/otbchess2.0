@@ -14,6 +14,7 @@ import {
 } from "../lib/clubEventRegistry";
 import { useAccessibleOverlay } from "@/hooks/useAccessibleOverlay";
 import { toast } from "sonner";
+import { ImageCropDialog, readImageFile } from "@/components/ImageCropDialog";
 
 interface Props {
   clubId: string;
@@ -33,33 +34,6 @@ const FREQ_LABELS: Record<Frequency, string> = {
   biweekly: "Bi-weekly",
   monthly: "Monthly",
 };
-
-/** Resize an image file to max 1200px wide and return a JPEG data URL */
-function resizeImage(file: File, maxWidth = 1200, quality = 0.85): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const img = new Image();
-      img.onload = () => {
-        const scale = Math.min(1, maxWidth / img.width);
-        const canvas = document.createElement("canvas");
-        canvas.width = Math.round(img.width * scale);
-        canvas.height = Math.round(img.height * scale);
-        const ctx = canvas.getContext("2d");
-        if (!ctx) return reject(new Error("canvas ctx"));
-        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-        let dataUrl = canvas.toDataURL("image/jpeg", quality);
-        // If still > 800 KB, compress more
-        if (dataUrl.length > 800_000) dataUrl = canvas.toDataURL("image/jpeg", 0.65);
-        resolve(dataUrl);
-      };
-      img.onerror = reject;
-      img.src = e.target?.result as string;
-    };
-    reader.onerror = reject;
-    reader.readAsDataURL(file);
-  });
-}
 
 export default function ClubMeetupWizard({
   clubId,
@@ -81,6 +55,7 @@ export default function ClubMeetupWizard({
   const [address, setAddress] = useState("");
   const [frequency, setFrequency] = useState<Frequency>("weekly");
   const [coverImageUrl, setCoverImageUrl] = useState<string | undefined>();
+  const [coverCropSrc, setCoverCropSrc] = useState<string | null>(null);
   const [dragging, setDragging] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -98,12 +73,14 @@ export default function ClubMeetupWizard({
   const labelCls = "block text-[11px] font-bold uppercase tracking-[0.12em] text-white/45 mb-2";
 
   const handleImageFile = useCallback(async (file: File) => {
-    if (!file.type.startsWith("image/")) return;
+    if (!file.type.startsWith("image/") || file.size > 5 * 1024 * 1024) {
+      toast.error("Please choose an image no larger than 5 MB.");
+      return;
+    }
     try {
-      const dataUrl = await resizeImage(file);
-      setCoverImageUrl(dataUrl);
+      setCoverCropSrc(await readImageFile(file));
     } catch {
-      // silently ignore
+      toast.error("Could not read the cover image. Please try another file.");
     }
   }, []);
 
@@ -339,6 +316,15 @@ export default function ClubMeetupWizard({
                 if (file) handleImageFile(file);
                 e.target.value = "";
               }}
+            />
+            <ImageCropDialog
+              imageSrc={coverCropSrc}
+              title="Crop meetup cover"
+              description="Move and scale your image to keep the meetup’s focus visible on every event card."
+              aspect={16 / 9}
+              output={{ width: 1200, height: 675, quality: 0.85, maxDataUrlLength: 800_000 }}
+              onApply={(dataUrl) => { setCoverImageUrl(dataUrl); setCoverCropSrc(null); }}
+              onCancel={() => setCoverCropSrc(null)}
             />
               </div>
 

@@ -14,12 +14,13 @@ describe("landing stats video divider", () => {
 
     expect(home).toContain('const LANDING_CHESS_VIDEO_SOURCE = "/videos/chess-hero-text-loop.mp4"');
     expect(statsSection).toContain('data-testid="landing-stats-video"');
-    expect(statsSection).toContain("src={LANDING_CHESS_VIDEO_SOURCE}");
+    expect(statsSection).toContain("const [shouldLoad, setShouldLoad] = useState(false);");
+    expect(statsSection).toContain("src={shouldLoad ? LANDING_CHESS_VIDEO_SOURCE : undefined}");
     expect(statsSection).toContain("autoPlay");
     expect(statsSection).toContain("loop");
     expect(statsSection).toContain("muted");
     expect(statsSection).toContain("playsInline");
-    expect(statsSection).toContain('preload="metadata"');
+    expect(statsSection).toContain('preload={shouldLoad ? "metadata" : "none"}');
     expect(statsSection).toContain('aria-hidden="true"');
     expect(statsSection).toContain("tabIndex={-1}");
   });
@@ -32,6 +33,8 @@ describe("landing stats video divider", () => {
 
     expect(statsBackground).toContain('window.matchMedia("(prefers-reduced-motion: reduce)")');
     expect(statsBackground).toContain("IntersectionObserver");
+    expect(statsBackground).toContain('rootMargin: "0px"');
+    expect(statsBackground).toContain("if (visible && !motionQuery.matches) setShouldLoad(true);");
     expect(statsBackground).toContain("video.pause()");
     expect(statsBackground).toContain("void video.play().catch");
     expect(styles).toContain(".landing-stats-video { display: none; }");

@@ -1,91 +1,51 @@
-/**
- * ClubAvatarUpload — reusable club avatar picker
- *
- * Features:
- *  - Click-to-browse or drag-and-drop
- *  - Accepts JPEG / PNG / WebP / GIF, max 5 MB
- *  - Canvas-based square crop + resize to 256 × 256 px
- *  - Returns a base64 data URL via onChange callback
- *  - Shows a live preview with a remove button
- *  - Fully dark-mode aware, consistent with platform design system
- *
- * Usage:
- *   <ClubAvatarUpload
- *     value={avatarDataUrl}
- *     onChange={(dataUrl) => setAvatar(dataUrl)}
- *     accentColor="#436850"
- *     clubName="London Chess Club"
- *     isDark={isDark}
- *   />
- */
+import { useCallback, useRef, useState, type ChangeEvent, type DragEvent } from "react";
+import { Camera, Upload, X } from "lucide-react";
+import { ImageCropDialog, readImageFile } from "@/components/ImageCropDialog";
 
-import { useRef, useState, useCallback } from "react";
-import { Upload, X, Camera } from "lucide-react";
-
-// ── Constants ─────────────────────────────────────────────────────────────────
-
-const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5 MB
-const OUTPUT_SIZE = 256; // px — square output
+const MAX_FILE_SIZE = 5 * 1024 * 1024;
+const OUTPUT_SIZE = 256;
 const ACCEPTED_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
-
 export function validateImageFile(file: File): string | null {
-  if (!ACCEPTED_TYPES.includes(file.type)) {
-    return "Please upload a JPEG, PNG, WebP, or GIF image.";
-  }
-  if (file.size > MAX_FILE_SIZE) {
-    return "Image must be 5 MB or smaller.";
-  }
+  if (!ACCEPTED_TYPES.includes(file.type)) return "Please upload a JPEG, PNG, WebP, or GIF image.";
+  if (file.size > MAX_FILE_SIZE) return "Image must be 5 MB or smaller.";
   return null;
 }
 
-/**
- * Resize + centre-crop a File to a square canvas, returning a base64 data URL.
- */
+/** Retained for programmatic callers; interactive uploads use ImageCropDialog. */
 export function cropAndResizeImage(file: File, size = OUTPUT_SIZE): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
-    reader.onload = (e) => {
-      const img = new Image();
-      img.onload = () => {
+    reader.onload = () => {
+      const image = new Image();
+      image.onload = () => {
         const canvas = document.createElement("canvas");
         canvas.width = size;
         canvas.height = size;
-        const ctx = canvas.getContext("2d");
-        if (!ctx) { reject(new Error("Canvas not supported")); return; }
-
-        // Centre-crop: take the largest square from the centre
-        const side = Math.min(img.width, img.height);
-        const sx = (img.width - side) / 2;
-        const sy = (img.height - side) / 2;
-        ctx.drawImage(img, sx, sy, side, side, 0, 0, size, size);
+        const context = canvas.getContext("2d");
+        if (!context) return reject(new Error("Canvas not supported"));
+        const side = Math.min(image.width, image.height);
+        context.drawImage(image, (image.width - side) / 2, (image.height - side) / 2, side, side, 0, 0, size, size);
         resolve(canvas.toDataURL("image/jpeg", 0.88));
       };
-      img.onerror = () => reject(new Error("Failed to load image"));
-      img.src = e.target?.result as string;
+      image.onerror = () => reject(new Error("Failed to load image"));
+      image.src = String(reader.result);
     };
     reader.onerror = () => reject(new Error("Failed to read file"));
     reader.readAsDataURL(file);
   });
 }
 
-// ── Component ─────────────────────────────────────────────────────────────────
-
 interface ClubAvatarUploadProps {
-  /** Current avatar data URL (or null if none) */
   value: string | null;
-  /** Called with the new base64 data URL, or null when removed */
   onChange: (dataUrl: string | null) => void;
-  /** Accent colour used for the placeholder background */
   accentColor?: string;
-  /** Club name used for the initials fallback */
   clubName?: string;
   isDark: boolean;
-  /** Size in px for the preview circle (default 96) */
   size?: number;
 }
 
+/** Club identity picker with intentional drag, reposition, and scale controls. */
 export function ClubAvatarUpload({
   value,
   onChange,
@@ -97,107 +57,54 @@ export function ClubAvatarUpload({
   const inputRef = useRef<HTMLInputElement>(null);
   const [dragging, setDragging] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [processing, setProcessing] = useState(false);
+  const [cropSrc, setCropSrc] = useState<string | null>(null);
 
-  const initials = clubName
-    .split(/\s+/)
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((w) => w[0].toUpperCase())
-    .join("");
+  const initials = clubName.split(/\s+/).filter(Boolean).slice(0, 2).map((word) => word[0].toUpperCase()).join("");
 
-  const processFile = useCallback(
-    async (file: File) => {
-      const err = validateImageFile(file);
-      if (err) { setError(err); return; }
-      setError(null);
-      setProcessing(true);
-      try {
-        const dataUrl = await cropAndResizeImage(file, OUTPUT_SIZE);
-        onChange(dataUrl);
-      } catch {
-        setError("Could not process image. Please try another file.");
-      } finally {
-        setProcessing(false);
-      }
-    },
-    [onChange]
-  );
+  const openCropper = useCallback(async (file: File) => {
+    const validationError = validateImageFile(file);
+    if (validationError) {
+      setError(validationError);
+      return;
+    }
+    setError(null);
+    try {
+      setCropSrc(await readImageFile(file));
+    } catch {
+      setError("Could not read image. Please try another file.");
+    }
+  }, []);
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) processFile(file);
-    e.target.value = "";
+  const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) void openCropper(file);
+    event.target.value = "";
   };
 
-  const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault();
+  const handleDrop = (event: DragEvent<HTMLButtonElement>) => {
+    event.preventDefault();
     setDragging(false);
-    const file = e.dataTransfer.files?.[0];
-    if (file) processFile(file);
+    const file = event.dataTransfer.files?.[0];
+    if (file) void openCropper(file);
   };
 
-  const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault();
-    setDragging(true);
-  };
-
-  const handleDragLeave = () => setDragging(false);
-
-  const ringColor = dragging
-    ? isDark ? "ring-[#4CAF50]" : "ring-[#436850]"
-    : isDark ? "ring-white/10" : "ring-gray-200";
+  const ringColor = dragging ? (isDark ? "ring-[#4CAF50]" : "ring-[#436850]") : (isDark ? "ring-white/10" : "ring-gray-200");
 
   return (
     <div className="flex flex-col items-center gap-3">
-      {/* Avatar preview / drop zone */}
       <div className="relative group" style={{ width: size, height: size }}>
-        <div
-          className={`relative w-full h-full cursor-pointer transition-all duration-200 ring-2 ${ringColor} rounded-2xl overflow-hidden`}
-        >
-          {/* Image or initials placeholder */}
+        <div className={`relative h-full w-full overflow-hidden rounded-2xl ring-2 ${ringColor}`}>
           {value ? (
-          <img
-            src={value}
-            alt="Club avatar"
-            className="w-full h-full object-cover"
-          />
-        ) : (
-          <div
-            className="w-full h-full flex items-center justify-center"
-            style={{ background: `linear-gradient(135deg, ${accentColor} 0%, ${accentColor}88 100%)` }}
-          >
-            {processing ? (
-              <div className="w-6 h-6 rounded-full border-2 border-white/40 border-t-white animate-spin" />
-            ) : initials ? (
-              <span
-                className="text-white font-bold select-none"
-                style={{ fontSize: size * 0.3 }}
-              >
-                {initials}
-              </span>
-            ) : (
-              <Upload className="text-white/60" style={{ width: size * 0.3, height: size * 0.3 }} />
-            )}
-          </div>
-        )}
-
-        {/* Hover overlay */}
-        <div className={`absolute inset-0 flex flex-col items-center justify-center gap-1 transition-opacity duration-200 ${
-          dragging ? "opacity-100" : "opacity-0 group-hover:opacity-100"
-        } bg-black/50`}>
-          {processing ? (
-            <div className="w-5 h-5 rounded-full border-2 border-white/40 border-t-white animate-spin" />
+            <img src={value} alt="Club logo" className="h-full w-full object-cover" />
           ) : (
-            <>
-              <Camera className="w-5 h-5 text-white" />
-              <span className="text-white text-[10px] font-semibold">
-                {dragging ? "Drop here" : "Change"}
-              </span>
-            </>
+            <div className="flex h-full w-full items-center justify-center" style={{ background: `linear-gradient(135deg, ${accentColor}, ${accentColor}88)` }}>
+              {initials ? <span className="select-none font-bold text-white" style={{ fontSize: size * 0.3 }}>{initials}</span> : <Upload className="text-white/60" style={{ width: size * 0.3, height: size * 0.3 }} />}
+            </div>
           )}
-        </div>
-
+          <div className={`absolute inset-0 flex flex-col items-center justify-center gap-1 bg-black/55 transition-opacity duration-200 ${dragging ? "opacity-100" : "opacity-0 group-hover:opacity-100"}`}>
+            <Camera className="h-5 w-5 text-white" />
+            <span className="text-[10px] font-semibold text-white">{dragging ? "Drop here" : "Adjust"}</span>
+          </div>
         </div>
 
         <button
@@ -205,56 +112,39 @@ export function ClubAvatarUpload({
           className="absolute inset-0 z-10 rounded-2xl focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#4CAF50]/60"
           onClick={() => inputRef.current?.click()}
           onDrop={handleDrop}
-          onDragOver={handleDragOver}
-          onDragLeave={handleDragLeave}
-          aria-label="Upload club avatar"
-        >
-          <span className="sr-only">Upload club avatar</span>
-        </button>
+          onDragOver={(event) => { event.preventDefault(); setDragging(true); }}
+          onDragLeave={() => setDragging(false)}
+          aria-label="Upload and crop club logo"
+        ><span className="sr-only">Upload and crop club logo</span></button>
 
-        {/* Remove button — sibling avoids nested interactive controls */}
-        {value && !processing && (
+        {value && (
           <button
             type="button"
             onClick={() => { onChange(null); setError(null); }}
-            className="absolute top-1.5 right-1.5 z-20 w-6 h-6 rounded-full bg-black/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-500/80"
-            aria-label="Remove avatar"
-          >
-            <X className="w-3.5 h-3.5 text-white" />
-          </button>
+            className="absolute right-1.5 top-1.5 z-20 flex h-6 w-6 items-center justify-center rounded-full bg-black/60 opacity-0 transition-opacity hover:bg-red-500/80 group-hover:opacity-100"
+            aria-label="Remove club logo"
+          ><X className="h-3.5 w-3.5 text-white" /></button>
         )}
       </div>
 
-      {/* Label + hint */}
       <div className="text-center">
-        <button
-          type="button"
-          onClick={() => inputRef.current?.click()}
-          className={`text-xs font-semibold transition-colors ${
-            isDark ? "text-[#4CAF50] hover:text-[#66BB6A]" : "text-[#436850] hover:text-[#3a5230]"
-          }`}
-        >
-          {value ? "Change avatar" : "Upload avatar"}
+        <button type="button" onClick={() => inputRef.current?.click()} className={`text-xs font-semibold transition-colors ${isDark ? "text-[#4CAF50] hover:text-[#66BB6A]" : "text-[#436850] hover:text-[#3a5230]"}`}>
+          {value ? "Adjust club logo" : "Upload club logo"}
         </button>
-        <p className={`text-[10px] mt-0.5 ${isDark ? "text-white/30" : "text-[#436850]"}`}>
-          JPEG, PNG or WebP · max 5 MB
-        </p>
+        <p className={`mt-0.5 text-[10px] ${isDark ? "text-white/30" : "text-[#436850]"}`}>Drag, scale, and crop · max 5 MB</p>
       </div>
 
-      {/* Error */}
-      {error && (
-        <p className="text-xs text-red-400 text-center max-w-[180px]">{error}</p>
-      )}
-
-      {/* Hidden file input */}
-      <input
-        aria-label="Upload club avatar"
-        ref={inputRef}
-        type="file"
-        accept={ACCEPTED_TYPES.join(",")}
-        className="hidden"
-        onChange={handleFileChange}
-        aria-hidden="true"
+      {error && <p className="max-w-[180px] text-center text-xs text-red-400">{error}</p>}
+      <input aria-label="Upload club logo" ref={inputRef} type="file" accept={ACCEPTED_TYPES.join(",")} className="hidden" onChange={handleFileChange} />
+      <ImageCropDialog
+        imageSrc={cropSrc}
+        title="Crop club logo"
+        description="Position and scale the image for the club’s square identity mark."
+        aspect={1}
+        cropShape="round"
+        output={{ width: OUTPUT_SIZE, height: OUTPUT_SIZE, quality: 0.88 }}
+        onApply={(dataUrl) => { onChange(dataUrl); setCropSrc(null); }}
+        onCancel={() => setCropSrc(null)}
       />
     </div>
   );

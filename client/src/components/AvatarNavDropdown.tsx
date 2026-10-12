@@ -44,6 +44,7 @@ import AuthModal from "@/components/AuthModal";
 import { ProUpgradeModal } from "@/components/ProUpgradeModal";
 import { useAccessibleOverlay } from "@/hooks/useAccessibleOverlay";
 import { useIsMobile } from "@/hooks/useMobile";
+import { AvatarCropModal } from "@/components/AvatarCropModal";
 
 import { authFetch } from "@/lib/apiFetch";
 // ─── Design tokens ────────────────────────────────────────────────────────────
@@ -328,6 +329,7 @@ export function AvatarNavDropdown({
     initialFocusRef: mobileCloseRef,
   });
   const [avatarUploading, setAvatarUploading] = useState(false);
+  const [avatarCropSrc, setAvatarCropSrc] = useState<string | null>(null);
   // Portal position for sidebar variant — computed from trigger's bounding rect
   const [panelPos, setPanelPos] = useState<{ top: number; left: number } | null>(null);
 
@@ -345,21 +347,28 @@ export function AvatarNavDropdown({
   const handleAvatarUpload = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !updateProfile) return;
+    if (!file.type.startsWith("image/") || file.size > 5 * 1024 * 1024) {
+      if (avatarInputRef.current) avatarInputRef.current.value = "";
+      return;
+    }
     const reader = new FileReader();
-    reader.onload = async (ev) => {
-      const dataUrl = ev.target?.result as string;
-      setAvatarUploading(true);
-      try {
-        await updateProfile({ avatarUrl: dataUrl });
-      } catch {
-        // silently ignore
-      } finally {
-        setAvatarUploading(false);
-        // reset so same file can be re-selected
-        if (avatarInputRef.current) avatarInputRef.current.value = "";
-      }
-    };
+    reader.onload = (ev) => setAvatarCropSrc(ev.target?.result as string);
     reader.readAsDataURL(file);
+    // Reset so the same file can be re-selected after a crop is cancelled.
+    e.target.value = "";
+  }, [updateProfile]);
+
+  const handleAvatarCropApply = useCallback(async (avatarUrl: string) => {
+    if (!updateProfile) return;
+    setAvatarUploading(true);
+    try {
+      await updateProfile({ avatarUrl });
+    } catch {
+      // Keep the existing profile image when a persistence request fails.
+    } finally {
+      setAvatarUploading(false);
+      setAvatarCropSrc(null);
+    }
   }, [updateProfile]);
   // Internal auth modal — kept for backward compat with pages that pass onSignInClick
   const [internalAuthOpen, setInternalAuthOpen] = useState(false);
@@ -1522,6 +1531,11 @@ export function AvatarNavDropdown({
         accept="image/*"
         className="hidden"
         onChange={handleAvatarUpload}
+      />
+      <AvatarCropModal
+        imageSrc={avatarCropSrc}
+        onApply={handleAvatarCropApply}
+        onCancel={() => setAvatarCropSrc(null)}
       />
       {/* Pro upgrade modal */}
       <ProUpgradeModal

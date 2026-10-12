@@ -200,8 +200,8 @@ import {
   type ClubTournamentLeaderboard as ClubTournamentLeaderboardData,
 } from "@/lib/clubsApi";
 import { logger } from "@/lib/logger";
-import { ClubAvatarUpload } from "@/components/ClubAvatarUpload";
-import { ClubBannerUpload, cropBannerImage, validateBannerFile } from "@/components/ClubBannerUpload";
+import { validateBannerFile } from "@/components/ClubBannerUpload";
+import { ImageCropDialog, readImageFile } from "@/components/ImageCropDialog";
 import { authFetch, apiFetch } from "@/lib/apiFetch";
 import { apiDeleteClubFeedPost, canCurrentUserDeleteClubFeedPost } from "@/lib/clubFeedApi";
 import { ShaderBackground } from "@/components/ui/shader-r";
@@ -3053,6 +3053,7 @@ export default function ClubDashboard() {
   const [loading, setLoading] = useState(true);
   const [bannerUploading, setBannerUploading] = useState(false);
   const [bannerDragOver, setBannerDragOver] = useState(false);
+  const [bannerCropSrc, setBannerCropSrc] = useState<string | null>(null);
   const [showCreateEvent, setShowCreateEvent] = useState(false);
   const [showTournamentWizard, setShowTournamentWizard] = useState(false);
   const [showMeetupWizard, setShowMeetupWizard] = useState(false);
@@ -3856,61 +3857,21 @@ export default function ClubDashboard() {
     shadow: isDark ? "0 18px 44px rgba(0, 0, 0, 0.22)" : "0 16px 36px rgba(33, 66, 42, 0.10)",
   };
 
-  // ── Banner image resize helper ─────────────────────────────────────────────
-  // Crops to 16:4 landscape, outputs JPEG ≤ 45 KB to stay within DB TEXT limit.
-  function resizeBannerImage(file: File): Promise<string> {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const img = new Image();
-        img.onload = () => {
-          const TARGET_W = 1920;
-          const TARGET_H = 480;
-          // Centre-crop to 16:4 ratio
-          const srcRatio = img.width / img.height;
-          const tgtRatio = TARGET_W / TARGET_H;
-          let sx = 0, sy = 0, sw = img.width, sh = img.height;
-          if (srcRatio > tgtRatio) {
-            sw = img.height * tgtRatio;
-            sx = (img.width - sw) / 2;
-          } else {
-            sh = img.width / tgtRatio;
-            sy = (img.height - sh) / 2;
-          }
-          const canvas = document.createElement("canvas");
-          canvas.width = TARGET_W;
-          canvas.height = TARGET_H;
-          const ctx = canvas.getContext("2d");
-          if (!ctx) { reject(new Error("Canvas not supported")); return; }
-          ctx.drawImage(img, sx, sy, sw, sh, 0, 0, TARGET_W, TARGET_H);
-          // Try quality 0.82 first; if still > 45 KB drop to 0.65
-          let dataUrl = canvas.toDataURL("image/jpeg", 0.82);
-          if (dataUrl.length > 45 * 1024 * (4 / 3)) {
-            dataUrl = canvas.toDataURL("image/jpeg", 0.65);
-          }
-          resolve(dataUrl);
-        };
-        img.onerror = () => reject(new Error("Failed to load image"));
-        img.src = e.target?.result as string;
-      };
-      reader.onerror = () => reject(new Error("Failed to read file"));
-      reader.readAsDataURL(file);
-    });
+  async function openBannerCropper(file: File) {
+    if (!club) return;
+    const error = validateBannerFile(file);
+    if (error) { toast.error(error); return; }
+    try {
+      setBannerCropSrc(await readImageFile(file));
+    } catch {
+      toast.error("Could not read image. Please try another file.");
+    }
   }
 
-  async function handleBannerFile(file: File) {
+  async function handleCroppedBanner(dataUrl: string) {
     if (!club) return;
-    if (!file.type.startsWith("image/")) {
-      toast.error("Please upload a JPEG, PNG, or WebP image.");
-      return;
-    }
-    if (file.size > 10 * 1024 * 1024) {
-      toast.error("Image must be 10 MB or smaller.");
-      return;
-    }
     setBannerUploading(true);
     try {
-      const dataUrl = await resizeBannerImage(file);
       const uploadRes = await authFetch("/api/clubs/upload-banner", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -4436,7 +4397,7 @@ export default function ClubDashboard() {
                             event.preventDefault();
                             setBannerDragOver(false);
                             const file = event.dataTransfer.files?.[0];
-                            if (file) handleBannerFile(file);
+                            if (file) void openBannerCropper(file);
                           }}
                         />
                         <div className="absolute right-3 top-3 z-40 flex items-center gap-2 sm:right-4 sm:top-4">
@@ -4460,9 +4421,18 @@ export default function ClubDashboard() {
                           className="hidden"
                           onChange={(event) => {
                             const file = event.target.files?.[0];
-                            if (file) handleBannerFile(file);
+                            if (file) void openBannerCropper(file);
                             event.target.value = "";
                           }}
+                        />
+                        <ImageCropDialog
+                          imageSrc={bannerCropSrc}
+                          title="Crop club banner"
+                          description="Move and scale your image so the club identity stays visible across the dashboard header."
+                          aspect={4}
+                          output={{ width: 1920, height: 480, quality: 0.82, maxDataUrlLength: 45 * 1024 * (4 / 3) }}
+                          onApply={async (dataUrl) => { await handleCroppedBanner(dataUrl); setBannerCropSrc(null); }}
+                          onCancel={() => setBannerCropSrc(null)}
                         />
                       </>
                     )}

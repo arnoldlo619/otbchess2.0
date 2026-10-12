@@ -56,6 +56,7 @@ import {
 import { authFetch } from "@/lib/apiFetch";
 import { clearDraft, readDraft, sanitizeDraftUrl, writeDraft } from "@/lib/draftStorage";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { ImageCropDialog, readImageFile } from "@/components/ImageCropDialog";
 import { useTheme } from "@/contexts/ThemeContext";
 import { toast } from "sonner";
 import {
@@ -164,6 +165,7 @@ export default function RsvpFormBuilderPage() {
   const [saveStatus, setSaveStatus] = useState<"saved" | "unsaved" | "saving" | "recovered" | "error">("saved");
   const [activeQuestionId, setActiveQuestionId] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+  const [headerCropSrc, setHeaderCropSrc] = useState<string | null>(null);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const saveRevision = useRef(0);
   const latestFormRef = useRef<RsvpFormData | null>(null);
@@ -1150,17 +1152,31 @@ export default function RsvpFormBuilderPage() {
                   onChange={async (e) => {
                     const file = e.target.files?.[0];
                     if (!file) return;
-                    const reader = new FileReader();
-                    reader.onload = (evt) => {
-                      const dataUrl = evt.target?.result as string;
-                      updateForm({ header_image: dataUrl });
-                    };
-                    reader.readAsDataURL(file);
+                    if (!file.type.startsWith("image/") || file.size > 8 * 1024 * 1024) {
+                      toast.error("Please choose an image no larger than 8 MB.");
+                      e.target.value = "";
+                      return;
+                    }
+                    try {
+                      setHeaderCropSrc(await readImageFile(file));
+                    } catch {
+                      toast.error("Could not read the header image. Please try another file.");
+                    }
+                    e.target.value = "";
                   }}
                   className="hidden"
                 />
                 <span className="text-white/60 text-sm font-medium">Click to upload or drag and drop</span>
               </label>
+              <ImageCropDialog
+                imageSrc={headerCropSrc}
+                title="Crop RSVP header"
+                description="Move and scale your image so it stays focused in the form header."
+                aspect={16 / 5}
+                output={{ width: 1280, height: 400, quality: 0.85 }}
+                onApply={(header_image) => { updateForm({ header_image }); setHeaderCropSrc(null); }}
+                onCancel={() => setHeaderCropSrc(null)}
+              />
             </div>
 
             {/* Preview */}

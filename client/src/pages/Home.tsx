@@ -555,6 +555,7 @@ function StatItem({
 
 function StatsVideoBackground() {
   const videoRef = useRef<HTMLVideoElement>(null);
+  const [shouldLoad, setShouldLoad] = useState(false);
 
   useEffect(() => {
     const video = videoRef.current;
@@ -564,7 +565,7 @@ function StatsVideoBackground() {
     let visible = false;
 
     const syncPlayback = () => {
-      if (motionQuery.matches || !visible) {
+      if (motionQuery.matches || !visible || !shouldLoad) {
         video.pause();
         return;
       }
@@ -576,10 +577,14 @@ function StatsVideoBackground() {
 
     const observer = new IntersectionObserver(([entry]) => {
       visible = Boolean(entry?.isIntersecting);
+      if (visible && !motionQuery.matches) setShouldLoad(true);
       syncPlayback();
-    }, { threshold: 0.1 });
+    }, { rootMargin: "0px", threshold: 0.1 });
 
-    const handleMotionChange = () => syncPlayback();
+    const handleMotionChange = () => {
+      if (!motionQuery.matches && visible) setShouldLoad(true);
+      syncPlayback();
+    };
     observer.observe(video);
     video.addEventListener("canplay", syncPlayback);
     motionQuery.addEventListener("change", handleMotionChange);
@@ -590,19 +595,19 @@ function StatsVideoBackground() {
       video.removeEventListener("canplay", syncPlayback);
       motionQuery.removeEventListener("change", handleMotionChange);
     };
-  }, []);
+  }, [shouldLoad]);
 
   return (
     <video
       ref={videoRef}
       data-testid="landing-stats-video"
       className="landing-stats-video absolute inset-0 h-full w-full object-cover"
-      src={LANDING_CHESS_VIDEO_SOURCE}
+      src={shouldLoad ? LANDING_CHESS_VIDEO_SOURCE : undefined}
       autoPlay
       loop
       muted
       playsInline
-      preload="metadata"
+      preload={shouldLoad ? "metadata" : "none"}
       aria-hidden="true"
       tabIndex={-1}
     />

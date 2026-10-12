@@ -36,6 +36,8 @@ describe("landing hero pattern text", () => {
     expect(styles).toContain("animation: otb-pattern-text-shift 5s linear infinite;");
     expect(styles).toContain("@keyframes otb-pattern-text-shift");
     expect(styles).toContain("background-position: 0.8em -0.8em;");
+    expect(styles).toContain("@media (max-width: 639px)");
+    expect(styles).toContain("Preserve the pattern depth on narrow devices");
     expect(styles).toContain(".otb-pattern-text--dark");
     expect(styles).toContain(".otb-pattern-text--light");
     expect(styles).toContain(".otb-pattern-text::after {\n    animation: none;");

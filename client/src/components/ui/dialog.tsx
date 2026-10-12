@@ -94,9 +94,12 @@ function DialogContent({
   children,
   showCloseButton = true,
   onEscapeKeyDown,
+  overlayClassName,
   ...props
 }: React.ComponentProps<typeof DialogPrimitive.Content> & {
   showCloseButton?: boolean;
+  /** Raises the matching backdrop with the content for full-screen workflow dialogs. */
+  overlayClassName?: string;
 }) {
   const { isComposing } = useDialogComposition();
 
@@ -120,7 +123,7 @@ function DialogContent({
 
   return (
     <DialogPortal data-slot="dialog-portal">
-      <DialogOverlay />
+      <DialogOverlay className={overlayClassName} />
       <DialogPrimitive.Content
         data-slot="dialog-content"
         className={cn(
@@ -206,4 +209,3 @@ export {
   DialogTitle,
   DialogTrigger
 };
-
