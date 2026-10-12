@@ -9,11 +9,13 @@ const demoSource = readFileSync(resolve(clientRoot, "pages/LeagueDemo.tsx"), "ut
 describe("League player and commissioner workspace separation", () => {
   it("adds a dedicated commissioner tab without a duplicate operations banner", () => {
     expect(dashboardSource).toContain('"commissioner" | "matchups"');
-    expect(dashboardSource).toContain('label: "Commissioner", icon: Settings');
+    expect(dashboardSource).toContain('label: "Commissioner", icon: ShieldCheck');
+    expect(dashboardSource).toContain('label: "Settings", icon: OtbSettingsIcon');
     expect(dashboardSource).not.toContain('data-testid="league-commissioner-workspace"');
     expect(dashboardSource).not.toContain("Week {league.currentWeek} operations");
     expect(dashboardSource).toContain("{/* Match cards */}");
     expect(dashboardSource).toContain("Submit Report");
+    expect(dashboardSource).not.toContain("{/* Prep button for my matches */}");
   });
 
   it("routes hero reporting and advancement actions into the commissioner workspace", () => {

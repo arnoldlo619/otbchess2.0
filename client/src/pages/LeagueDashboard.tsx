@@ -1293,7 +1293,7 @@ export default function LeagueDashboard() {
 
   const tabs = [
     { id: "overview" as const, label: "Overview", icon: DashboardIcon },
-    ...(isCommissioner ? [{ id: "commissioner" as const, label: "Commissioner", icon: Settings }] : []),
+    ...(isCommissioner ? [{ id: "commissioner" as const, label: "Commissioner", icon: ShieldCheck }] : []),
     { id: "matchups" as const, label: "Matchups", icon: BattleIcon },
     { id: "standings" as const, label: "Standings", icon: RatingIcon },
     { id: "schedule" as const, label: "Schedule", icon: EventsIcon },
@@ -2333,23 +2333,6 @@ export default function LeagueDashboard() {
                           <span className="text-xs" style={{ color: textMuted }}>Black</span>
                         </div>
                       </div>
-                      {/* Prep button for my matches */}
-                      {mine && (() => {
-                        const oppChessCom = getOpponentChesscom(match);
-                        if (!oppChessCom) return null;
-                        return (
-                          <div className="px-4 pb-3">
-                            <button
-                              onClick={() => navigate(`/prep/${encodeURIComponent(oppChessCom)}`)}
-                              className="w-full flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-xs font-semibold transition-all hover:opacity-90"
-                              style={{ background: `${accent}15`, color: accent, border: `1px solid ${accent}30` }}
-                            >
-                              <Target size={12} />
-                              Prep for {oppChessCom}
-                            </button>
-                          </div>
-                        );
-                      })()}
                       {/* Commissioner: Submit Report button — locks in result for any non-completed match */}
                       {isCommissioner && activeTab === "commissioner" && match.resultStatus !== "completed" && (
                         <div className="px-4 pb-3">
