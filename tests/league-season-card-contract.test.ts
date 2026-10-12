@@ -22,11 +22,12 @@ describe("League season card delivery", () => {
     expect(serverSource).toContain("Player standing not found");
   });
 
-  it("keeps the share action compact and available only for completed seasons", () => {
-    expect(dashboardSource).toContain("Season Summary");
-    expect(dashboardSource).toContain("Share Season Card");
-    expect(dashboardSource).toContain('league.status === "completed" && standings.length > 0');
-    expect(dashboardSource).toContain("sm:flex-row sm:items-center sm:justify-between");
+  it("keeps the share action compact in the completed-season Champion card", () => {
+    expect(dashboardSource).toContain("Season Champion");
+    expect(dashboardSource).toContain('"Share season"');
+    expect(dashboardSource).toContain("onClick={shareSeasonCard}");
+    expect(dashboardSource).toContain('league.status === "completed" && (');
+    expect(dashboardSource).toContain("min-h-10 flex-shrink-0 items-center");
     expect(dashboardSource).toContain("navigator.share");
     expect(dashboardSource).toContain("new File([cardBlob]");
     expect(dashboardSource).toContain("navigator.canShare({ files: [imageFile] })");

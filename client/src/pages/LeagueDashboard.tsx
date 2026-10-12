@@ -2183,12 +2183,6 @@ export default function LeagueDashboard() {
                         Pending
                       </span>
                     )}
-                    <span
-                      className="text-xs font-semibold px-2.5 py-1 rounded-full"
-                      style={{ background: isDark ? "oklch(0.25 0.06 145)" : "oklch(0.88 0.04 145)", color: textMuted }}
-                    >
-                      {league.formatType.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase())}
-                    </span>
                   </div>
                 </div>
 

@@ -54,6 +54,7 @@ describe("League dashboard content readability", () => {
     expect(demoSource).toContain("league-matchup-card league-data-surface");
     expect(dashboardSource).toContain("onClick={shareSeasonCard}");
     expect(dashboardSource).toContain('"Share season"');
+    expect(dashboardSource).not.toContain('league.formatType.replace(/_/g, " ").replace(/\\b\\w/g, c => c.toUpperCase())');
     expect(styleSource).not.toContain(".league-page-intro");
     expect(styleSource).toContain(".league-data-surface");
     expect(styleSource).toContain("@media (hover: hover) and (pointer: fine)");
