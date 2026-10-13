@@ -1414,7 +1414,7 @@ export default function LeagueDashboard() {
           {/* ── LEAGUE HERO BANNER: the single identity surface ───────────── */}
           <div
             data-testid="league-dashboard-hero"
-            className="flex-shrink-0 relative overflow-hidden h-[132px] sm:h-[144px] lg:h-[156px]"
+            className="flex-shrink-0 relative overflow-hidden h-[104px] sm:h-[112px] lg:h-[120px]"
             style={{ borderBottom: `1px solid ${cardBorder}` }}
           >
             <AsciiArt className="absolute inset-0 w-full h-full" style={{ objectPosition: "right center" }} />
@@ -1427,7 +1427,7 @@ export default function LeagueDashboard() {
             <div className="relative z-10 h-full flex items-center gap-5 px-4 sm:px-6">
               <div className="flex-1 min-w-0 lg:max-w-[31%]">
                 <h1
-                  className="truncate text-[clamp(1.65rem,7vw,2.5rem)] font-black leading-tight"
+                  className="truncate text-[clamp(1.5rem,4vw,2rem)] font-black leading-tight"
                   style={{ color: "#fff", fontFamily: "'Clash Display', sans-serif", textShadow: "0 2px 12px rgba(0,0,0,0.7)" }}
                 >
                   {league.name}

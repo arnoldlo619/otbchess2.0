@@ -24,7 +24,17 @@ describe("LeagueDemo responsive containment", () => {
   it("keeps the mobile league title centered and fully readable", () => {
     expect(demoSource).toContain("pointer-events-none absolute inset-x-16 text-center lg:hidden");
     expect(demoSource).toContain("block whitespace-nowrap text-base font-bold");
-    expect(demoSource).toContain("text-[clamp(1.55rem,7vw,2.25rem)]");
+    expect(demoSource).toContain("text-[clamp(1.5rem,4vw,2rem)]");
+  });
+
+  it("uses a compact, readable banner scale across live and demo League dashboards", () => {
+    const compactHeroHeight = "h-[104px] sm:h-[112px] lg:h-[120px]";
+    const compactTitleScale = "text-[clamp(1.5rem,4vw,2rem)]";
+
+    expect(dashboardSource).toContain(compactHeroHeight);
+    expect(demoSource).toContain(compactHeroHeight);
+    expect(dashboardSource).toContain(compactTitleScale);
+    expect(demoSource).toContain(compactTitleScale);
   });
 
   it("removes the post-banner top inset in both League dashboards", () => {

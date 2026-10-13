@@ -354,8 +354,8 @@ export default function LeagueDemo() {
 
           {/* ── LEAGUE HERO BANNER (animated ASCII art backdrop + stats overlay) ── */}
           <div
-            className="flex-shrink-0 relative overflow-hidden"
-            style={{ height: "120px", borderBottom: `1px solid ${cardBorder}` }}
+            className="flex-shrink-0 relative overflow-hidden h-[104px] sm:h-[112px] lg:h-[120px]"
+            style={{ borderBottom: `1px solid ${cardBorder}` }}
           >
             <AsciiArt className="absolute inset-0 w-full h-full" style={{ objectPosition: "right center" }} />
             <div
@@ -368,7 +368,7 @@ export default function LeagueDemo() {
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-0.5">
                   <h1
-                    className="whitespace-nowrap text-[clamp(1.55rem,7vw,2.25rem)] font-black leading-tight"
+                    className="whitespace-nowrap text-[clamp(1.5rem,4vw,2rem)] font-black leading-tight"
                     style={{ color: "#fff", fontFamily: "'Clash Display', sans-serif", textShadow: "0 2px 12px rgba(0,0,0,0.7)" }}
                   >
                     ChessOTB Club League
