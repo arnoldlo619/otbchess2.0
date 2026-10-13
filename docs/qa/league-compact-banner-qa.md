@@ -8,10 +8,10 @@ The supplied reference showed the League identity banner still reading as too ta
 
 | Surface | Previous compact version | Current version |
 |---|---:|---:|
-| Desktop banner height | 120px | 96px |
-| Tablet banner height | 112px | 88px |
-| Mobile banner height | 104px | 84px |
-| League title cap | 32px | 26px |
+| Desktop banner height | 96px | 80px |
+| Tablet banner height | 88px | 76px |
+| Mobile banner height | 84px | 72px |
+| League title cap | 26px | 24px |
 | Content separation below banner | None | 16px mobile / 20px desktop |
 
 The name remains the primary label. Supporting club/format metadata, the centered Commissioner control for authorized users, and right-aligned season metrics retain their established hierarchy without expanding the banner.
@@ -19,7 +19,8 @@ The name remains the primary label. Supporting club/format metadata, the centere
 ## Implementation
 
 - `LeagueDashboard.tsx`
-  - Uses `84 / 88 / 96px` hero height and a `clamp(1.25rem, 2.4vw, 1.625rem)` League title.
+  - Uses `72 / 76 / 80px` identity-strip height and a `clamp(1.125rem, 2.05vw, 1.5rem)` League title.
+  - Reduces season-metric scale and horizontal spacing proportionally so the strip stays balanced rather than crowded.
   - Adds a responsive `16 / 20px` inset before the dashboard working surface.
   - Replaces the oversized green preparation block with a 44px minimum-height, pastel-yellow, bordered **Prep Scout** button. It preserves the existing opponent-scoped prep route, visible keyboard focus, descriptive accessible name, and restrained hover/reduced-motion behavior.
 - `LeagueDemo.tsx`
@@ -28,9 +29,10 @@ The name remains the primary label. Supporting club/format metadata, the centere
 
 ## Visual QA
 
-- **Desktop (1440px):** The live League header reads as a 96px compact identity bar; title, metadata, right-side metrics, and surrounding surface remain readable. The new content gap clearly separates identity from the first dashboard card.
-- **Mobile (390px):** The header reduces to 84px, keeps the League title and format metadata legible, and preserves a clear 16px transition before the match surface. No horizontal overflow or clipping observed.
+- **Desktop (1440px):** The live League header reads as an 80px compact identity strip; title, metadata, and right-side metrics remain readable. The new content gap clearly separates identity from the first dashboard card.
+- **Mobile (390px):** The header reduces to 72px, keeps the League title and format metadata legible, and preserves a clear 16px transition before the match surface. No horizontal overflow or clipping observed.
 - **Demo parity:** Desktop and mobile `/league-demo` use the same compact header scale and deliberate content separation.
+- **Runtime geometry:** The live desktop header measured exactly 80px at a 1280px viewport; the content shell had no horizontal overflow.
 - **Prep Scout:** Source-level regression coverage confirms the existing opponent-specific navigation now uses the concise label, pastel-yellow outline treatment, and accessible `Open Prep Scout for …` name. The live visual QA account had no attached current-week matchup, so the conditional CTA did not render in-browser for that route.
 
 ## Validation

@@ -33,8 +33,8 @@ describe("League commissioner header action cluster", () => {
 
   it("pins season metrics to the trophy side of the hero instead of the centered action cluster", () => {
     expect(heroSource).toContain('data-testid="league-dashboard-hero-metrics"');
-    expect(heroSource).toContain('absolute right-6 top-1/2 hidden -translate-y-1/2');
-    expect(heroSource).toContain('sm:flex lg:right-8');
+    expect(heroSource).toContain('absolute right-5 top-1/2 hidden -translate-y-1/2');
+    expect(heroSource).toContain('sm:flex lg:right-7');
     expect(heroSource).toContain('{ label: "Players", value: `${league.players.length}/${league.maxPlayers}` }');
     expect(heroSource).toContain('{ label: "Matches", value: `${completedMatchCount}/${totalMatches}` }');
     expect(heroSource).toContain('{ label: "Week", value: `${league.currentWeek}/${league.totalWeeks}` }');

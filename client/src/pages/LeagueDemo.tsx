@@ -353,7 +353,7 @@ export default function LeagueDemo() {
 
           {/* ── LEAGUE HERO BANNER (animated ASCII art backdrop + stats overlay) ── */}
           <div
-            className="flex-shrink-0 relative overflow-hidden h-[84px] sm:h-[88px] lg:h-[96px]"
+            className="flex-shrink-0 relative overflow-hidden h-[72px] sm:h-[76px] lg:h-[80px]"
             style={{ borderBottom: `1px solid ${cardBorder}` }}
           >
             <AsciiArt className="absolute inset-0 w-full h-full" style={{ objectPosition: "right center" }} />
@@ -363,11 +363,11 @@ export default function LeagueDemo() {
                 background: "linear-gradient(90deg, oklch(0.10 0.05 145 / 0.88) 0%, oklch(0.10 0.05 145 / 0.55) 60%, oklch(0.10 0.05 145 / 0.30) 100%)",
               }}
             />
-            <div className="relative z-10 h-full flex items-center gap-4 px-4 sm:px-5">
+            <div className="relative z-10 h-full flex items-center gap-3 px-4 sm:px-5">
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-0.5">
                   <h1
-                    className="whitespace-nowrap text-[clamp(1.25rem,2.4vw,1.625rem)] font-black leading-none"
+                    className="whitespace-nowrap text-[clamp(1.125rem,2.05vw,1.5rem)] font-black leading-none"
                     style={{ color: "#fff", fontFamily: "'Clash Display', sans-serif", textShadow: "0 2px 12px rgba(0,0,0,0.7)" }}
                   >
                     ChessOTB Club League
@@ -396,15 +396,15 @@ export default function LeagueDemo() {
                 </div>
               </div>
               <div className="hidden sm:block w-px h-10 opacity-20" style={{ background: accent }} />
-              <div className="hidden sm:flex items-center gap-5 flex-shrink-0">
+              <div className="hidden sm:flex items-center gap-4 flex-shrink-0">
                 {[
                   { label: "Players", value: "8/8" },
                   { label: "Matches", value: "42/56" },
                   { label: "Week", value: "14/16" },
                 ].map(({ label, value }) => (
                   <div key={label} className="text-center">
-                    <div className="text-xl font-black" style={{ color: "#fff", textShadow: "0 1px 8px rgba(0,0,0,0.6)" }}>{value}</div>
-                    <div className="text-[10px] font-bold uppercase tracking-wider mt-0.5" style={{ color: "rgba(255,255,255,0.50)" }}>{label}</div>
+                    <div className="text-lg font-black leading-none" style={{ color: "#fff", textShadow: "0 1px 8px rgba(0,0,0,0.6)" }}>{value}</div>
+                    <div className="mt-0.5 text-[10px] font-bold uppercase tracking-wider" style={{ color: "rgba(255,255,255,0.50)" }}>{label}</div>
                   </div>
                 ))}
               </div>

@@ -1413,7 +1413,7 @@ export default function LeagueDashboard() {
           {/* ── LEAGUE HERO BANNER: the single identity surface ───────────── */}
           <div
             data-testid="league-dashboard-hero"
-            className="flex-shrink-0 relative overflow-hidden h-[84px] sm:h-[88px] lg:h-[96px]"
+            className="flex-shrink-0 relative overflow-hidden h-[72px] sm:h-[76px] lg:h-[80px]"
             style={{ borderBottom: `1px solid ${cardBorder}` }}
           >
             <AsciiArt className="absolute inset-0 w-full h-full" style={{ objectPosition: "right center" }} />
@@ -1423,10 +1423,10 @@ export default function LeagueDashboard() {
                 background: "linear-gradient(90deg, oklch(0.10 0.05 145 / 0.88) 0%, oklch(0.10 0.05 145 / 0.55) 60%, oklch(0.10 0.05 145 / 0.30) 100%)",
               }}
             />
-            <div className="relative z-10 h-full flex items-center gap-4 px-4 sm:px-5">
+            <div className="relative z-10 h-full flex items-center gap-3 px-4 sm:px-5">
               <div className="flex-1 min-w-0 lg:max-w-[31%]">
                 <h1
-                  className="truncate text-[clamp(1.25rem,2.4vw,1.625rem)] font-black leading-none"
+                  className="truncate text-[clamp(1.125rem,2.05vw,1.5rem)] font-black leading-none"
                   style={{ color: "#fff", fontFamily: "'Clash Display', sans-serif", textShadow: "0 2px 12px rgba(0,0,0,0.7)" }}
                 >
                   {league.name}
@@ -1477,7 +1477,7 @@ export default function LeagueDashboard() {
               </div>
               <div
                 data-testid="league-dashboard-hero-metrics"
-                className="absolute right-6 top-1/2 hidden -translate-y-1/2 items-center gap-5 sm:flex lg:right-8"
+                className="absolute right-5 top-1/2 hidden -translate-y-1/2 items-center gap-4 sm:flex lg:right-7"
               >
                 {[
                   { label: "Players", value: `${league.players.length}/${league.maxPlayers}` },
@@ -1485,8 +1485,8 @@ export default function LeagueDashboard() {
                   { label: "Week", value: `${league.currentWeek}/${league.totalWeeks}` },
                 ].map(({ label, value }) => (
                   <div key={label} className="text-center">
-                    <div className="text-2xl font-black tabular-nums" style={{ color: "#fff", textShadow: "0 1px 8px rgba(0,0,0,0.6)" }}>{value}</div>
-                    <div className="text-[11px] font-bold uppercase tracking-wider mt-0.5" style={{ color: "rgba(255,255,255,0.58)" }}>{label}</div>
+                    <div className="text-xl font-black tabular-nums leading-none" style={{ color: "#fff", textShadow: "0 1px 8px rgba(0,0,0,0.6)" }}>{value}</div>
+                    <div className="mt-0.5 text-[10px] font-bold uppercase tracking-wider" style={{ color: "rgba(255,255,255,0.58)" }}>{label}</div>
                   </div>
                 ))}
               </div>
