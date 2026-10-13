@@ -40,6 +40,7 @@ type ClubDashboardSidebarProps = {
   borderColor: string;
   brandActionLabel?: string;
   brandTooltip?: string;
+  showTooltips?: boolean;
   ariaLabel?: string;
   footerAriaLabel?: string;
   items: ClubDashboardSidebarItem[];
@@ -64,6 +65,7 @@ export function ClubDashboardSidebar({
   borderColor,
   brandActionLabel = "Back to all clubs",
   brandTooltip,
+  showTooltips = true,
   ariaLabel = "Club dashboard sidebar",
   footerAriaLabel = "Club dashboard footer navigation",
   items,
@@ -112,6 +114,7 @@ export function ClubDashboardSidebar({
     const description = item.description ?? CLUB_SIDEBAR_ITEM_DESCRIPTIONS[item.id];
     const button = (
       <button
+        key={item.id}
         type="button"
         onClick={() => onSelect(item.id)}
         onPointerEnter={(event) => {
@@ -181,6 +184,8 @@ export function ClubDashboardSidebar({
         )}
       </button>
     );
+
+    if (!showTooltips) return button;
 
     return (
       <Tooltip key={item.id} delayDuration={expanded ? 600 : 350}>
@@ -264,6 +269,8 @@ export function ClubDashboardSidebar({
       </button>
     );
 
+    if (!showTooltips) return button;
+
     return (
       <Tooltip delayDuration={expanded ? 600 : 350}>
         <TooltipTrigger asChild>{button}</TooltipTrigger>
@@ -293,6 +300,8 @@ export function ClubDashboardSidebar({
         />
       </button>
     );
+
+    if (!showTooltips) return button;
 
     return (
       <Tooltip delayDuration={expanded ? 600 : 350}>

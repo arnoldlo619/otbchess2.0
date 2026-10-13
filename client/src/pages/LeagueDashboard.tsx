@@ -1297,14 +1297,14 @@ export default function LeagueDashboard() {
   }
 
   const tabs: Array<ClubDashboardSidebarItem & { id: LeagueTabId }> = [
-    { id: "overview" as const, label: "Overview", icon: DashboardIcon, description: "See your current matchup and League form.", group: "workspace" },
-    ...(isCommissioner ? [{ id: "commissioner" as const, label: "Commissioner", icon: ShieldCheck, description: "Report results and advance the League week.", group: "workspace" as const }] : []),
-    { id: "matchups" as const, label: "Matchups", icon: BattleIcon, description: "Review this week’s pairings and results.", group: "workspace" },
-    { id: "standings" as const, label: "Standings", icon: RatingIcon, description: "Track player rankings and points.", group: "workspace" },
-    { id: "schedule" as const, label: "Schedule", icon: EventsIcon, description: "View the season calendar by week.", group: "workspace" },
-    ...(league.status === "completed" ? [{ id: "history" as const, label: "Summary", icon: TournamentsIcon, description: "Review the completed League season.", group: "workspace" as const }] : []),
-    ...(isCommissioner && league.status === "draft" ? [{ id: "requests" as const, label: "Requests", icon: MembersIcon, description: "Review pending League join requests.", badge: joinRequests.length, group: "workspace" as const }] : []),
-    ...(isCommissioner ? [{ id: "settings" as const, label: "Settings", icon: OtbSettingsIcon, description: "Edit League setup and access.", group: "manage" as const }] : []),
+    { id: "overview" as const, label: "Overview", icon: DashboardIcon, group: "workspace" },
+    ...(isCommissioner ? [{ id: "commissioner" as const, label: "Commissioner", icon: ShieldCheck, group: "workspace" as const }] : []),
+    { id: "matchups" as const, label: "Matchups", icon: BattleIcon, group: "workspace" },
+    { id: "standings" as const, label: "Standings", icon: RatingIcon, group: "workspace" },
+    { id: "schedule" as const, label: "Schedule", icon: EventsIcon, group: "workspace" },
+    ...(league.status === "completed" ? [{ id: "history" as const, label: "Summary", icon: TournamentsIcon, group: "workspace" as const }] : []),
+    ...(isCommissioner && league.status === "draft" ? [{ id: "requests" as const, label: "Requests", icon: MembersIcon, badge: joinRequests.length, group: "workspace" as const }] : []),
+    ...(isCommissioner ? [{ id: "settings" as const, label: "Settings", icon: OtbSettingsIcon, group: "manage" as const }] : []),
   ];
   const sidebarExpanded = sidebarHovered || sidebarKeyboardExpanded;
 
@@ -1347,7 +1347,7 @@ export default function LeagueDashboard() {
           expandedBackground={isDark ? "oklch(0.115 0.025 145)" : "oklch(0.15 0.04 145)"}
           borderColor={isDark ? "oklch(0.22 0.06 145)" : "oklch(0.25 0.08 145)"}
           brandActionLabel="Back to club"
-          brandTooltip="Return to the club dashboard."
+          showTooltips={false}
           ariaLabel="League dashboard sidebar"
           footerAriaLabel="League dashboard footer navigation"
           items={tabs}
@@ -1364,7 +1364,6 @@ export default function LeagueDashboard() {
           onBackToClubs={() => navigate(`/clubs/${league.clubId}`)}
           footerAction={{
             label: "Back to club",
-            description: "Return to the club dashboard.",
             icon: ArrowLeft,
             onClick: () => navigate(`/clubs/${league.clubId}`),
           }}

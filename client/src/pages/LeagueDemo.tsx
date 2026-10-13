@@ -164,12 +164,12 @@ function FormBadge({ result, isDark = true }: { result: string; isDark?: boolean
 type TabId = "overview" | "commissioner" | "matchup" | "standings" | "schedule" | "history";
 
 const TABS: Array<ClubDashboardSidebarItem & { id: TabId }> = [
-  { id: "overview", label: "Overview", icon: DashboardIcon, description: "See your player dashboard and League form.", group: "workspace" },
-  { id: "commissioner", label: "Commissioner", icon: ShieldCheck, description: "Report results and advance the demo week.", group: "workspace" },
-  { id: "matchup", label: "Matchup", icon: BattleIcon, description: "Review the current featured pairing.", group: "workspace" },
-  { id: "standings", label: "Standings", icon: RatingIcon, description: "Compare player rankings and points.", group: "workspace" },
-  { id: "schedule", label: "Schedule", icon: EventsIcon, description: "Browse the demo season calendar.", group: "workspace" },
-  { id: "history", label: "History", icon: TournamentsIcon, description: "Review earlier League results.", group: "workspace" },
+  { id: "overview", label: "Overview", icon: DashboardIcon, group: "workspace" },
+  { id: "commissioner", label: "Commissioner", icon: ShieldCheck, group: "workspace" },
+  { id: "matchup", label: "Matchup", icon: BattleIcon, group: "workspace" },
+  { id: "standings", label: "Standings", icon: RatingIcon, group: "workspace" },
+  { id: "schedule", label: "Schedule", icon: EventsIcon, group: "workspace" },
+  { id: "history", label: "History", icon: TournamentsIcon, group: "workspace" },
 ];
 
 export default function LeagueDemo() {
@@ -303,7 +303,7 @@ export default function LeagueDemo() {
           expandedBackground={isDark ? "oklch(0.115 0.025 145)" : "oklch(0.15 0.04 145)"}
           borderColor={isDark ? "oklch(0.22 0.06 145)" : "oklch(0.25 0.08 145)"}
           brandActionLabel="Back to home"
-          brandTooltip="Return to the ChessOTB home page."
+          showTooltips={false}
           ariaLabel="League demo sidebar"
           footerAriaLabel="League demo footer navigation"
           items={TABS}
@@ -316,7 +316,6 @@ export default function LeagueDemo() {
           onBackToClubs={() => navigate("/")}
           footerAction={{
             label: "Back to home",
-            description: "Return to the ChessOTB home page.",
             icon: ArrowLeft,
             onClick: () => navigate("/"),
           }}

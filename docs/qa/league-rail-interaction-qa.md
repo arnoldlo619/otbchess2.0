@@ -1,38 +1,35 @@
 # League rail interaction QA
 
-**Scope:** Smooth hover states and descriptive tooltips for the shared expandable Club-style rail used by the live Club League dashboard and public League demo.
+**Scope:** Remove redundant hover-tooltip overlays from the shared expandable Club-style rail **only on the live Club League dashboard and public League demo**.
 
 ## Delivered behavior
 
-- Added a restrained 200ms hover response to rail actions: a small icon lift/scale, more legible accent tint, border, and shadow. The active destination remains visually stronger than hover.
-- Added a delayed tooltip treatment for every brand, primary, settings, and footer rail action. Tooltips present the action label plus a short, route-specific purpose.
-- Added League-specific descriptions for Overview, Commissioner, Matchups, Standings, Schedule, Summary/History, Requests, Settings, and return actions in both the live dashboard and demo.
-- Preserved existing navigation destinations, compact-to-expanded rail behavior, and mobile navigation.
+- League rail actions no longer render hover or keyboard-focus tooltip overlays.
+- The rail still expands on pointer hover and keyboard focus, revealing the same full navigation labels in place.
+- Retained the existing 200ms hover response: restrained icon lift/scale, accent tint, border, and shadow; active destinations remain visually stronger.
+- Removed now-unused League-only descriptions for Overview, Commissioner, Matchups, Standings, Schedule, History/Summary, Requests, Settings, and return actions.
+- Club dashboards retain their existing tooltip behavior through a shared `showTooltips` option that defaults to `true`.
+- Preserved routes, compact-to-expanded geometry, mobile navigation, focus rings, 52px desktop targets, and reduced-motion safeguards.
 
-## Accessibility and motion
+## Browser QA
 
-- Buttons retain their concise accessible names; tooltip content supplements rather than replaces control labels.
-- Tooltip content is available on keyboard focus and pointer hover.
-- Existing `focus-visible` rings, logical tab order, touch-safe controls, and `prefers-reduced-motion` transition safeguards remain in place.
-- Hover state is guarded from touch pointers.
-
-## Visual and runtime QA
-
-- Browser review: `/league-demo` at desktop width.
-  - Rail expands smoothly without overlapping League content.
-  - Hover state confirmed: Commissioner icon computes to `translateY(-1px) scale(1.04)`.
-  - Keyboard focus on Commissioner exposes the tooltip: “Report results and advance the demo week.”
-  - Tooltip remains on the opaque right-side rail surface and does not use emojis.
+- Live League dashboard (`/league/NlGsu0f5XroLQNzk`), desktop 1280×1100:
+  - Hovering the rail expanded it cleanly and revealed Overview, Matchups, Standings, Schedule, and Back to club labels.
+  - DOM inspection confirmed `data-club-sidebar-expanded="true"` and **zero** `[role="tooltip"]` elements.
+  - No overlay covered adjacent League content.
+- Captured desktop route snapshots for both the live League dashboard and `/league-demo`.
 
 ## Automated validation
 
 | Check | Result |
 | --- | --- |
-| Focused sidebar + League suites | 37 passing tests across 6 files |
+| Focused shared-sidebar + League suites | 29 passing tests across 4 files |
+| Targeted League tooltip-removal contract | Passed (1 test) |
 | TypeScript | Passed (`pnpm exec tsc --noEmit`) |
 | Changed-file ESLint | 0 errors; 1 established `LeagueDashboard` hook-dependency warning |
 | Production build | Passed (`pnpm run build`) |
+| Project lint | 0 errors; 225 established warnings |
 | Diff integrity | Passed (`git diff --check`) |
-| Full Vitest baseline | 7,281 passed, 2 skipped; 27 established unrelated failures across 19 suites |
+| Full Vitest baseline | 7,282 passed, 2 skipped; 27 established unrelated failures across 19 suites |
 
-The full-suite failures do not include the shared sidebar tests, compact-rail tests, or affected League interaction suites.
+The full-suite failures do not include the shared sidebar tests, compact-rail tests, responsive League tests, or Commissioner workspace tests. One pre-existing `leagueBacklogReconciliation` landing-navigation assertion remains stale outside this change; the updated tooltip-removal contract passes independently.

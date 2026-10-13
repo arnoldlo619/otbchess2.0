@@ -101,12 +101,14 @@ describe("Club Dashboard shared sidebar", () => {
     expect(sidebarSource).toContain("const Icon = CLUB_SIDEBAR_ICON_OVERRIDES[item.id] ?? item.icon");
   });
 
-  it("keeps navigation vertically centered and makes icon actions discoverable through descriptive tooltips", () => {
+  it("keeps navigation vertically centered and supports context-specific tooltip suppression", () => {
     expect(sidebarSource).toContain('className="flex flex-1 flex-col justify-center overflow-y-auto px-3 py-5"');
     expect(sidebarSource).toContain("const CLUB_SIDEBAR_ITEM_DESCRIPTIONS");
     expect(sidebarSource).toContain("const description = item.description ?? CLUB_SIDEBAR_ITEM_DESCRIPTIONS[item.id];");
+    expect(sidebarSource).toContain("showTooltips?: boolean;");
+    expect(sidebarSource).toContain("showTooltips = true,");
+    expect(sidebarSource).toContain("if (!showTooltips) return button;");
     expect(sidebarSource).toContain("<Tooltip key={item.id} delayDuration={expanded ? 600 : 350}>");
-    expect(sidebarSource).toContain("function renderTooltipContent(");
     expect(sidebarSource).toContain("aria-label={item.label}");
   });
 
