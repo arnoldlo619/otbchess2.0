@@ -1413,7 +1413,7 @@ export default function LeagueDashboard() {
           {/* ── LEAGUE HERO BANNER: the single identity surface ───────────── */}
           <div
             data-testid="league-dashboard-hero"
-            className="flex-shrink-0 relative overflow-hidden h-[104px] sm:h-[112px] lg:h-[120px]"
+            className="flex-shrink-0 relative overflow-hidden h-[84px] sm:h-[88px] lg:h-[96px]"
             style={{ borderBottom: `1px solid ${cardBorder}` }}
           >
             <AsciiArt className="absolute inset-0 w-full h-full" style={{ objectPosition: "right center" }} />
@@ -1423,10 +1423,10 @@ export default function LeagueDashboard() {
                 background: "linear-gradient(90deg, oklch(0.10 0.05 145 / 0.88) 0%, oklch(0.10 0.05 145 / 0.55) 60%, oklch(0.10 0.05 145 / 0.30) 100%)",
               }}
             />
-            <div className="relative z-10 h-full flex items-center gap-5 px-4 sm:px-6">
+            <div className="relative z-10 h-full flex items-center gap-4 px-4 sm:px-5">
               <div className="flex-1 min-w-0 lg:max-w-[31%]">
                 <h1
-                  className="truncate text-[clamp(1.5rem,4vw,2rem)] font-black leading-tight"
+                  className="truncate text-[clamp(1.25rem,2.4vw,1.625rem)] font-black leading-none"
                   style={{ color: "#fff", fontFamily: "'Clash Display', sans-serif", textShadow: "0 2px 12px rgba(0,0,0,0.7)" }}
                 >
                   {league.name}
@@ -1569,7 +1569,7 @@ export default function LeagueDashboard() {
 
           {/* Scrollable content */}
           <div className="flex-1 min-w-0 overflow-x-hidden overflow-y-auto pb-[calc(7rem+env(safe-area-inset-bottom,0px))] lg:pb-6">
-            <div data-testid="league-dashboard-content-shell" className={`league-content-scale ${isDark ? "league-content-scale--dark" : ""} px-4 pt-0 pb-4 lg:px-6 lg:pt-0 lg:pb-6`}>
+            <div data-testid="league-dashboard-content-shell" className={`league-content-scale ${isDark ? "league-content-scale--dark" : ""} px-4 pt-4 pb-4 lg:px-6 lg:pt-5 lg:pb-6`}>
               <div className="flex flex-col lg:flex-row gap-4 items-start">
                 {/* Main content column */}
                                 <div className="flex-1 min-w-0 space-y-4">
@@ -2007,31 +2007,30 @@ export default function LeagueDashboard() {
                     )}
                   </div>
                 )}
-                {/* Prep for Next Round CTA */}
+                {/* Prep Scout CTA */}
                 {(() => {
                   const oppChessCom = myMatchThisWeek ? getOpponentChesscom(myMatchThisWeek) : null;
                   if (!oppChessCom) return null;
+                  const scoutAccent = "oklch(0.88 0.14 92)";
                   return (
                     <div className="px-4 pb-4">
                       <button
                         onClick={() => navigate(`/prep/${encodeURIComponent(oppChessCom)}`)}
-                        className="relative flex w-full items-center justify-center gap-3 rounded-xl px-4 py-3 text-center font-semibold transition-all hover:-translate-y-0.5 hover:opacity-90 active:translate-y-0"
+                        className="relative flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border px-4 py-2.5 text-sm font-bold transition-[background-color,border-color,box-shadow,transform] duration-200 ease-out hover:-translate-y-px active:translate-y-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 motion-reduce:transition-none"
                         style={{
-                          background: `linear-gradient(135deg, ${accent}22 0%, ${accent}10 100%)`,
-                          color: accent,
-                          border: `1px solid ${accent}44`,
-                          boxShadow: `0 2px 12px ${accent}18`,
+                          background: isDark ? "oklch(0.17 0.04 145 / 0.74)" : "oklch(0.24 0.05 145)",
+                          color: scoutAccent,
+                          borderColor: "oklch(0.78 0.13 92 / 0.50)",
+                          boxShadow: "inset 0 1px 0 oklch(0.95 0.10 92 / 0.08)",
+                          // @ts-expect-error CSS custom property is supported by React at runtime.
+                          "--tw-ring-color": scoutAccent,
                         }}
+                        aria-label={`Open Prep Scout for ${oppChessCom}`}
+                        title={`Open Prep Scout for ${oppChessCom}`}
                       >
-                        <div className="flex items-center justify-center gap-2.5">
-                          <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg" style={{ background: `${accent}22` }}>
-                            <Binoculars size={16} />
-                          </div>
-                          <div className="text-center">
-                            <div className="text-sm font-bold" style={{ color: accent }}>Prep for Next Round</div>
-                          </div>
-                        </div>
-                        <ChevronRight className="absolute right-4" size={16} style={{ color: `${accent}88` }} />
+                        <Binoculars size={16} aria-hidden="true" />
+                        <span>Prep Scout</span>
+                        <ChevronRight className="absolute right-4" size={16} aria-hidden="true" style={{ color: "oklch(0.80 0.12 92 / 0.72)" }} />
                       </button>
                     </div>
                   );

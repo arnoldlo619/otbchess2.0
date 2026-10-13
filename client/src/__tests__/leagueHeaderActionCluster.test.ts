@@ -58,7 +58,9 @@ describe("League commissioner header action cluster", () => {
       dashboardSource.indexOf("/* ── STANDINGS")
     );
 
-    expect(overviewSource).toContain("<Binoculars size={16} />");
+    expect(overviewSource).toContain('<Binoculars size={16} aria-hidden="true" />');
+    expect(overviewSource).toContain(">Prep Scout</span>");
+    expect(overviewSource).toContain("Open Prep Scout for ${oppChessCom}");
     expect(overviewSource).toContain("League form");
     expect(overviewSource).not.toContain("Recent league results");
     expect(overviewSource).not.toContain("My Standing");

@@ -353,7 +353,7 @@ export default function LeagueDemo() {
 
           {/* ── LEAGUE HERO BANNER (animated ASCII art backdrop + stats overlay) ── */}
           <div
-            className="flex-shrink-0 relative overflow-hidden h-[104px] sm:h-[112px] lg:h-[120px]"
+            className="flex-shrink-0 relative overflow-hidden h-[84px] sm:h-[88px] lg:h-[96px]"
             style={{ borderBottom: `1px solid ${cardBorder}` }}
           >
             <AsciiArt className="absolute inset-0 w-full h-full" style={{ objectPosition: "right center" }} />
@@ -363,11 +363,11 @@ export default function LeagueDemo() {
                 background: "linear-gradient(90deg, oklch(0.10 0.05 145 / 0.88) 0%, oklch(0.10 0.05 145 / 0.55) 60%, oklch(0.10 0.05 145 / 0.30) 100%)",
               }}
             />
-            <div className="relative z-10 h-full flex items-center gap-6 px-6">
+            <div className="relative z-10 h-full flex items-center gap-4 px-4 sm:px-5">
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-0.5">
                   <h1
-                    className="whitespace-nowrap text-[clamp(1.5rem,4vw,2rem)] font-black leading-tight"
+                    className="whitespace-nowrap text-[clamp(1.25rem,2.4vw,1.625rem)] font-black leading-none"
                     style={{ color: "#fff", fontFamily: "'Clash Display', sans-serif", textShadow: "0 2px 12px rgba(0,0,0,0.7)" }}
                   >
                     ChessOTB Club League
@@ -418,7 +418,7 @@ export default function LeagueDemo() {
             {activeTab === "overview" && (
               <div className="flex">
                 {/* Main content */}
-                <div data-testid="league-demo-content-shell" className="flex-1 px-4 pt-0 pb-4 lg:px-6 lg:pt-0 lg:pb-6 space-y-5">
+                <div data-testid="league-demo-content-shell" className="flex-1 px-4 pt-4 pb-4 lg:px-6 lg:pt-5 lg:pb-6 space-y-5">
                   {/* Featured Matchup Hero */}
                   <div
                     className="league-matchup-card league-data-surface rounded-2xl overflow-hidden"

@@ -24,12 +24,12 @@ describe("LeagueDemo responsive containment", () => {
   it("keeps the mobile league title centered and fully readable", () => {
     expect(demoSource).toContain("pointer-events-none absolute inset-x-16 text-center lg:hidden");
     expect(demoSource).toContain("block whitespace-nowrap text-base font-bold");
-    expect(demoSource).toContain("text-[clamp(1.5rem,4vw,2rem)]");
+    expect(demoSource).toContain("text-[clamp(1.25rem,2.4vw,1.625rem)]");
   });
 
   it("uses a compact, readable banner scale across live and demo League dashboards", () => {
-    const compactHeroHeight = "h-[104px] sm:h-[112px] lg:h-[120px]";
-    const compactTitleScale = "text-[clamp(1.5rem,4vw,2rem)]";
+    const compactHeroHeight = "h-[84px] sm:h-[88px] lg:h-[96px]";
+    const compactTitleScale = "text-[clamp(1.25rem,2.4vw,1.625rem)]";
 
     expect(dashboardSource).toContain(compactHeroHeight);
     expect(demoSource).toContain(compactHeroHeight);
@@ -37,13 +37,13 @@ describe("LeagueDemo responsive containment", () => {
     expect(demoSource).toContain(compactTitleScale);
   });
 
-  it("removes the post-banner top inset in both League dashboards", () => {
+  it("uses a deliberate content gap after the compact banner in both League dashboards", () => {
     expect(demoSource).toContain('data-testid="league-demo-content-shell"');
     expect(demoSource).toContain('league-content-scale ${isDark ? "league-content-scale--dark" : ""} flex-1');
-    expect(demoSource).toContain("px-4 pt-0 pb-4 lg:px-6 lg:pt-0 lg:pb-6 space-y-5");
+    expect(demoSource).toContain("px-4 pt-4 pb-4 lg:px-6 lg:pt-5 lg:pb-6 space-y-5");
     expect(demoSource).not.toContain('className="p-4 lg:p-6');
     expect(dashboardSource).toContain('data-testid="league-dashboard-content-shell"');
-    expect(dashboardSource).toContain('league-content-scale ${isDark ? "league-content-scale--dark" : ""} px-4 pt-0 pb-4 lg:px-6 lg:pt-0 lg:pb-6');
+    expect(dashboardSource).toContain('league-content-scale ${isDark ? "league-content-scale--dark" : ""} px-4 pt-4 pb-4 lg:px-6 lg:pt-5 lg:pb-6');
     expect(dashboardSource).toContain("px-4 pt-0 pb-6 lg:px-6 lg:pt-0 lg:pb-6 space-y-6");
     expect(dashboardSource).toContain("mx-4 lg:mx-6 mt-0 rounded-2xl");
   });

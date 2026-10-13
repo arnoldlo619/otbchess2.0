@@ -69,10 +69,10 @@ describe("League Dashboard implementation", () => {
     expect(dashboard).toContain('transition-[width,min-width] duration-300');
     expect(demo).toContain('transition-[width,min-width] duration-300');
     expect(dashboard).toContain('data-testid="league-dashboard-hero"');
-    expect(dashboard).toContain('h-[104px] sm:h-[112px] lg:h-[120px]');
-    expect(demo).toContain('h-[104px] sm:h-[112px] lg:h-[120px]');
-    expect(dashboard).toContain('text-[clamp(1.5rem,4vw,2rem)]');
-    expect(demo).toContain('text-[clamp(1.5rem,4vw,2rem)]');
+    expect(dashboard).toContain('h-[84px] sm:h-[88px] lg:h-[96px]');
+    expect(demo).toContain('h-[84px] sm:h-[88px] lg:h-[96px]');
+    expect(dashboard).toContain('text-[clamp(1.25rem,2.4vw,1.625rem)]');
+    expect(demo).toContain('text-[clamp(1.25rem,2.4vw,1.625rem)]');
     expect(dashboard).toContain('otb-header-safe lg:hidden');
     expect(dashboard).toContain('data-testid="league-dashboard-header-actions"');
     expect(dashboard.match(/title="Share League"/g) ?? []).toHaveLength(1);
