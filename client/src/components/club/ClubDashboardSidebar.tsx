@@ -7,10 +7,20 @@ const CLUB_SIDEBAR_ICON_OVERRIDES: Record<string, ElementType> = {
   feed: MessagesSquare,
   members: UsersRound,
 };
+const CLUB_SIDEBAR_ITEM_DESCRIPTIONS: Record<string, string> = {
+  feed: "Read club posts and updates.",
+  events: "Manage upcoming club events.",
+  league: "Open the club league workspace.",
+  leagues: "Open the club league workspace.",
+  members: "View members, rankings, and attendance.",
+  albums: "Browse club photos and albums.",
+  settings: "Manage club settings and access.",
+};
 
 export type ClubDashboardSidebarItem = {
   id: string;
   label: string;
+  description?: string;
   icon: ElementType;
   badge?: number;
   group: "workspace" | "manage";
@@ -18,6 +28,7 @@ export type ClubDashboardSidebarItem = {
 
 type ClubDashboardSidebarFooterAction = {
   label: string;
+  description?: string;
   icon: ElementType;
   onClick: () => void;
 };
@@ -28,6 +39,7 @@ type ClubDashboardSidebarProps = {
   expandedBackground?: string;
   borderColor: string;
   brandActionLabel?: string;
+  brandTooltip?: string;
   ariaLabel?: string;
   footerAriaLabel?: string;
   items: ClubDashboardSidebarItem[];
@@ -51,6 +63,7 @@ export function ClubDashboardSidebar({
   expandedBackground,
   borderColor,
   brandActionLabel = "Back to all clubs",
+  brandTooltip,
   ariaLabel = "Club dashboard sidebar",
   footerAriaLabel = "Club dashboard footer navigation",
   items,
@@ -75,10 +88,28 @@ export function ClubDashboardSidebar({
     }
   }
 
+  function renderTooltipContent(label: string, description?: string, badge?: number) {
+    return (
+      <TooltipContent
+        side="right"
+        sideOffset={12}
+        className="max-w-56 border border-white/10 bg-[#101d15] px-3 py-2 text-white shadow-[0_12px_28px_rgb(0_0_0_/_0.28)]"
+      >
+        <span className="grid gap-0.5">
+          <span className="text-xs font-semibold leading-4">
+            {label}{badge ? ` · ${badgeLabel(badge)}` : ""}
+          </span>
+          {description && <span className="text-[11px] font-normal leading-4 text-white/70">{description}</span>}
+        </span>
+      </TooltipContent>
+    );
+  }
+
   function renderItem(item: ClubDashboardSidebarItem) {
     const Icon = CLUB_SIDEBAR_ICON_OVERRIDES[item.id] ?? item.icon;
     const active = activeId === item.id;
     const badge = item.badge ?? 0;
+    const description = item.description ?? CLUB_SIDEBAR_ITEM_DESCRIPTIONS[item.id];
     const button = (
       <button
         type="button"
@@ -89,7 +120,7 @@ export function ClubDashboardSidebar({
         onPointerLeave={() => setHoveredItemId(null)}
         aria-label={item.label}
         aria-current={active ? "page" : undefined}
-        className="group relative flex cursor-pointer items-center rounded-xl text-left outline-none transition-[width,height,margin,padding,gap,background-color,color,transform] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-[#07140c] motion-reduce:transition-none"
+        className="group relative flex cursor-pointer items-center rounded-xl text-left outline-none transition-[width,height,margin,padding,gap,background-color,border-color,color,box-shadow,transform] duration-200 ease-out active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-[#07140c] motion-reduce:transition-none"
         style={{
           justifyContent: expanded ? "flex-start" : "center",
           gap: expanded ? "12px" : 0,
@@ -99,9 +130,9 @@ export function ClubDashboardSidebar({
           alignSelf: "center",
           marginInlineStart: expanded ? "2px" : 0,
           color: active ? "#ffffff" : "rgba(229, 238, 232, 0.68)",
-          background: active ? `color-mix(in srgb, ${accent} 14%, transparent)` : hoveredItemId === item.id ? `color-mix(in srgb, ${accent} 8%, transparent)` : "transparent",
-          border: active ? `1px solid color-mix(in srgb, ${accent} 52%, transparent)` : hoveredItemId === item.id ? `1px solid color-mix(in srgb, ${accent} 27%, transparent)` : "1px solid transparent",
-          boxShadow: active ? `inset 0 1px 0 color-mix(in srgb, ${accent} 32%, transparent), 0 5px 14px rgb(0 0 0 / 0.13)` : hoveredItemId === item.id ? `inset 0 1px 0 color-mix(in srgb, ${accent} 16%, transparent)` : "none",
+          background: active ? `color-mix(in srgb, ${accent} 14%, transparent)` : hoveredItemId === item.id ? `color-mix(in srgb, ${accent} 11%, transparent)` : "transparent",
+          border: active ? `1px solid color-mix(in srgb, ${accent} 52%, transparent)` : hoveredItemId === item.id ? `1px solid color-mix(in srgb, ${accent} 34%, transparent)` : "1px solid transparent",
+          boxShadow: active ? `inset 0 1px 0 color-mix(in srgb, ${accent} 32%, transparent), 0 5px 14px rgb(0 0 0 / 0.13)` : hoveredItemId === item.id ? `inset 0 1px 0 color-mix(in srgb, ${accent} 18%, transparent), 0 7px 18px rgb(0 0 0 / 0.12)` : "none",
           // @ts-expect-error CSS custom property is supported by React at runtime.
           "--tw-ring-color": accent,
         }}
@@ -151,18 +182,10 @@ export function ClubDashboardSidebar({
       </button>
     );
 
-    if (expanded) return <div key={item.id}>{button}</div>;
-
     return (
-      <Tooltip key={item.id} delayDuration={250}>
+      <Tooltip key={item.id} delayDuration={expanded ? 600 : 350}>
         <TooltipTrigger asChild>{button}</TooltipTrigger>
-        <TooltipContent
-          side="right"
-          sideOffset={10}
-          className="border border-white/10 bg-[#101d15] px-2.5 py-1.5 text-xs font-semibold text-white shadow-xl"
-        >
-          {item.label}{badge > 0 ? ` · ${badgeLabel(badge)}` : ""}
-        </TooltipContent>
+        {renderTooltipContent(item.label, description, badge)}
       </Tooltip>
     );
   }
@@ -183,7 +206,7 @@ export function ClubDashboardSidebar({
     const Icon = footerAction.icon;
     const isHovered = hoveredItemId === "footer-action";
 
-    return (
+    const button = (
       <button
         type="button"
         onClick={footerAction.onClick}
@@ -192,7 +215,7 @@ export function ClubDashboardSidebar({
         }}
         onPointerLeave={() => setHoveredItemId(null)}
         aria-label={footerAction.label}
-        className="group relative flex cursor-pointer items-center rounded-xl text-left outline-none transition-[width,height,margin,padding,gap,background-color,color,transform] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-[#07140c] motion-reduce:transition-none"
+        className="group relative flex cursor-pointer items-center rounded-xl text-left outline-none transition-[width,height,margin,padding,gap,background-color,border-color,color,box-shadow,transform] duration-200 ease-out active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-[#07140c] motion-reduce:transition-none"
         style={{
           justifyContent: expanded ? "flex-start" : "center",
           gap: expanded ? "12px" : 0,
@@ -202,9 +225,9 @@ export function ClubDashboardSidebar({
           alignSelf: "center",
           marginInlineStart: expanded ? "2px" : 0,
           color: isHovered ? accent : "rgba(229, 238, 232, 0.68)",
-          background: isHovered ? `color-mix(in srgb, ${accent} 8%, transparent)` : "transparent",
-          border: isHovered ? `1px solid color-mix(in srgb, ${accent} 27%, transparent)` : "1px solid transparent",
-          boxShadow: isHovered ? `inset 0 1px 0 color-mix(in srgb, ${accent} 16%, transparent)` : "none",
+          background: isHovered ? `color-mix(in srgb, ${accent} 11%, transparent)` : "transparent",
+          border: isHovered ? `1px solid color-mix(in srgb, ${accent} 34%, transparent)` : "1px solid transparent",
+          boxShadow: isHovered ? `inset 0 1px 0 color-mix(in srgb, ${accent} 18%, transparent), 0 7px 18px rgb(0 0 0 / 0.12)` : "none",
           // @ts-expect-error CSS custom property is supported by React at runtime.
           "--tw-ring-color": accent,
         }}
@@ -240,6 +263,43 @@ export function ClubDashboardSidebar({
         </span>
       </button>
     );
+
+    return (
+      <Tooltip delayDuration={expanded ? 600 : 350}>
+        <TooltipTrigger asChild>{button}</TooltipTrigger>
+        {renderTooltipContent(footerAction.label, footerAction.description)}
+      </Tooltip>
+    );
+  }
+
+  function renderBrandAction() {
+    const button = (
+      <button
+        type="button"
+        onClick={onBackToClubs}
+        aria-label={brandActionLabel}
+        className="group/brand relative flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-transparent outline-none transition-[opacity,transform] duration-200 ease-out hover:-translate-y-px hover:opacity-100 active:scale-[0.96] focus-visible:ring-2 motion-reduce:transform-none motion-reduce:transition-none"
+        style={{
+          color: accent,
+          // @ts-expect-error CSS custom property is supported by React at runtime.
+          "--tw-ring-color": accent,
+        }}
+      >
+        <img
+          src={OTB_THUMBNAIL_LOGO}
+          alt="OTB!!"
+          className={`h-14 w-14 origin-center object-contain transition-transform duration-200 ease-out group-hover/brand:scale-[1.08] motion-reduce:transition-none ${expanded ? "scale-[1.04]" : "scale-100"}`}
+          draggable={false}
+        />
+      </button>
+    );
+
+    return (
+      <Tooltip delayDuration={expanded ? 600 : 350}>
+        <TooltipTrigger asChild>{button}</TooltipTrigger>
+        {renderTooltipContent(brandActionLabel, brandTooltip ?? "Return to your club dashboard.")}
+      </Tooltip>
+    );
   }
 
   return (
@@ -269,27 +329,7 @@ export function ClubDashboardSidebar({
           className="flex h-16 items-center overflow-hidden"
           style={{ justifyContent: expanded ? "flex-start" : "center", paddingInlineStart: expanded ? "10px" : 0 }}
         >
-          <button
-            type="button"
-            onClick={onBackToClubs}
-            aria-label={brandActionLabel}
-            className="group/brand relative flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-transparent outline-none transition-[opacity,transform] duration-200 ease-out hover:opacity-100 active:scale-[0.96] focus-visible:ring-2 motion-reduce:transition-none"
-            style={{
-              color: accent,
-              // @ts-expect-error CSS custom property is supported by React at runtime.
-              "--tw-ring-color": accent,
-            }}
-          >
-            <img
-              src={OTB_THUMBNAIL_LOGO}
-              alt="OTB!!"
-              className="h-14 w-14 origin-center object-contain transition-transform duration-200 ease-out motion-reduce:transition-none"
-              style={{
-                transform: expanded ? "scale(1.04)" : "scale(1)",
-              }}
-              draggable={false}
-            />
-          </button>
+          {renderBrandAction()}
         </div>
       </div>
 

@@ -51,8 +51,8 @@ describe("Club Dashboard shared sidebar", () => {
 
   it("keeps hover feedback subordinate to the active selection and safe for pointer, keyboard, and reduced-motion users", () => {
     expect(sidebarSource).toContain("event.pointerType !== \"touch\"");
-    expect(sidebarSource).toContain("color-mix(in srgb, ${accent} 8%, transparent)");
-    expect(sidebarSource).toContain("hoveredItemId === item.id ? `1px solid color-mix(in srgb, ${accent} 27%, transparent)`");
+    expect(sidebarSource).toContain("color-mix(in srgb, ${accent} 11%, transparent)");
+    expect(sidebarSource).toContain("hoveredItemId === item.id ? `1px solid color-mix(in srgb, ${accent} 34%, transparent)`");
     expect(sidebarSource).toContain('transform: hoveredItemId === item.id ? "translateY(-1px) scale(1.04)" : "scale(1)"');
     expect(sidebarSource).toContain("focus-visible:ring-2");
     expect(sidebarSource).toContain("active:scale-[0.98]");
@@ -101,10 +101,12 @@ describe("Club Dashboard shared sidebar", () => {
     expect(sidebarSource).toContain("const Icon = CLUB_SIDEBAR_ICON_OVERRIDES[item.id] ?? item.icon");
   });
 
-  it("keeps compact navigation vertically centered and labels available through tooltips", () => {
+  it("keeps navigation vertically centered and makes icon actions discoverable through descriptive tooltips", () => {
     expect(sidebarSource).toContain('className="flex flex-1 flex-col justify-center overflow-y-auto px-3 py-5"');
-    expect(sidebarSource).toContain("if (expanded) return <div key={item.id}>{button}</div>;");
-    expect(sidebarSource).toContain("<Tooltip key={item.id} delayDuration={250}>");
+    expect(sidebarSource).toContain("const CLUB_SIDEBAR_ITEM_DESCRIPTIONS");
+    expect(sidebarSource).toContain("const description = item.description ?? CLUB_SIDEBAR_ITEM_DESCRIPTIONS[item.id];");
+    expect(sidebarSource).toContain("<Tooltip key={item.id} delayDuration={expanded ? 600 : 350}>");
+    expect(sidebarSource).toContain("function renderTooltipContent(");
     expect(sidebarSource).toContain("aria-label={item.label}");
   });
 
@@ -113,6 +115,8 @@ describe("Club Dashboard shared sidebar", () => {
     expect(sidebarSource).toContain("ariaLabel?: string;");
     expect(sidebarSource).toContain("footerAriaLabel?: string;");
     expect(sidebarSource).toContain("function renderFooterAction()");
+    expect(sidebarSource).toContain("function renderBrandAction()");
+    expect(sidebarSource).toContain("description?: string;");
     expect(sidebarSource).toContain("{(settingsItem || footerAction) && (");
   });
 });

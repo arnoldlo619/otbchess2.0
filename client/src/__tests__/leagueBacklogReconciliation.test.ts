@@ -35,6 +35,17 @@ describe("League Dashboard implementation", () => {
     expect(demo).toContain('ariaLabel="League demo sidebar"');
   });
 
+  it("gives compact League rail icons descriptive navigation tooltips", () => {
+    expect(dashboard).toContain('description: "See your current matchup and League form."');
+    expect(dashboard).toContain('description: "Report results and advance the League week."');
+    expect(dashboard).toContain('description: "Track player rankings and points."');
+    expect(dashboard).toContain('brandTooltip="Return to the club dashboard."');
+    expect(demo).toContain('description: "See your player dashboard and League form."');
+    expect(demo).toContain('description: "Report results and advance the demo week."');
+    expect(demo).toContain('description: "Compare player rankings and points."');
+    expect(demo).toContain('brandTooltip="Return to the ChessOTB home page."');
+  });
+
   it("separates player overview, commissioner operations, and standings surfaces", () => {
     expect(dashboard).toContain("Upcoming Matchups");
     expect(dashboard).toContain(">League form</p>");
