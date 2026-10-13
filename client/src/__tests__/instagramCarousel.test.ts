@@ -19,7 +19,7 @@ const BRAND = {
 };
 
 const SLIDE_THEMES = [
-  { id: "classic-green", label: "Classic", bg: "#2A4A32", bgDark: "#0A1A0E", accent: "#3D6B47", accentLight: "#769656", accentBright: "#4CAF50", glow: "#3D6B47", swatch: "#3D6B47" },
+  { id: "classic-green", label: "Classic", bg: "#2A4A32", bgDark: "#0A1A0E", accent: "#436850", accentLight: "#FBFADA", accentBright: "#4CAF50", glow: "#436850", swatch: "#436850" },
   { id: "midnight-blue", label: "Midnight", bg: "#1A2A4A", bgDark: "#080E1A", accent: "#2A4A7A", accentLight: "#5B8DD9", accentBright: "#4A90E2", glow: "#2A4A7A", swatch: "#2A4A7A" },
   { id: "crimson", label: "Crimson", bg: "#4A1A1A", bgDark: "#1A0808", accent: "#7A2A2A", accentLight: "#D95B5B", accentBright: "#E24A4A", glow: "#7A2A2A", swatch: "#7A2A2A" },
   { id: "gold-rush", label: "Gold", bg: "#3A2A0A", bgDark: "#1A1205", accent: "#7A5A0A", accentLight: "#D4A017", accentBright: "#F5C842", glow: "#7A5A0A", swatch: "#7A5A0A" },

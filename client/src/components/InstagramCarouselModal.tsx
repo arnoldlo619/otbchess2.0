@@ -134,7 +134,8 @@ export const SLIDE_THEMES: SlideTheme[] = [
     bg: "#2A4A32",
     bgDark: "#0A1A0E",
     accent: "#436850",
-    accentLight: "#769656",
+    // Semantic secondary text for the default export palette: warm, readable pastel yellow.
+    accentLight: BRAND.offWhite,
     accentBright: "#4CAF50",
     glow: "#436850",
     swatch: "#436850",
@@ -604,7 +605,7 @@ function OTBBrand({
       {!hostLogoUrl && clubName && (
         <>
           <div style={{ width: 1, height: 20 * s, background: "rgba(255,255,255,0.18)" }} />
-          <div style={{ fontSize: 22 * s, color: "rgba(255,255,255,0.45)", fontWeight: 600, letterSpacing: "0.05em" }}>
+          <div style={{ fontSize: 22 * s, color: theme.accentLight, fontWeight: 600, letterSpacing: "0.05em" }}>
             {clubName}
           </div>
         </>
@@ -615,10 +616,10 @@ function OTBBrand({
 
 // ─── Slide counter badge ──────────────────────────────────────────────────────
 
-function SlideCounter({ current, total, scale = 1 }: { current: number; total: number; scale?: number }) {
+function SlideCounter({ current, total, scale = 1, theme = DEFAULT_THEME }: { current: number; total: number; scale?: number; theme?: SlideTheme }) {
   const s = scale;
   return (
-    <div style={{ position: "absolute", top: 36 * s, right: 44 * s, fontSize: 20 * s, color: "rgba(255,255,255,0.25)", fontWeight: 700, letterSpacing: "0.12em" }}>
+    <div style={{ position: "absolute", top: 36 * s, right: 44 * s, fontSize: 20 * s, color: theme.accentLight, fontWeight: 700, letterSpacing: "0.12em" }}>
       {current} / {total}
     </div>
   );
@@ -645,7 +646,7 @@ function Slide1Cover({ rows, config, tournamentName, totalRounds, scale = 1, hos
 
   return (
     <SlideWrapper scale={scale} theme={theme} format={format} headingFont={headingFont} bgType={bgType} bgValue={bgValue}>
-      <SlideCounter current={1} total={TOTAL_SLIDES} scale={scale} />
+      <SlideCounter current={1} total={TOTAL_SLIDES} scale={scale} theme={theme} />
 
       {/* ── TOP SECTION: Club pill + Tournament name ── */}
       <div style={{ position: "absolute", top: isStory ? 132 * s : PAD, left: PAD, right: PAD }}>
@@ -688,7 +689,7 @@ function Slide1Cover({ rows, config, tournamentName, totalRounds, scale = 1, hos
         )}
 
         {/* Label */}
-        <div style={{ fontSize: 24 * s, color: "rgba(255,255,255,0.38)", fontWeight: 700, letterSpacing: "0.28em", textTransform: "uppercase" as const, marginBottom: 18 * s }}>
+        <div style={{ fontSize: 24 * s, color: theme.accentLight, fontWeight: 700, letterSpacing: "0.28em", textTransform: "uppercase" as const, marginBottom: 18 * s }}>
           Tournament Recap
         </div>
 
@@ -734,7 +735,7 @@ function Slide1Cover({ rows, config, tournamentName, totalRounds, scale = 1, hos
             gap: 20 * s,
           }}
         >
-          <div style={{ fontSize: 28 * s, color: "rgba(255,255,255,0.35)", fontWeight: 500 }}>
+          <div style={{ fontSize: 28 * s, color: theme.accentLight, fontWeight: 500 }}>
             {rows.length} Players · {totalRounds} Rounds{date ? ` · ${date}` : ""}
           </div>
         </div>
@@ -838,7 +839,7 @@ function Slide1Cover({ rows, config, tournamentName, totalRounds, scale = 1, hos
                 {champion.elo} ELO
               </div>
               <div style={{ width: 1, height: 20 * s, background: "rgba(255,255,255,0.2)" }} />
-              <div style={{ fontSize: isStory ? 36 * s : 30 * s, color: "rgba(255,255,255,0.55)", fontWeight: 600 }}>
+              <div style={{ fontSize: isStory ? 36 * s : 30 * s, color: theme.accentLight, fontWeight: 600 }}>
                 {rows[0]?.points ?? 0} / {totalRounds} pts
               </div>
             </div>
@@ -846,9 +847,9 @@ function Slide1Cover({ rows, config, tournamentName, totalRounds, scale = 1, hos
             {!isStory && (date || rows.length) && (
               <div style={{ marginTop: 24 * s, display: "flex", gap: 20 * s, flexWrap: "wrap" as const }}>
                 {date && (
-                  <div style={{ fontSize: 26 * s, color: "rgba(255,255,255,0.35)", fontWeight: 500 }}>{date}</div>
+                  <div style={{ fontSize: 26 * s, color: theme.accentLight, fontWeight: 500 }}>{date}</div>
                 )}
-                <div style={{ fontSize: 20 * s, color: "rgba(255,255,255,0.35)", fontWeight: 500 }}>
+                <div style={{ fontSize: 20 * s, color: theme.accentLight, fontWeight: 500 }}>
                   {rows.length} Players · {totalRounds} Rounds
                 </div>
               </div>
@@ -874,7 +875,7 @@ function Slide1Cover({ rows, config, tournamentName, totalRounds, scale = 1, hos
                     <div style={{ fontSize: 38 * s }}>{idx === 0 ? "🥈" : "🥉"}</div>
                     <div>
                       <div style={{ fontSize: 34 * s, fontWeight: 800, color: BRAND.white }}>{row.player.name}</div>
-                      <div style={{ fontSize: 26 * s, color: "rgba(255,255,255,0.40)", marginTop: 4 * s }}>{row.points} pts</div>
+                      <div style={{ fontSize: 26 * s, color: theme.accentLight, marginTop: 4 * s }}>{row.points} pts</div>
                     </div>
                   </div>
                 ))}
@@ -933,18 +934,18 @@ function Slide2Podium({ rows, config, tournamentName, totalRounds: _totalRounds,
 
   return (
     <SlideWrapper scale={scale} theme={theme} format={format} headingFont={headingFont} bgType={bgType} bgValue={bgValue}>
-      <SlideCounter current={2} total={TOTAL_SLIDES} scale={scale} />
+      <SlideCounter current={2} total={TOTAL_SLIDES} scale={scale} theme={theme} />
 
       {/* Header */}
       <div style={{ paddingTop: isStory ? 128 * s : 56 * s, paddingLeft: PAD, paddingRight: PAD }}>
-        <div style={{ fontSize: isStory ? 26 * s : 22 * s, color: "rgba(255,255,255,0.32)", letterSpacing: "0.26em", fontWeight: 700, textTransform: "uppercase" as const, marginBottom: isStory ? 16 * s : 10 * s }}>
+        <div style={{ fontSize: isStory ? 26 * s : 22 * s, color: theme.accentLight, letterSpacing: "0.26em", fontWeight: 700, textTransform: "uppercase" as const, marginBottom: isStory ? 16 * s : 10 * s }}>
           {tournamentName}
         </div>
         <div style={{ fontSize: hSize, fontWeight: 900, fontStyle: isAntonLike ? "italic" : "normal", fontFamily: headingFont.family, color: headingColor, letterSpacing: headingFont.id === "anton" ? "0.02em" : "-0.02em", lineHeight: 0.95, textTransform: "uppercase" as const }}>
           Top Players
         </div>
         {isStory && (
-          <div style={{ fontSize: 36 * s, color: "rgba(255,255,255,0.42)", marginTop: 22 * s, fontWeight: 600 }}>
+          <div style={{ fontSize: 36 * s, color: theme.accentLight, marginTop: 22 * s, fontWeight: 600 }}>
             Final Podium · {rows.length} Players
           </div>
         )}
@@ -993,8 +994,8 @@ function Slide2Podium({ rows, config, tournamentName, totalRounds: _totalRounds,
                 <div style={{ fontSize: isFirst ? (isStory ? 86 * s : 56 * s) : (isStory ? 62 * s : 40 * s), fontWeight: 900, color: medalColors[idx], lineHeight: 1 }}>
                   {row.points}
                 </div>
-                <div style={{ fontSize: isStory ? 24 * s : 20 * s, color: "rgba(255,255,255,0.38)", marginTop: 6 * s }}>pts</div>
-                <div style={{ fontSize: isFirst ? (isStory ? 34 * s : 24 * s) : (isStory ? 28 * s : 20 * s), color: "rgba(255,255,255,0.40)", marginTop: isStory ? 10 * s : 6 * s, fontWeight: 600 }}>
+                <div style={{ fontSize: isStory ? 24 * s : 20 * s, color: theme.accentLight, marginTop: 6 * s }}>pts</div>
+                <div style={{ fontSize: isFirst ? (isStory ? 34 * s : 24 * s) : (isStory ? 28 * s : 20 * s), color: theme.accentLight, marginTop: isStory ? 10 * s : 6 * s, fontWeight: 600 }}>
                   {row.player.elo} ELO
                 </div>
               </div>
@@ -1052,11 +1053,11 @@ function Slide3Standings({ rows, config, tournamentName, totalRounds: _totalRoun
 
   return (
     <SlideWrapper scale={scale} theme={theme} format={format} headingFont={headingFont} bgType={bgType} bgValue={bgValue}>
-      <SlideCounter current={3} total={TOTAL_SLIDES} scale={scale} />
+      <SlideCounter current={3} total={TOTAL_SLIDES} scale={scale} theme={theme} />
 
       {/* Header — larger title matching Slide 1 weight */}
       <div style={{ paddingTop: isStory ? 128 * s : 56 * s, paddingLeft: PAD_H, paddingRight: PAD_H, marginBottom: isStory ? 34 * s : 24 * s }}>
-        <div style={{ fontSize: isStory ? 26 * s : 24 * s, color: "rgba(255,255,255,0.38)", letterSpacing: "0.28em", fontWeight: 700, textTransform: "uppercase" as const, marginBottom: isStory ? 16 * s : 12 * s }}>
+        <div style={{ fontSize: isStory ? 26 * s : 24 * s, color: theme.accentLight, letterSpacing: "0.28em", fontWeight: 700, textTransform: "uppercase" as const, marginBottom: isStory ? 16 * s : 12 * s }}>
           {tournamentName}
         </div>
         <div style={{ fontSize: hSize3, fontWeight: 900, fontStyle: isAntonLike3 ? "italic" : "normal", fontFamily: headingFont.family, color: headingColor, letterSpacing: headingFont.id === "anton" ? "0.02em" : "-0.03em", lineHeight: 0.95, textTransform: "uppercase" as const }}>
@@ -1076,11 +1077,11 @@ function Slide3Standings({ rows, config, tournamentName, totalRounds: _totalRoun
           background: "rgba(0,0,0,0.18)",
         }}
       >
-        <div style={{ width: 60 * s, fontSize: 22 * s, color: "rgba(255,255,255,0.32)", fontWeight: 800, letterSpacing: "0.14em", textTransform: "uppercase" as const }}>#</div>
-        <div style={{ flex: 1, fontSize: 22 * s, color: "rgba(255,255,255,0.32)", fontWeight: 800, letterSpacing: "0.14em", textTransform: "uppercase" as const }}>Player</div>
-        <div style={{ width: 90 * s, textAlign: "right", fontSize: 22 * s, color: "rgba(255,255,255,0.32)", fontWeight: 800, letterSpacing: "0.14em", textTransform: "uppercase" as const }}>ELO</div>
-        <div style={{ width: 80 * s, textAlign: "right", fontSize: 22 * s, color: "rgba(255,255,255,0.32)", fontWeight: 800, letterSpacing: "0.14em", textTransform: "uppercase" as const }}>PTS</div>
-        <div style={{ width: 90 * s, textAlign: "right", fontSize: 22 * s, color: "rgba(255,255,255,0.32)", fontWeight: 800, letterSpacing: "0.14em", textTransform: "uppercase" as const }}>W-D-L</div>
+        <div style={{ width: 60 * s, fontSize: 22 * s, color: theme.accentLight, fontWeight: 800, letterSpacing: "0.14em", textTransform: "uppercase" as const }}>#</div>
+        <div style={{ flex: 1, fontSize: 22 * s, color: theme.accentLight, fontWeight: 800, letterSpacing: "0.14em", textTransform: "uppercase" as const }}>Player</div>
+        <div style={{ width: 90 * s, textAlign: "right", fontSize: 22 * s, color: theme.accentLight, fontWeight: 800, letterSpacing: "0.14em", textTransform: "uppercase" as const }}>ELO</div>
+        <div style={{ width: 80 * s, textAlign: "right", fontSize: 22 * s, color: theme.accentLight, fontWeight: 800, letterSpacing: "0.14em", textTransform: "uppercase" as const }}>PTS</div>
+        <div style={{ width: 90 * s, textAlign: "right", fontSize: 22 * s, color: theme.accentLight, fontWeight: 800, letterSpacing: "0.14em", textTransform: "uppercase" as const }}>W-D-L</div>
       </div>
 
       {/* Rows */}
@@ -1120,7 +1121,7 @@ function Slide3Standings({ rows, config, tournamentName, totalRounds: _totalRoun
                   </span>
                 )}
               </div>
-              <div style={{ fontSize: isStory ? 28 * s : 22 * s, color: "rgba(255,255,255,0.35)", marginTop: 4 * s }}>@{row.player.username}</div>
+              <div style={{ fontSize: isStory ? 28 * s : 22 * s, color: theme.accentLight, marginTop: 4 * s }}>@{row.player.username}</div>
             </div>
 
             {/* ELO — up from 18 → 22 */}
@@ -1134,7 +1135,7 @@ function Slide3Standings({ rows, config, tournamentName, totalRounds: _totalRoun
             </div>
 
             {/* W-D-L — up from 14 → 18 */}
-            <div style={{ width: 90 * s, textAlign: "right", fontSize: isStory ? 24 * s : 20 * s, color: "rgba(255,255,255,0.42)", fontWeight: 700 }}>
+            <div style={{ width: 90 * s, textAlign: "right", fontSize: isStory ? 24 * s : 20 * s, color: theme.accentLight, fontWeight: 700 }}>
               {row.wins}-{row.draws}-{row.losses}
             </div>
           </div>
@@ -1142,7 +1143,7 @@ function Slide3Standings({ rows, config, tournamentName, totalRounds: _totalRoun
       })}
 
       {rows.length > maxRows && (
-        <div style={{ textAlign: "center", marginTop: 12 * s, fontSize: 22 * s, color: "rgba(255,255,255,0.25)", fontWeight: 600 }}>
+        <div style={{ textAlign: "center", marginTop: 12 * s, fontSize: 22 * s, color: theme.accentLight, fontWeight: 600 }}>
           +{rows.length - maxRows} more players
         </div>
       )}
@@ -1179,11 +1180,11 @@ function Slide4Stats({ rows, config, tournamentName, totalRounds, scale = 1, hos
 
   return (
     <SlideWrapper scale={scale} theme={theme} format={format} headingFont={headingFont} bgType={bgType} bgValue={bgValue}>
-      <SlideCounter current={4} total={TOTAL_SLIDES} scale={scale} />
+      <SlideCounter current={4} total={TOTAL_SLIDES} scale={scale} theme={theme} />
 
       {/* Header */}
       <div style={{ paddingTop: isStory ? 128 * s : 52 * s, paddingLeft: PAD, paddingRight: PAD, marginBottom: isStory ? 72 * s : 44 * s }}>
-        <div style={{ fontSize: isStory ? 26 * s : 22 * s, color: "rgba(255,255,255,0.32)", letterSpacing: "0.26em", fontWeight: 700, textTransform: "uppercase" as const, marginBottom: isStory ? 16 * s : 10 * s }}>
+        <div style={{ fontSize: isStory ? 26 * s : 22 * s, color: theme.accentLight, letterSpacing: "0.26em", fontWeight: 700, textTransform: "uppercase" as const, marginBottom: isStory ? 16 * s : 10 * s }}>
           {tournamentName}
         </div>
         <div style={{ fontSize: hSize4, fontWeight: 900, fontStyle: isAntonLike4 ? "italic" : "normal", fontFamily: headingFont.family, color: headingColor, letterSpacing: headingFont.id === "anton" ? "0.02em" : "-0.025em", lineHeight: 0.95, textTransform: "uppercase" as const }}>
@@ -1218,7 +1219,7 @@ function Slide4Stats({ rows, config, tournamentName, totalRounds, scale = 1, hos
             <div style={{ fontSize: isStory ? 124 * s : 88 * s, fontWeight: 900, color: BRAND.white, lineHeight: 0.9, letterSpacing: "-0.03em" }}>
               {stat.value}
             </div>
-            <div style={{ fontSize: isStory ? 30 * s : 24 * s, color: "rgba(255,255,255,0.32)", marginTop: isStory ? 14 * s : 10 * s, fontWeight: 600 }}>
+            <div style={{ fontSize: isStory ? 30 * s : 24 * s, color: theme.accentLight, marginTop: isStory ? 14 * s : 10 * s, fontWeight: 600 }}>
               {stat.sub}
             </div>
           </div>
@@ -1239,7 +1240,7 @@ function Slide4Stats({ rows, config, tournamentName, totalRounds, scale = 1, hos
               alignItems: "center",
             }}
           >
-            <div style={{ fontSize: isStory ? 28 * s : 22 * s, color: "rgba(255,255,255,0.45)", fontWeight: 700, letterSpacing: "0.14em", textTransform: "uppercase" as const }}>
+            <div style={{ fontSize: isStory ? 28 * s : 22 * s, color: theme.accentLight, fontWeight: 700, letterSpacing: "0.14em", textTransform: "uppercase" as const }}>
               Most Wins
             </div>
             <div style={{ fontSize: isStory ? 42 * s : 32 * s, fontWeight: 900, color: BRAND.white }}>
@@ -1260,7 +1261,7 @@ function Slide4Stats({ rows, config, tournamentName, totalRounds, scale = 1, hos
               alignItems: "center",
             }}
           >
-            <div style={{ fontSize: isStory ? 28 * s : 22 * s, color: "rgba(255,255,255,0.45)", fontWeight: 700, letterSpacing: "0.14em", textTransform: "uppercase" as const }}>
+            <div style={{ fontSize: isStory ? 28 * s : 22 * s, color: theme.accentLight, fontWeight: 700, letterSpacing: "0.14em", textTransform: "uppercase" as const }}>
               Highest Rated
             </div>
             <div style={{ fontSize: isStory ? 42 * s : 32 * s, fontWeight: 900, color: BRAND.white }}>
@@ -1283,7 +1284,7 @@ function Slide4Stats({ rows, config, tournamentName, totalRounds, scale = 1, hos
                 alignItems: "center",
               }}
             >
-              <div style={{ fontSize: 20 * s, color: "rgba(255,255,255,0.45)", fontWeight: 700, letterSpacing: "0.14em", textTransform: "uppercase" as const }}>
+              <div style={{ fontSize: 20 * s, color: theme.accentLight, fontWeight: 700, letterSpacing: "0.14em", textTransform: "uppercase" as const }}>
                 Champion
               </div>
               <div style={{ fontSize: 30 * s, fontWeight: 900, color: BRAND.white }}>
@@ -1302,7 +1303,7 @@ function Slide4Stats({ rows, config, tournamentName, totalRounds, scale = 1, hos
                 alignItems: "center",
               }}
             >
-              <div style={{ fontSize: 20 * s, color: "rgba(255,255,255,0.45)", fontWeight: 700, letterSpacing: "0.14em", textTransform: "uppercase" as const }}>
+              <div style={{ fontSize: 20 * s, color: theme.accentLight, fontWeight: 700, letterSpacing: "0.14em", textTransform: "uppercase" as const }}>
                 Format
               </div>
               <div style={{ fontSize: 30 * s, fontWeight: 900, color: BRAND.white }}>
@@ -1332,7 +1333,7 @@ function Slide5CTA({ rows: _rows, config, tournamentName: _tournamentName, total
 
   return (
     <SlideWrapper scale={scale} theme={theme} format={format} headingFont={headingFont} bgType={bgType} bgValue={bgValue}>
-      <SlideCounter current={5} total={TOTAL_SLIDES} scale={scale} />
+      <SlideCounter current={5} total={TOTAL_SLIDES} scale={scale} theme={theme} />
 
       {/* Giant OTB watermark — fills the background */}
       <div
@@ -1370,7 +1371,7 @@ function Slide5CTA({ rows: _rows, config, tournamentName: _tournamentName, total
         }}
       >
         {/* Eyebrow */}
-        <div style={{ fontSize: isStory ? 32 * s : 24 * s, color: "rgba(255,255,255,0.38)", letterSpacing: "0.28em", fontWeight: 800, textTransform: "uppercase" as const }}>
+        <div style={{ fontSize: isStory ? 32 * s : 24 * s, color: theme.accentLight, letterSpacing: "0.28em", fontWeight: 800, textTransform: "uppercase" as const }}>
           Join the Community
         </div>
 
@@ -1392,7 +1393,7 @@ function Slide5CTA({ rows: _rows, config, tournamentName: _tournamentName, total
         </div>
 
         {/* Body copy */}
-        <div style={{ fontSize: isStory ? 42 * s : 32 * s, color: "rgba(255,255,255,0.45)", lineHeight: 1.55, maxWidth: 820 * s }}>
+        <div style={{ fontSize: isStory ? 42 * s : 32 * s, color: theme.accentLight, lineHeight: 1.55, maxWidth: 820 * s }}>
           Chess tournaments, organised in minutes.{"\n"}
           Swiss pairings · ELO tracking · Live standings
         </div>
@@ -1415,7 +1416,7 @@ function Slide5CTA({ rows: _rows, config, tournamentName: _tournamentName, total
         </div>
 
         {inviteCode && (
-          <div style={{ fontSize: isStory ? 30 * s : 26 * s, color: "rgba(255,255,255,0.28)", marginTop: -8 * s }}>
+          <div style={{ fontSize: isStory ? 30 * s : 26 * s, color: theme.accentLight, marginTop: -8 * s }}>
             Tournament code:{" "}
             <span style={{ color: theme.accentLight, fontWeight: 800 }}>{inviteCode}</span>
           </div>
@@ -1427,7 +1428,7 @@ function Slide5CTA({ rows: _rows, config, tournamentName: _tournamentName, total
             <div style={{ width: 96 * s, height: 96 * s, background: `${theme.accent}30`, border: `2px solid ${theme.accentLight}40`, borderRadius: 14 * s, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 42 * s }}>
               ♟
             </div>
-            <div style={{ fontSize: 32 * s, color: "rgba(255,255,255,0.30)", fontWeight: 600 }}>
+            <div style={{ fontSize: 32 * s, color: theme.accentLight, fontWeight: 600 }}>
               Scan · Join · Play
             </div>
           </div>
@@ -1519,7 +1520,7 @@ function Slide6RoundResults({ rows, config, tournamentName, totalRounds, scale =
     if (outcome === "W") return { background: "#2D5A3A", color: "#6FCF97", border: "2px solid #3D7A4A" };
     if (outcome === "L") return { background: "#5A2D2D", color: "#EB5757", border: "2px solid #7A3D3D" };
     if (outcome === "D") return { background: "#3A3A1A", color: "#F2C94C", border: "2px solid #5A5A2A" };
-    if (outcome === "BYE") return { background: "rgba(255,255,255,0.04)", color: "rgba(255,255,255,0.30)", border: "2px solid rgba(255,255,255,0.08)" };
+    if (outcome === "BYE") return { background: "rgba(255,255,255,0.04)", color: theme.accentLight, border: "2px solid rgba(255,255,255,0.08)" };
     return { background: "transparent", color: "rgba(255,255,255,0.15)", border: "2px solid rgba(255,255,255,0.06)" };
   };
 
@@ -1528,11 +1529,11 @@ function Slide6RoundResults({ rows, config, tournamentName, totalRounds, scale =
 
   return (
     <SlideWrapper scale={scale} theme={theme} format={format} headingFont={headingFont} bgType={bgType} bgValue={bgValue}>
-      <SlideCounter current={6} total={TOTAL_SLIDES} scale={scale} />
+      <SlideCounter current={6} total={TOTAL_SLIDES} scale={scale} theme={theme} />
 
       {/* Header — larger title matching Slide 3 */}
       <div style={{ paddingTop: isStory ? 128 * s : 56 * s, paddingLeft: PAD, paddingRight: PAD, marginBottom: isStory ? 34 * s : 24 * s }}>
-        <div style={{ fontSize: isStory ? 26 * s : 24 * s, color: "rgba(255,255,255,0.38)", letterSpacing: "0.28em", fontWeight: 700, textTransform: "uppercase" as const, marginBottom: isStory ? 16 * s : 12 * s }}>
+        <div style={{ fontSize: isStory ? 26 * s : 24 * s, color: theme.accentLight, letterSpacing: "0.28em", fontWeight: 700, textTransform: "uppercase" as const, marginBottom: isStory ? 16 * s : 12 * s }}>
           {tournamentName}
         </div>
         <div style={{ fontSize: hSize6, fontWeight: 900, fontStyle: isAntonLike6 ? "italic" : "normal", fontFamily: headingFont.family, color: headingColor, letterSpacing: headingFont.id === "anton" ? "0.02em" : "-0.03em", lineHeight: 0.95, textTransform: "uppercase" as const }}>
@@ -1552,8 +1553,8 @@ function Slide6RoundResults({ rows, config, tournamentName, totalRounds, scale =
           background: "rgba(0,0,0,0.18)",
         }}
       >
-        <div style={{ width: RANK_COL, fontSize: 22 * s, color: "rgba(255,255,255,0.32)", fontWeight: 800, letterSpacing: "0.12em", textTransform: "uppercase" as const }}>#</div>
-        <div style={{ width: NAME_COL, fontSize: 22 * s, color: "rgba(255,255,255,0.32)", fontWeight: 800, letterSpacing: "0.12em", textTransform: "uppercase" as const }}>Player</div>
+        <div style={{ width: RANK_COL, fontSize: 22 * s, color: theme.accentLight, fontWeight: 800, letterSpacing: "0.12em", textTransform: "uppercase" as const }}>#</div>
+        <div style={{ width: NAME_COL, fontSize: 22 * s, color: theme.accentLight, fontWeight: 800, letterSpacing: "0.12em", textTransform: "uppercase" as const }}>Player</div>
         {Array.from({ length: totalRounds }, (_, i) => (
           <div
             key={i}
@@ -1561,7 +1562,7 @@ function Slide6RoundResults({ rows, config, tournamentName, totalRounds, scale =
               width: roundColW,
               textAlign: "center",
               fontSize: 22 * s,
-              color: "rgba(255,255,255,0.32)",
+              color: theme.accentLight,
               fontWeight: 800,
               letterSpacing: "0.08em",
             }}
@@ -1569,7 +1570,7 @@ function Slide6RoundResults({ rows, config, tournamentName, totalRounds, scale =
             R{i + 1}
           </div>
         ))}
-        <div style={{ width: PTS_COL, textAlign: "right", fontSize: 22 * s, color: "rgba(255,255,255,0.32)", fontWeight: 800, letterSpacing: "0.12em", textTransform: "uppercase" as const }}>Pts</div>
+        <div style={{ width: PTS_COL, textAlign: "right", fontSize: 22 * s, color: theme.accentLight, fontWeight: 800, letterSpacing: "0.12em", textTransform: "uppercase" as const }}>Pts</div>
       </div>
 
       {/* Player rows */}
@@ -1602,7 +1603,7 @@ function Slide6RoundResults({ rows, config, tournamentName, totalRounds, scale =
               <div style={{ fontSize: nameSize, fontWeight: 800, color: BRAND.white, lineHeight: 1.2, whiteSpace: "nowrap" as const, overflow: "hidden", textOverflow: "ellipsis" }}>
                 {row.player.name}
               </div>
-              <div style={{ fontSize: isStory ? 26 * s : 20 * s, color: "rgba(255,255,255,0.32)", marginTop: 4 * s }}>@{row.player.username}</div>
+              <div style={{ fontSize: isStory ? 26 * s : 20 * s, color: theme.accentLight, marginTop: 4 * s }}>@{row.player.username}</div>
             </div>
 
             {outcomes.map((outcome, rIdx) => (
@@ -1645,7 +1646,7 @@ function Slide6RoundResults({ rows, config, tournamentName, totalRounds, scale =
       })}
 
       {rows.length > maxPlayers && (
-        <div style={{ textAlign: "center", marginTop: 12 * s, fontSize: 22 * s, color: "rgba(255,255,255,0.25)", fontWeight: 600 }}>
+        <div style={{ textAlign: "center", marginTop: 12 * s, fontSize: 22 * s, color: theme.accentLight, fontWeight: 600 }}>
           +{rows.length - maxPlayers} more players
         </div>
       )}
@@ -1679,7 +1680,7 @@ function Slide6RoundResults({ rows, config, tournamentName, totalRounds, scale =
             >
               {label === "BYE" ? "B" : label}
             </div>
-            <div style={{ fontSize: 22 * s, color: "rgba(255,255,255,0.40)", fontWeight: 700 }}>
+            <div style={{ fontSize: 22 * s, color: theme.accentLight, fontWeight: 700 }}>
               {label === "W" ? "Win" : label === "D" ? "Draw" : label === "L" ? "Loss" : "Bye"}
             </div>
           </div>
@@ -1837,7 +1838,7 @@ function Slide7BracketResults({
 
   return (
     <SlideWrapper scale={scale} theme={theme} format={format} headingFont={headingFont} bgType={bgType} bgValue={bgValue}>
-      <SlideCounter current={7} total={7} scale={scale} />
+      <SlideCounter current={7} total={7} scale={scale} theme={theme} />
 
       {/* ── Header ── */}
       <div
@@ -1851,7 +1852,7 @@ function Slide7BracketResults({
         <div
           style={{
             fontSize: 22 * s,
-            color: "rgba(255,255,255,0.35)",
+            color: theme.accentLight,
             letterSpacing: "0.28em",
             fontWeight: 700,
             textTransform: "uppercase" as const,
@@ -1974,7 +1975,7 @@ function Slide7BracketResults({
                 <div
                   style={{
                     fontSize: isStory ? 32 * s : 28 * s,
-                    color: "rgba(255,255,255,0.45)",
+                    color: theme.accentLight,
                     marginTop: 6 * s,
                     fontWeight: 600,
                   }}
@@ -2041,7 +2042,7 @@ function Slide7BracketResults({
                 >
                   {runnerUp.name}
                 </div>
-                <div style={{ fontSize: isStory ? 24 * s : 20 * s, color: "rgba(255,255,255,0.38)", marginTop: 4 * s }}>
+                <div style={{ fontSize: isStory ? 24 * s : 20 * s, color: theme.accentLight, marginTop: 4 * s }}>
                   @{runnerUp.username} · {runnerUp.elo} ELO
                 </div>
               </div>
@@ -2107,7 +2108,7 @@ function Slide7BracketResults({
                     >
                       {p.name}
                     </div>
-                    <div style={{ fontSize: isStory ? 20 * s : 16 * s, color: "rgba(255,255,255,0.35)", marginTop: 3 * s }}>
+                    <div style={{ fontSize: isStory ? 20 * s : 16 * s, color: theme.accentLight, marginTop: 3 * s }}>
                       {p.elo} ELO
                     </div>
                   </div>
@@ -2136,7 +2137,7 @@ function Slide7BracketResults({
           <div
             style={{
               fontSize: isStory ? 32 * s : 26 * s,
-              color: "rgba(255,255,255,0.35)",
+              color: theme.accentLight,
               fontWeight: 700,
               textAlign: "center" as const,
             }}
