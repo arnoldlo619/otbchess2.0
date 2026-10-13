@@ -154,6 +154,39 @@
   --otb-pattern-text-surface: #f7fbf5;
 }
 
+/* Give the member name its own theme-tuned contrast and depth without changing the shared hero treatment. */
+.club-welcome-name {
+  --otb-pattern-offset: clamp(7px, 0.11em, 12px);
+  --club-welcome-glow: transparent;
+  padding: 0.02em 0.05em 0.14em 0.02em;
+  letter-spacing: -0.035em;
+}
+
+.club-welcome-name .otb-pattern-text__foreground {
+  text-shadow:
+    0 0.025em 0 var(--otb-pattern-text-surface),
+    0 0.12em 0.36em var(--club-welcome-glow);
+}
+
+.club-welcome-name::after {
+  opacity: 0.96;
+  filter: drop-shadow(0 0.07em 0.12em var(--club-welcome-glow));
+}
+
+.club-welcome-name.otb-pattern-text--dark {
+  --otb-pattern-text-foreground: oklch(0.97 0.025 142);
+  --otb-pattern-text-pattern: oklch(0.78 0.17 142);
+  --otb-pattern-text-surface: oklch(0.10 0.025 145);
+  --club-welcome-glow: oklch(0.70 0.16 142 / 0.26);
+}
+
+.club-welcome-name.otb-pattern-text--light {
+  --otb-pattern-text-foreground: #103b20;
+  --otb-pattern-text-pattern: #2f7446;
+  --otb-pattern-text-surface: #f5f7f2;
+  --club-welcome-glow: rgb(47 116 70 / 0.18);
+}
+
 @keyframes otb-pattern-text-shift {
   from { background-position: 0.8em -0.8em; }
   to { background-position: 0 0; }

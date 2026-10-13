@@ -89,6 +89,13 @@ describe("My Clubs visual system", () => {
     expect(memberIndex).toContain("fontSize: '56px'");
     expect(myClubsSource).not.toContain("welcomeNameTone");
     expect(globalStylesSource).not.toContain("club-welcome-name-in");
+    expect(globalStylesSource).toContain(".club-welcome-name {");
+    expect(globalStylesSource).toContain("--otb-pattern-offset: clamp(7px, 0.11em, 12px);");
+    expect(globalStylesSource).toContain(".club-welcome-name .otb-pattern-text__foreground");
+    expect(globalStylesSource).toContain(".club-welcome-name::after");
+    expect(globalStylesSource).toContain(".club-welcome-name.otb-pattern-text--dark");
+    expect(globalStylesSource).toContain(".club-welcome-name.otb-pattern-text--light");
+    expect(globalStylesSource).toContain("--club-welcome-glow");
     expect(globalStylesSource).toContain("@media (prefers-reduced-motion: reduce)");
     expect(globalStylesSource).toContain(".otb-pattern-text::after");
     expect(memberIndex).toContain("Your chess clubs hub.");
