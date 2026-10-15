@@ -2265,9 +2265,12 @@ export default function Home() {
   const logoEl = (
     <Link href="/" className="flex items-center">
       <img
-        src="/manus-storage/chessotb-wordmark-320_e1731168.webp"
-        alt="OTB Chess"
-        className={`h-8 w-auto object-contain transition-opacity hover:opacity-80 ${isDark ? "nav-logo-dark" : ""}`}
+        src="/brand/otb-retro-cream-green-wordmark.webp"
+        alt="OTB!!"
+        width={512}
+        height={341}
+        className={`nav-logo h-8 w-auto object-contain transition-opacity hover:opacity-90 sm:h-9 ${isDark ? "nav-logo-dark" : ""}`}
+        draggable={false}
       />
     </Link>
   );
