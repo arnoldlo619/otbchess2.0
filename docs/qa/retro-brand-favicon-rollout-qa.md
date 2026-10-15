@@ -19,6 +19,7 @@ Replaced the remaining legacy OTB image assets across active website chrome, pro
 - Updated favicon, Apple touch icon, Windows tile, manifest icons, PWA shortcuts, and default Open Graph/Twitter metadata.
 - Retained the wordmark for horizontal placements and the compact mark for square placements.
 - Added a restrained forest drop shadow to shared header wordmarks so the cream artwork remains distinct in light and dark appearance modes.
+- **Post-checkpoint correction:** Restored the original `!!` thumbnail exclusively inside the animated pointer above the landing navigation. It is now a local static asset (`otb-animated-nav-thumbnail.webp`) so the established motion treatment remains stable; the far-left header wordmark continues to use the new retro cream-and-green logo.
 
 ## Visual QA
 
@@ -32,14 +33,16 @@ Replaced the remaining legacy OTB image assets across active website chrome, pro
 | Check | Result |
 | --- | --- |
 | Focused retro brand and affected regression suites | **35 passed** across 8 files |
+| Animated navigation thumbnail correction | **14 focused checks passed** across landing and rollout suites |
 | TypeScript | Passed |
 | Production build | Passed |
 | Changed-file ESLint | Passed — 0 errors, 0 warnings |
 | Project lint | Passed — 0 errors, 224 established warnings |
-| Full Vitest baseline | **7,295 passed / 2 skipped**; 26 established unrelated failures across 18 suites |
+| Full Vitest baseline | **7,296 passed / 2 skipped**; 26 established unrelated failures across 18 suites |
 | Diff integrity | Passed |
 
 ## Notes
 
 - The new favicon intentionally uses the standalone retro `O` rather than the whole wordmark: it stays recognizable at browser-tab scale while clearly matching the supplied artwork.
+- The animated navigation pointer intentionally remains the original `!!` thumbnail, restored from its established source as a local 256×171 WebP. Browser QA confirmed that pointer renders from the local asset at the existing 40×40 animated position, independently of the far-left retro wordmark.
 - Existing unrelated test-suite failures remain tracked as baseline debt and are reported separately from this rollout.

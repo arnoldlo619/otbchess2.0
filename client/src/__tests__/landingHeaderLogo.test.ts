@@ -24,6 +24,14 @@ const retroWordmark = resolve(
   process.cwd(),
   "client/public/brand/otb-retro-cream-green-wordmark.webp",
 );
+const animeNavbarSource = readFileSync(
+  resolve(process.cwd(), "client/src/components/ui/anime-navbar.tsx"),
+  "utf8",
+);
+const animatedNavThumbnail = resolve(
+  process.cwd(),
+  "client/public/brand/otb-animated-nav-thumbnail.webp",
+);
 
 describe("landing header retro OTB!! wordmark", () => {
   it("uses the supplied local wordmark in the active landing navigation", () => {
@@ -49,5 +57,13 @@ describe("landing header retro OTB!! wordmark", () => {
   it("ships the optimized local WebP header asset", () => {
     expect(existsSync(retroWordmark)).toBe(true);
     expect(statSync(retroWordmark).size).toBeGreaterThan(20_000);
+  });
+
+  it("keeps the original thumbnail inside the animated pointer while preserving the new far-left wordmark", () => {
+    expect(existsSync(animatedNavThumbnail)).toBe(true);
+    expect(statSync(animatedNavThumbnail).size).toBeGreaterThan(8_000);
+    expect(animeNavbarSource).toContain('const MASCOT_URL = "/brand/otb-animated-nav-thumbnail.webp"');
+    expect(animeNavbarSource).not.toContain('const MASCOT_URL = "/brand/otb-retro-app-icon-512.png"');
+    expect(liveLandingHeader).toContain('src="/brand/otb-retro-cream-green-wordmark.webp"');
   });
 });

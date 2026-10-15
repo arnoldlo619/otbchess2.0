@@ -57,7 +57,7 @@ interface AnimeNavBarProps {
 }
 
 // ─── Mascot ───────────────────────────────────────────────────────────────────
-const MASCOT_URL = "/brand/otb-retro-app-icon-512.png"
+const MASCOT_URL = "/brand/otb-animated-nav-thumbnail.webp"
 
 type IdleState = "none" | "pulse" | "wobble"
 
