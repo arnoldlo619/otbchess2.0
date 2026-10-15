@@ -1541,7 +1541,7 @@ export default function ClubProfile() {
                 />
               ) : (
                 <img
-                  src="/manus-storage/otb-logo-exclamation-256_9b50f5ee.webp"
+                  src="/brand/otb-retro-app-icon-512.png"
                   alt="OTB!!"
                   className="h-14 w-14 flex-shrink-0 object-contain"
                 />

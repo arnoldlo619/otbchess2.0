@@ -1183,7 +1183,8 @@ const ACCENT_PRESETS = [
   "#fbbf24", "#d4af37", "#c0c0c0", "#94a3b8", "#e2e8f0", "#ffffff",
 ];
 
-const OTB_LOGO_URL = "https://d2xsxph8kpxj0f.cloudfront.net/117675823/J6FsDoRMH9x5xbUvpyzxyf/otb-logo-thumbnail_8939ab7b.png";
+const OTB_WORDMARK_URL = "/brand/otb-retro-cream-green-wordmark.webp";
+const OTB_COMPACT_MARK_URL = "/brand/otb-retro-app-icon-512.png";
 
 function CreateEventModal({
   clubId,
@@ -1310,9 +1311,9 @@ function CreateEventModal({
             {/* Logo + headline */}
             <div className="flex flex-col items-center gap-3 text-center">
               <img
-                src={OTB_LOGO_URL}
+                src={OTB_WORDMARK_URL}
                 alt="OTB Chess"
-                style={{ height: 32, width: "auto", objectFit: "contain", filter: "brightness(0) invert(1) opacity(0.85)" }}
+                style={{ height: 32, width: "auto", objectFit: "contain", filter: "drop-shadow(0 1px 6px rgba(0,0,0,0.32))" }}
               />
               <h2
                 id="create-club-event-title"
@@ -1427,7 +1428,7 @@ function CreateEventModal({
                     Club Exclusive
                   </span>
                   <div className="w-11 h-11 rounded-2xl flex items-center justify-center" style={{ background: "rgba(255,255,255,0.10)" }}>
-                    <img src={OTB_LOGO_URL} alt="OTB" className="w-6 h-6 object-contain drop-shadow-sm" />
+                    <img src={OTB_COMPACT_MARK_URL} alt="OTB" className="w-6 h-6 object-contain drop-shadow-sm" />
                   </div>
                   <div className="pr-6">
                     <h3 className="text-lg font-bold text-white mb-1" style={{ fontFamily: "'Clash Display', sans-serif" }}>Club Tournament</h3>

@@ -1280,7 +1280,7 @@ export default function JoinPage() {
           )}
           <Link href="/" className="flex items-center">
             <img
-              src="/manus-storage/chessotb-wordmark-320_e1731168.webp"
+              src="/brand/otb-retro-cream-green-wordmark.webp"
               alt="OTB Chess"
               className="h-8 w-auto object-contain"
             />
@@ -1458,7 +1458,7 @@ export default function JoinPage() {
               <div className="text-center pt-4 pb-2">
                 <div className="w-16 h-16 flex items-center justify-center mx-auto mb-4">
                   <img
-                    src="/manus-storage/otb-logo-exclamation-256_9b50f5ee.webp"
+                    src="/brand/otb-retro-app-icon-512.png"
                     alt="OTB!!"
                     className="w-16 h-16 object-contain drop-shadow-lg"
                     style={{ mixBlendMode: "screen" }}
@@ -1543,7 +1543,7 @@ export default function JoinPage() {
               <div className="text-center pt-6 pb-2">
                 <div className="w-20 h-20 flex items-center justify-center mx-auto mb-5">
                   <img
-                    src="/manus-storage/otb-logo-exclamation-256_9b50f5ee.webp"
+                    src="/brand/otb-retro-app-icon-512.png"
                     alt="OTB!!"
                     className="w-20 h-20 object-contain drop-shadow-lg"
                     style={{ mixBlendMode: "screen" }}
@@ -1714,7 +1714,7 @@ export default function JoinPage() {
               <div className="text-center pt-6 pb-2">
                 <div className="w-20 h-20 flex items-center justify-center mx-auto mb-5">
                   <img
-                    src="/manus-storage/otb-logo-exclamation-256_9b50f5ee.webp"
+                    src="/brand/otb-retro-app-icon-512.png"
                     alt="OTB!!"
                     className="w-20 h-20 object-contain drop-shadow-lg"
                     style={{ mixBlendMode: "screen" }}

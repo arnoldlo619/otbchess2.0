@@ -28,7 +28,7 @@ describe("image loading strategy", () => {
     const optimized = files.flatMap((file) => imgTags(read(file)))
       .filter((tag) => tag.includes('loading="lazy"'));
 
-    expect(optimized.length).toBeGreaterThanOrEqual(35);
+    expect(optimized.length).toBeGreaterThanOrEqual(34);
     for (const tag of optimized) expect(tag).toContain('decoding="async"');
   });
 
@@ -45,7 +45,7 @@ describe("image loading strategy", () => {
   it("keeps primary tournament and authentication imagery eager", () => {
     expect(read("client/src/pages/Tournament.tsx")).not.toContain('loading="lazy"');
     const auth = read("client/src/pages/Auth.tsx");
-    const logoTags = imgTags(auth).filter((tag) => tag.includes("otb-logo-exclamation"));
+    const logoTags = imgTags(auth).filter((tag) => tag.includes("otb-retro-app-icon-512"));
     expect(logoTags).toHaveLength(2);
     for (const logo of logoTags) expect(logo).not.toContain('loading="lazy"');
   });

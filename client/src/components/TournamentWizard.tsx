@@ -192,7 +192,7 @@ const DEFAULT_DATA: WizardData = {
 
 // Keep the wizard identity aligned with the landing-page header rather than
 // falling back to a text treatment or a separate remote thumbnail asset.
-const TOURNAMENT_WIZARD_LOGO_URL = "/manus-storage/chessotb-wordmark-320_e1731168.webp";
+const TOURNAMENT_WIZARD_LOGO_URL = "/brand/otb-retro-cream-green-wordmark.webp";
 
 const SCHEDULE_STEPS = [
   {
@@ -977,7 +977,7 @@ function ModeSelect({
       <div className="relative mx-auto flex w-full max-w-5xl flex-col items-center gap-6 px-4 pb-[calc(2rem+env(safe-area-inset-bottom))] sm:gap-8 sm:px-10 sm:pb-16" style={{ paddingTop: "max(4rem, calc(env(safe-area-inset-top) + 3.5rem))" }}>
         {/* Logo */}
         <img
-          src="/manus-storage/otbchesslogo_brilliant_v2_04cf93cb.webp"
+          src="/brand/otb-retro-cream-green-wordmark.webp"
           alt="OTB!!"
           style={{ height: 56, width: "auto", objectFit: "contain" }}
         />

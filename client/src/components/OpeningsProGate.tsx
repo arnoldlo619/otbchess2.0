@@ -86,7 +86,7 @@ function OtbLogoMark() {
       transition={{ type: "spring", stiffness: 260, damping: 18, delay: 0.1 }}
     >
       <motion.img
-        src="https://d2xsxph8kpxj0f.cloudfront.net/117675823/J6FsDoRMH9x5xbUvpyzxyf/otb-logo-exclamation_a8022818.png"
+        src="/brand/otb-retro-app-icon-512.png"
         alt="OTB!!"
         className="w-10 h-10 object-contain"
         initial={{ rotate: -8 }}

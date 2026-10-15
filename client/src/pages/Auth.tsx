@@ -328,7 +328,7 @@ export default function AuthPage() {
             <div className="relative flex items-center gap-2.5">
               <div className="w-9 h-9 rounded-xl overflow-hidden flex-shrink-0 ring-1 ring-white/20">
                 <img
-                  src="/manus-storage/otb-logo-exclamation-256_9b50f5ee.webp"
+                  src="/brand/otb-retro-app-icon-512.png"
                   alt="OTB Chess"
                   className="w-full h-full object-contain"
                 />
@@ -365,7 +365,7 @@ export default function AuthPage() {
             <div className="flex items-center gap-2.5 md:hidden">
               <div className="w-8 h-8 rounded-lg overflow-hidden flex-shrink-0">
                 <img
-                  src="/manus-storage/otb-logo-exclamation-256_9b50f5ee.webp"
+                  src="/brand/otb-retro-app-icon-512.png"
                   alt="OTB Chess"
                   className="w-full h-full object-contain"
                 />

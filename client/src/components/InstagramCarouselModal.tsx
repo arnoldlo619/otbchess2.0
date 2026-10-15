@@ -583,7 +583,7 @@ function OTBBrand({
       )}
 
       <img
-        src="/manus-storage/chessotb-logo_edcecdb1.png"
+        src="/brand/otb-retro-cream-green-wordmark.webp"
         alt="ChessOTB.Club"
         crossOrigin="anonymous"
         style={{

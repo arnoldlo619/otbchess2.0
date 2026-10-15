@@ -48,7 +48,7 @@ import { authFetch } from "@/lib/apiFetch";
 export type ShareChannel = "email" | "qr";
 
 const OTB_LOGO_URL =
-  "https://d2xsxph8kpxj0f.cloudfront.net/117675823/J6FsDoRMH9x5xbUvpyzxyf/otb-logo_54fb3385.png";
+  "/brand/otb-retro-app-icon-512.png";
 
 interface ShareResultsModalProps {
   performances: PlayerPerformance[];

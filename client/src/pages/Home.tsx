@@ -196,7 +196,7 @@ function Nav({
         {/* Logo navigates to landing page */}
         <Link href="/" className="flex items-center gap-1 group cursor-pointer">
           <img
-            src="/manus-storage/chessotb-wordmark-320_e1731168.webp"
+            src="/brand/otb-retro-cream-green-wordmark.webp"
             alt="OTB Chess Home"
             className={`nav-logo h-8 w-auto object-contain transition-opacity hover:opacity-80 active:opacity-60 ${isDark ? "nav-logo-dark" : ""}`}
           />
@@ -2133,7 +2133,7 @@ function Footer() {
               <img
                 loading="lazy"
                 decoding="async"
-                src="/manus-storage/chessotb-wordmark-320_e1731168.webp"
+                src="/brand/otb-retro-cream-green-wordmark.webp"
                 alt="OTB Chess"
                 className="h-9 w-auto object-contain drop-shadow-[0_0_6px_rgba(100,200,100,0.2)]"
               />

@@ -280,7 +280,7 @@ const STEP_HERO = [
     eyebrow: "Step 1 of 6",
     title: "Name your\nclub",
     body: "Give your club a name that players will remember. A great tagline tells visitors what you're about in one sentence.",
-    icon: <img src="https://d2xsxph8kpxj0f.cloudfront.net/117675823/J6FsDoRMH9x5xbUvpyzxyf/otb-logo-thumbnail_8939ab7b.png" alt="OTB" className="w-10 h-10 object-contain drop-shadow-sm" />,
+    icon: <img src="/brand/otb-retro-app-icon-512.png" alt="OTB" className="w-10 h-10 object-contain drop-shadow-sm" />,
   },
   {
     eyebrow: "Step 2 of 6",

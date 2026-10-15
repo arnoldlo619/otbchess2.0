@@ -868,7 +868,7 @@ export default function BlogPost() {
   const logoEl = (
     <Link href="/" className="flex items-center">
       <img
-        src="https://files.manuscdn.com/user_upload_by_module/session_file/117675823/bWANpVvGVfpfXSpZ.png"
+        src="/brand/otb-retro-cream-green-wordmark.webp"
         alt="OTB Chess"
         className={`h-8 w-auto object-contain transition-opacity hover:opacity-80 ${isDark ? "nav-logo-dark" : ""}`}
       />
@@ -930,7 +930,7 @@ export default function BlogPost() {
         name: "ChessOTB.club",
         logo: {
           "@type": "ImageObject",
-          url: "https://d2xsxph8kpxj0f.cloudfront.net/117675823/J6FsDoRMH9x5xbUvpyzxyf/otb-logo-exclamation_0b3fa613.png",
+          url: "/brand/otb-retro-app-icon-512.png",
         },
       },
       mainEntityOfPage: {
@@ -1281,7 +1281,7 @@ export default function BlogPost() {
                   <img
                     loading="lazy"
                     decoding="async"
-                    src="https://d2xsxph8kpxj0f.cloudfront.net/117675823/J6FsDoRMH9x5xbUvpyzxyf/otb-logo-exclamation_0b3fa613.png"
+                    src="/brand/otb-retro-app-icon-512.png"
                     alt="OTB!!"
                     className="w-6 h-6 object-contain"
                   />
@@ -1375,7 +1375,7 @@ export default function BlogPost() {
                   <img
                     loading="lazy"
                     decoding="async"
-                    src="https://files.manuscdn.com/user_upload_by_module/session_file/117675823/bWANpVvGVfpfXSpZ.png"
+                    src="/brand/otb-retro-cream-green-wordmark.webp"
                     alt="OTB Chess"
                     className={`h-6 w-auto object-contain ${
                       isDark ? "" : "brightness-0 saturate-100" 

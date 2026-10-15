@@ -418,7 +418,7 @@ export default function AuthModal({
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-xl overflow-hidden flex-shrink-0">
               <img
-                src="/manus-storage/otb-logo-exclamation-256_9b50f5ee.webp"
+                src="/brand/otb-retro-app-icon-512.png"
                 alt="OTB Chess"
                 className="w-full h-full object-contain"
               />

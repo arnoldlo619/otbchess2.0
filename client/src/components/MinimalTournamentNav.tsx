@@ -17,7 +17,7 @@ import { AvatarNavDropdown } from "@/components/AvatarNavDropdown";
 import { ThemeToggle } from "@/components/ThemeToggle";
 
 const LOGO_URL =
-  "/manus-storage/otb-logo-exclamation-256_9b50f5ee.webp";
+  "/brand/otb-retro-cream-green-wordmark.webp";
 
 interface MinimalTournamentNavProps {
   onSignInClick?: () => void;
@@ -73,7 +73,7 @@ export function MinimalTournamentNav({
           <img
             src={LOGO_URL}
             alt="OTB Chess — Back to Home"
-            className="h-9 w-auto object-contain transition-opacity hover:opacity-90 active:scale-95"
+            className={`nav-logo h-9 w-auto object-contain transition-opacity hover:opacity-90 active:scale-95 ${isDark ? "nav-logo-dark" : ""}`}
             style={{ mixBlendMode: isDark ? "screen" : "normal" }}
             draggable={false}
           />

@@ -1,53 +1,54 @@
 {
   "id": "/",
-  "name": "OTB Chess — Tournaments Over The Board",
+  "name": "OTB Chess \u2014 Tournaments Over The Board",
   "short_name": "OTB Chess",
   "description": "Organize in-person chess tournaments in minutes. Built for chess clubs, powered by chess.com ELO data.",
   "start_url": "/?source=pwa",
   "scope": "/",
   "display": "standalone",
-  "display_override": ["window-controls-overlay", "standalone", "minimal-ui"],
+  "display_override": [
+    "window-controls-overlay",
+    "standalone",
+    "minimal-ui"
+  ],
   "orientation": "portrait-primary",
   "background_color": "#0D1F13",
   "theme_color": "#3D6B47",
   "lang": "en",
-  "categories": ["sports", "utilities"],
+  "categories": [
+    "sports",
+    "utilities"
+  ],
   "icons": [
     {
-      "src": "https://d2xsxph8kpxj0f.cloudfront.net/117675823/J6FsDoRMH9x5xbUvpyzxyf/favicon-32x32_f24122c7.png",
+      "src": "/brand/otb-retro-favicon-32.png",
       "sizes": "32x32",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "https://d2xsxph8kpxj0f.cloudfront.net/117675823/J6FsDoRMH9x5xbUvpyzxyf/apple-touch-icon_3d4c948c.png",
+      "src": "/brand/otb-retro-app-icon-180.png",
       "sizes": "180x180",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "https://d2xsxph8kpxj0f.cloudfront.net/117675823/J6FsDoRMH9x5xbUvpyzxyf/icon-192x192_1d5ec0c4.png",
+      "src": "/brand/otb-retro-app-icon-192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "https://d2xsxph8kpxj0f.cloudfront.net/117675823/J6FsDoRMH9x5xbUvpyzxyf/icon-192x192_1d5ec0c4.png",
-      "sizes": "192x192",
+      "src": "/brand/otb-retro-app-icon-maskable-512.png",
+      "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
     },
     {
-      "src": "https://d2xsxph8kpxj0f.cloudfront.net/117675823/J6FsDoRMH9x5xbUvpyzxyf/icon-512x512_8aa3d459.png",
+      "src": "/brand/otb-retro-app-icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
-    },
-    {
-      "src": "https://d2xsxph8kpxj0f.cloudfront.net/117675823/J6FsDoRMH9x5xbUvpyzxyf/icon-512x512_8aa3d459.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "maskable"
     }
   ],
   "screenshots": [
@@ -56,7 +57,7 @@
       "sizes": "1200x630",
       "type": "image/png",
       "form_factor": "wide",
-      "label": "OTB Chess — host and manage chess tournaments"
+      "label": "OTB Chess \u2014 host and manage chess tournaments"
     }
   ],
   "shortcuts": [
@@ -67,8 +68,9 @@
       "url": "/?action=create&source=pwa-shortcut",
       "icons": [
         {
-          "src": "https://d2xsxph8kpxj0f.cloudfront.net/117675823/J6FsDoRMH9x5xbUvpyzxyf/icon-192x192_1d5ec0c4.png",
-          "sizes": "192x192"
+          "src": "/brand/otb-retro-app-icon-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
         }
       ]
     },
@@ -79,8 +81,9 @@
       "url": "/join?source=pwa-shortcut",
       "icons": [
         {
-          "src": "https://d2xsxph8kpxj0f.cloudfront.net/117675823/J6FsDoRMH9x5xbUvpyzxyf/icon-192x192_1d5ec0c4.png",
-          "sizes": "192x192"
+          "src": "/brand/otb-retro-app-icon-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
         }
       ]
     },
@@ -91,8 +94,9 @@
       "url": "/clubs?source=pwa-shortcut",
       "icons": [
         {
-          "src": "https://d2xsxph8kpxj0f.cloudfront.net/117675823/J6FsDoRMH9x5xbUvpyzxyf/icon-192x192_1d5ec0c4.png",
-          "sizes": "192x192"
+          "src": "/brand/otb-retro-app-icon-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
         }
       ]
     }

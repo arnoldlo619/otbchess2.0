@@ -13,9 +13,11 @@ describe("browser tab metadata", () => {
     expect(pageMetaHook).toContain('const DEFAULT_PAGE_TITLE = "Play Chess OTB"');
   });
 
-  it("retains the existing ChessOTB favicon references", () => {
-    expect(documentHtml).toContain("favicon_ea0457e2.ico");
-    expect(documentHtml).toContain("favicon-16x16_24a28be0.png");
-    expect(documentHtml).toContain("favicon-32x32_f24122c7.png");
+  it("uses retro cream-and-green favicon references", () => {
+    expect(documentHtml).toContain('href="/favicon.ico" sizes="any"');
+    expect(documentHtml).toContain('href="/brand/otb-retro-favicon-16.png"');
+    expect(documentHtml).toContain('href="/brand/otb-retro-favicon-32.png"');
+    expect(documentHtml).toContain('href="/brand/otb-retro-app-icon-192.png"');
+    expect(documentHtml).toContain('href="/brand/otb-retro-app-icon-180.png"');
   });
 });

@@ -69,7 +69,7 @@ describe("Club Dashboard shared sidebar", () => {
   });
 
   it("renders the OTB thumbnail as the permanent Club dashboard header identity", () => {
-    expect(sidebarSource).toContain('const OTB_THUMBNAIL_LOGO = "/manus-storage/otb-logo-exclamation-256_9b50f5ee.webp"');
+    expect(sidebarSource).toContain('const OTB_THUMBNAIL_LOGO = "/brand/otb-retro-app-icon-512.png"');
     expect(sidebarSource).toContain('src={OTB_THUMBNAIL_LOGO}');
     expect(sidebarSource).toContain('alt="OTB!!"');
     expect(sidebarSource).not.toContain("brandImageSrc");

@@ -18,15 +18,17 @@ describe("Performance report tournament integrity", () => {
     expect(report).not.toContain("chesscomForm");
   });
 
-  it("uses the local OTB mark in report cards and shared navigation", () => {
-    const brandAsset = resolve(clientRoot, "../public/brand/otb-logo-exclamation.webp");
+  it("uses local retro OTB assets in report cards and shared navigation", () => {
+    const compactMark = resolve(clientRoot, "../public/brand/otb-retro-app-icon-512.png");
+    const wordmark = resolve(clientRoot, "../public/brand/otb-retro-cream-green-wordmark.webp");
 
-    expect(existsSync(brandAsset)).toBe(true);
+    expect(existsSync(compactMark)).toBe(true);
+    expect(existsSync(wordmark)).toBe(true);
     expect(playerCard).toContain('import { OTB_LOGO_ASSET } from "@/lib/brandAssets";');
     expect(playerCard).toContain("src={OTB_LOGO_ASSET}");
     expect(playerCard).not.toContain("d2xsxph8kpxj0f.cloudfront.net");
-    expect(navLogo).toContain('import { OTB_LOGO_ASSET } from "@/lib/brandAssets";');
-    expect(navLogo).toContain("src={OTB_LOGO_ASSET}");
+    expect(navLogo).toContain('import { OTB_WORDMARK_ASSET } from "@/lib/brandAssets";');
+    expect(navLogo).toContain("src={OTB_WORDMARK_ASSET}");
   });
 
   it("keeps long achievement labels compact, legible, and free of emoji glyphs", () => {

@@ -30,7 +30,7 @@ describe("Tournament Wizard visual edits", () => {
 
   it("uses the landing-header wordmark for both desktop and mobile wizard chrome", () => {
     expect(wizardSource).toContain(
-      'const TOURNAMENT_WIZARD_LOGO_URL = "/manus-storage/chessotb-wordmark-320_e1731168.webp";',
+      'const TOURNAMENT_WIZARD_LOGO_URL = "/brand/otb-retro-cream-green-wordmark.webp";',
     );
     expect(wizardSource.match(/src=\{TOURNAMENT_WIZARD_LOGO_URL\}/g)).toHaveLength(2);
     expect(wizardSource).not.toContain("bWANpVvGVfpfXSpZ.png");

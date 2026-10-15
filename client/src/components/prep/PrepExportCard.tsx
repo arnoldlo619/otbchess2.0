@@ -3,7 +3,7 @@ import type { ScoutReportV3 } from "../../../../shared/prepTypes";
 import { projectScoutReport } from "../../../../shared/scoutReportProjection";
 import { formatScoutDateUtc, formatScoutDateWindowUtc } from "../../lib/scoutDateDisplay";
 
-const LOGO_URL = "https://d2xsxph8kpxj0f.cloudfront.net/117675823/J6FsDoRMH9x5xbUvpyzxyf/otb-logo-exclamation_0b3fa613.png";
+const LOGO_URL = "/brand/otb-retro-app-icon-512.png";
 const COLORS = {
   page: "#09120b",
   surface: "#0f1c11",

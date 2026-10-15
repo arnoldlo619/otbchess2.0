@@ -2,7 +2,7 @@ import { useState, type ElementType, type FocusEvent } from "react";
 import { MessagesSquare, UsersRound } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
-const OTB_THUMBNAIL_LOGO = "/manus-storage/otb-logo-exclamation-256_9b50f5ee.webp";
+const OTB_THUMBNAIL_LOGO = "/brand/otb-retro-app-icon-512.png";
 const CLUB_SIDEBAR_ICON_OVERRIDES: Record<string, ElementType> = {
   feed: MessagesSquare,
   members: UsersRound,

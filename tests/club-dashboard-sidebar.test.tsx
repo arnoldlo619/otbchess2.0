@@ -52,14 +52,14 @@ describe("ClubDashboardSidebar", () => {
     expect(screen.getByRole("button", { name: "Feed" }).getAttribute("aria-current")).toBe("page");
     expect(screen.getByRole("button", { name: "Feed" }).style.width).toBe("52px");
     expect(screen.getByLabelText("12 upcoming").textContent).toBe("9+");
-    expect(screen.getByRole("img", { name: "OTB!!" }).getAttribute("src")).toBe("/manus-storage/otb-logo-exclamation-256_9b50f5ee.webp");
+    expect(screen.getByRole("img", { name: "OTB!!" }).getAttribute("src")).toBe("/brand/otb-retro-app-icon-512.png");
     expect(screen.getByRole("button", { name: "Back to all clubs" })).toBeTruthy();
   });
 
   it("uses the OTB thumbnail as the permanent header mark while retaining the contextual Club return action", () => {
     renderSidebar({ brandActionLabel: "Back to Club dashboard" });
 
-    expect(screen.getByRole("img", { name: "OTB!!" }).getAttribute("src")).toBe("/manus-storage/otb-logo-exclamation-256_9b50f5ee.webp");
+    expect(screen.getByRole("img", { name: "OTB!!" }).getAttribute("src")).toBe("/brand/otb-retro-app-icon-512.png");
     expect(screen.getByRole("button", { name: "Back to Club dashboard" })).toBeTruthy();
   });
 

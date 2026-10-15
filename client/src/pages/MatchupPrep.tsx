@@ -948,7 +948,7 @@ export default function MatchupPrep() {
           <div className={`${t.card} py-12 px-6 sm:py-16 flex flex-col items-center gap-5 text-center`}>
             <div className={`w-14 h-14 rounded-2xl flex items-center justify-center ${isDark ? "bg-[#162018]" : "bg-[#436850]/06"}`}>
               <img
-                src="/manus-storage/otb-logo-exclamation-256_9b50f5ee.webp"
+                src="/brand/otb-retro-app-icon-512.png"
                 alt="OTB!!"
                 className="w-9 h-9 object-contain"
               />

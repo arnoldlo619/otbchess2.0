@@ -464,7 +464,7 @@ function LobbyScreen({
             transition={{ type: "spring", stiffness: 260, damping: 18, delay: 0.15 }}
           >
             <motion.img
-              src="https://d2xsxph8kpxj0f.cloudfront.net/117675823/J6FsDoRMH9x5xbUvpyzxyf/otb-logo-exclamation_a8022818.png"
+              src="/brand/otb-retro-app-icon-512.png"
               alt="OTB!!"
               className="w-14 h-14 object-contain"
               initial={{ rotate: -8 }}
@@ -984,7 +984,7 @@ function MyBoardScreen({
                   {/* OTB!! logo + label */}
                   <div className="flex items-center gap-1.5 mb-1">
                     <img
-                      src="https://d2xsxph8kpxj0f.cloudfront.net/117675823/J6FsDoRMH9x5xbUvpyzxyf/otb-logo-exclamation_a8022818.png"
+                      src="/brand/otb-retro-app-icon-512.png"
                       alt="OTB!!"
                       className={`w-4 h-4 object-contain opacity-80${logoPulse ? " pairing-logo-pulse" : ""}`}
                     />

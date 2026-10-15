@@ -32,7 +32,7 @@ import { MobileNavDrawer } from "@/components/MobileNavDrawer";
 import { useLeagueWorkspaceNavigation } from "@/lib/leagueWorkspaceNavigation";
 
 const LOGO_URL =
-  "/manus-storage/otb-logo-exclamation-256_9b50f5ee.webp";
+  "/brand/otb-retro-cream-green-wordmark.webp";
 
 interface AppNavBarProps {
   /** Which nav tab should be highlighted on mount. Defaults to "Tournaments". */
@@ -131,7 +131,7 @@ export function AppNavBar({ defaultActive = "Tournaments", onSignInClick, classN
       <img
         src={LOGO_URL}
         alt="OTB Chess"
-        className="h-9 w-auto object-contain transition-opacity hover:opacity-90"
+        className={`nav-logo h-9 w-auto object-contain transition-opacity hover:opacity-90 ${isDark ? "nav-logo-dark" : ""}`}
         style={{ mixBlendMode: isDark ? "screen" : "normal" }}
         draggable={false}
       />
