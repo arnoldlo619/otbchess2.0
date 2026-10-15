@@ -12,19 +12,19 @@ import {describe, it, expect} from "vitest";
 const SLIDE_SIZE = 1080;
 const BRAND = {
   white: "#FFFFFF",
-  offWhite: "#F0F5EE",
+  offWhite: "#FBFADA",
   gold: "#F5C842",
   silver: "#C8D0D8",
-  bronze: "#CD7F32",
+  bronze: "#E9B36B",
 };
 
 const SLIDE_THEMES = [
   { id: "classic-green", label: "Classic", bg: "#2A4A32", bgDark: "#0A1A0E", accent: "#436850", accentLight: "#FBFADA", accentBright: "#4CAF50", glow: "#436850", swatch: "#436850" },
-  { id: "midnight-blue", label: "Midnight", bg: "#1A2A4A", bgDark: "#080E1A", accent: "#2A4A7A", accentLight: "#5B8DD9", accentBright: "#4A90E2", glow: "#2A4A7A", swatch: "#2A4A7A" },
-  { id: "crimson", label: "Crimson", bg: "#4A1A1A", bgDark: "#1A0808", accent: "#7A2A2A", accentLight: "#D95B5B", accentBright: "#E24A4A", glow: "#7A2A2A", swatch: "#7A2A2A" },
-  { id: "gold-rush", label: "Gold", bg: "#3A2A0A", bgDark: "#1A1205", accent: "#7A5A0A", accentLight: "#D4A017", accentBright: "#F5C842", glow: "#7A5A0A", swatch: "#7A5A0A" },
-  { id: "monochrome", label: "Mono", bg: "#2A2A2A", bgDark: "#0A0A0A", accent: "#4A4A4A", accentLight: "#B0B0B0", accentBright: "#E0E0E0", glow: "#4A4A4A", swatch: "#4A4A4A" },
-  { id: "purple-reign", label: "Purple", bg: "#2A1A4A", bgDark: "#0E0818", accent: "#4A2A7A", accentLight: "#9B5BD9", accentBright: "#8B4AE2", glow: "#4A2A7A", swatch: "#4A2A7A" },
+  { id: "midnight-blue", label: "Midnight", bg: "#1A2A4A", bgDark: "#080E1A", accent: "#2A4A7A", accentLight: "#AFCBFF", accentBright: "#4A90E2", glow: "#2A4A7A", swatch: "#2A4A7A" },
+  { id: "crimson", label: "Crimson", bg: "#4A1A1A", bgDark: "#1A0808", accent: "#7A2A2A", accentLight: "#FFB8B8", accentBright: "#E24A4A", glow: "#7A2A2A", swatch: "#7A2A2A" },
+  { id: "gold-rush", label: "Gold", bg: "#3A2A0A", bgDark: "#1A1205", accent: "#7A5A0A", accentLight: "#F9D984", accentBright: "#F5C842", glow: "#7A5A0A", swatch: "#7A5A0A" },
+  { id: "monochrome", label: "Mono", bg: "#2A2A2A", bgDark: "#0A0A0A", accent: "#4A4A4A", accentLight: "#E0E0E0", accentBright: "#E0E0E0", glow: "#4A4A4A", swatch: "#4A4A4A" },
+  { id: "purple-reign", label: "Purple", bg: "#2A1A4A", bgDark: "#0E0818", accent: "#4A2A7A", accentLight: "#D1B5FF", accentBright: "#8B4AE2", glow: "#4A2A7A", swatch: "#4A2A7A" },
 ];
 
 // ─── Helper functions (mirror from component) ─────────────────────────────────

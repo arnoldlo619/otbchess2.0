@@ -45,13 +45,16 @@ interface Props {
 
 // ─── Design tokens (OTB brand) ────────────────────────────────────────────────
 
-const BRAND = {
+export const CAROUSEL_BRAND = {
   white: "#FFFFFF",
   offWhite: "#FBFADA",
   gold: "#F5C842",
   silver: "#C8D0D8",
-  bronze: "#CD7F32",
+  bronze: "#E9B36B",
 };
+
+const BRAND = CAROUSEL_BRAND;
+const IMAGE_TEXT_SCRIM = "rgba(0,0,0,0.80)";
 
 /** Fixed slide width — always 1080px */
 const SLIDE_W = 1080;
@@ -146,7 +149,7 @@ export const SLIDE_THEMES: SlideTheme[] = [
     bg: "#1A2A4A",
     bgDark: "#080E1A",
     accent: "#2A4A7A",
-    accentLight: "#5B8DD9",
+    accentLight: "#AFCBFF",
     accentBright: "#4A90E2",
     glow: "#2A4A7A",
     swatch: "#2A4A7A",
@@ -157,7 +160,7 @@ export const SLIDE_THEMES: SlideTheme[] = [
     bg: "#4A1A1A",
     bgDark: "#1A0808",
     accent: "#7A2A2A",
-    accentLight: "#D95B5B",
+    accentLight: "#FFB8B8",
     accentBright: "#E24A4A",
     glow: "#7A2A2A",
     swatch: "#7A2A2A",
@@ -168,7 +171,7 @@ export const SLIDE_THEMES: SlideTheme[] = [
     bg: "#3A2A0A",
     bgDark: "#1A1205",
     accent: "#7A5A0A",
-    accentLight: "#D4A017",
+    accentLight: "#F9D984",
     accentBright: "#F5C842",
     glow: "#7A5A0A",
     swatch: "#7A5A0A",
@@ -179,7 +182,7 @@ export const SLIDE_THEMES: SlideTheme[] = [
     bg: "#2A2A2A",
     bgDark: "#0A0A0A",
     accent: "#4A4A4A",
-    accentLight: "#B0B0B0",
+    accentLight: "#E0E0E0",
     accentBright: "#E0E0E0",
     glow: "#4A4A4A",
     swatch: "#4A4A4A",
@@ -190,7 +193,7 @@ export const SLIDE_THEMES: SlideTheme[] = [
     bg: "#2A1A4A",
     bgDark: "#0E0818",
     accent: "#4A2A7A",
-    accentLight: "#9B5BD9",
+    accentLight: "#D1B5FF",
     accentBright: "#8B4AE2",
     glow: "#4A2A7A",
     swatch: "#4A2A7A",
@@ -205,7 +208,7 @@ const EXTRA_THEMES: SlideTheme[] = [
     bg: "#050505",
     bgDark: "#000000",
     accent: "#1a1a1a",
-    accentLight: "#4CAF50",
+    accentLight: "#B7F7A9",
     accentBright: "#76FF03",
     glow: "#1a3a1a",
     swatch: "#050505",
@@ -227,14 +230,14 @@ const EXTRA_THEMES: SlideTheme[] = [
     bg: "#080808",
     bgDark: "#000000",
     accent: "#0a2a0a",
-    accentLight: "#39FF14",
+    accentLight: "#B7FFAA",
     accentBright: "#39FF14",
     glow: "#0a2a0a",
     swatch: "#080808",
   },
 ];
 
-const ALL_THEMES = [...SLIDE_THEMES, ...EXTRA_THEMES];
+export const ALL_THEMES = [...SLIDE_THEMES, ...EXTRA_THEMES];
 
 const DEFAULT_THEME = SLIDE_THEMES[0];
 
@@ -455,9 +458,9 @@ function SlideWrapper({
         flexShrink: 0,
       }}
     >
-      {/* Dark overlay for image backgrounds to ensure text readability */}
+      {/* A strong scrim keeps every palette readable over arbitrary host photography. */}
       {bgType === "image" && bgValue && (
-        <div style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.52)", zIndex: 0 }} />
+        <div style={{ position: "absolute", inset: 0, background: IMAGE_TEXT_SCRIM, zIndex: 0 }} />
       )}
       {/* Chess board texture overlay */}
       <div
@@ -1014,7 +1017,7 @@ function Slide2Podium({ rows, config, tournamentName, totalRounds: _totalRounds,
                   justifyContent: "center",
                 }}
               >
-                <div style={{ fontSize: isFirst ? (isStory ? 78 * s : 52 * s) : (isStory ? 60 * s : 38 * s), fontWeight: 900, color: `${medalColors[idx]}70` }}>
+                <div style={{ fontSize: isFirst ? (isStory ? 78 * s : 52 * s) : (isStory ? 60 * s : 38 * s), fontWeight: 900, color: medalColors[idx] }}>
                   #{ranks[idx]}
                 </div>
               </div>
@@ -1087,7 +1090,7 @@ function Slide3Standings({ rows, config, tournamentName, totalRounds: _totalRoun
       {/* Rows */}
       {displayRows.map((row, idx) => {
         const isTop3 = row.rank <= 3;
-        const rankColor = isTop3 ? rankColors[row.rank] : "rgba(255,255,255,0.45)";
+        const rankColor = isTop3 ? rankColors[row.rank] : theme.accentLight;
         // Larger name font — up from 22 → 28 (square), 26 → 32 (story)
         const nameSize = clampFont(isStory ? 34 * s : 28 * s, row.player.name, 18);
 
@@ -1125,7 +1128,7 @@ function Slide3Standings({ rows, config, tournamentName, totalRounds: _totalRoun
             </div>
 
             {/* ELO — up from 18 → 22 */}
-            <div style={{ width: 90 * s, textAlign: "right", fontSize: isStory ? 30 * s : 24 * s, color: "rgba(255,255,255,0.52)", fontWeight: 600 }}>
+            <div style={{ width: 90 * s, textAlign: "right", fontSize: isStory ? 30 * s : 24 * s, color: theme.accentLight, fontWeight: 600 }}>
               {row.player.elo}
             </div>
 
@@ -1517,11 +1520,11 @@ function Slide6RoundResults({ rows, config, tournamentName, totalRounds, scale =
   const roundColW = Math.min(isStory ? 96 * s : 80 * s, roundColsW / Math.max(1, totalRounds));
 
   const cellStyle = (outcome: string): React.CSSProperties => {
-    if (outcome === "W") return { background: "#2D5A3A", color: "#6FCF97", border: "2px solid #3D7A4A" };
-    if (outcome === "L") return { background: "#5A2D2D", color: "#EB5757", border: "2px solid #7A3D3D" };
+    if (outcome === "W") return { background: "#2D5A3A", color: "#8BE8AF", border: "2px solid #3D7A4A" };
+    if (outcome === "L") return { background: "#5A2D2D", color: "#FF8F8F", border: "2px solid #7A3D3D" };
     if (outcome === "D") return { background: "#3A3A1A", color: "#F2C94C", border: "2px solid #5A5A2A" };
     if (outcome === "BYE") return { background: "rgba(255,255,255,0.04)", color: theme.accentLight, border: "2px solid rgba(255,255,255,0.08)" };
-    return { background: "transparent", color: "rgba(255,255,255,0.15)", border: "2px solid rgba(255,255,255,0.06)" };
+    return { background: "transparent", color: theme.accentLight, border: "2px solid rgba(255,255,255,0.06)" };
   };
 
   const isAntonLike6 = headingFont.italic !== false;
@@ -1578,7 +1581,7 @@ function Slide6RoundResults({ rows, config, tournamentName, totalRounds, scale =
         const outcomes = grid.get(row.player.id) ?? Array(totalRounds).fill("—");
         const isTop3 = row.rank <= 3;
         const rankColors: Record<number, string> = { 1: BRAND.gold, 2: BRAND.silver, 3: BRAND.bronze };
-        const rankColor = isTop3 ? rankColors[row.rank] : "rgba(255,255,255,0.40)";
+        const rankColor = isTop3 ? rankColors[row.rank] : theme.accentLight;
         // Larger name font — up from 18 → 26 (square), 22 → 30 (story)
         const nameSize = clampFont(isStory ? 34 * s : 26 * s, row.player.name, 18);
 
