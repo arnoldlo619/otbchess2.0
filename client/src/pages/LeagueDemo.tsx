@@ -302,6 +302,8 @@ export default function LeagueDemo() {
           background="oklch(0.115 0.025 145)"
           expandedBackground={isDark ? "oklch(0.115 0.025 145)" : "oklch(0.15 0.04 145)"}
           borderColor={isDark ? "oklch(0.22 0.06 145)" : "oklch(0.25 0.08 145)"}
+          compactBrandLogo="/brand/otb-animated-nav-thumbnail.webp"
+          expandedBrandLogo="/brand/otb-retro-cream-green-rail-wordmark.webp"
           brandActionLabel="Back to home"
           showTooltips={false}
           ariaLabel="League demo sidebar"

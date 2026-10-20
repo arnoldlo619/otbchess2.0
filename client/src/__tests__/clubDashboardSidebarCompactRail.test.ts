@@ -70,13 +70,27 @@ describe("Club Dashboard shared sidebar", () => {
 
   it("renders the OTB thumbnail as the permanent Club dashboard header identity", () => {
     expect(sidebarSource).toContain('const OTB_THUMBNAIL_LOGO = "/brand/otb-retro-app-icon-512.png"');
-    expect(sidebarSource).toContain('src={OTB_THUMBNAIL_LOGO}');
+    expect(sidebarSource).toContain("compactBrandLogo = OTB_THUMBNAIL_LOGO,");
+    expect(sidebarSource).toContain('src={compactBrandLogo}');
     expect(sidebarSource).toContain('alt="OTB!!"');
     expect(sidebarSource).not.toContain("brandImageSrc");
     expect(sidebarSource).not.toContain("brandLabel");
     expect(sidebarSource).not.toContain("otb-wordmark-brilliant.webp");
     expect(sidebarSource).toContain("aria-label={brandActionLabel}");
     expect(dashboardSource).not.toContain("brandImageSrc={club.avatarUrl}");
+  });
+
+  it("supports a League-only thumbnail-to-wordmark brand transition without changing the default Club mark", () => {
+    expect(sidebarSource).toContain("compactBrandLogo?: string;");
+    expect(sidebarSource).toContain("expandedBrandLogo?: string;");
+    expect(sidebarSource).toContain("const showExpandedWordmark = expanded && Boolean(expandedBrandLogo);");
+    expect(sidebarSource).toContain('data-club-sidebar-brand-state={showExpandedWordmark ? "expanded" : "compact"}');
+    expect(sidebarSource).toContain('width: showExpandedWordmark ? "168px" : "64px"');
+    expect(sidebarSource).toContain('transition-[opacity,transform] duration-200 ease-out');
+    expect(sidebarSource).toContain("motion-reduce:transition-none");
+    expect(sidebarSource).toContain('src={compactBrandLogo}');
+    expect(sidebarSource).toContain('src={expandedBrandLogo}');
+    expect(sidebarSource).toContain("compactBrandLogo = OTB_THUMBNAIL_LOGO,");
   });
 
   it("keeps Settings in the sidebar footer and removes the redundant Back to Club footer action", () => {

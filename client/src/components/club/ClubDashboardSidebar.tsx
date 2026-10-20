@@ -38,6 +38,8 @@ type ClubDashboardSidebarProps = {
   background: string;
   expandedBackground?: string;
   borderColor: string;
+  compactBrandLogo?: string;
+  expandedBrandLogo?: string;
   brandActionLabel?: string;
   brandTooltip?: string;
   showTooltips?: boolean;
@@ -63,6 +65,8 @@ export function ClubDashboardSidebar({
   background,
   expandedBackground,
   borderColor,
+  compactBrandLogo = OTB_THUMBNAIL_LOGO,
+  expandedBrandLogo,
   brandActionLabel = "Back to all clubs",
   brandTooltip,
   showTooltips = true,
@@ -280,24 +284,45 @@ export function ClubDashboardSidebar({
   }
 
   function renderBrandAction() {
+    const showExpandedWordmark = expanded && Boolean(expandedBrandLogo);
     const button = (
       <button
         type="button"
         onClick={onBackToClubs}
         aria-label={brandActionLabel}
-        className="group/brand relative flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-transparent outline-none transition-[opacity,transform] duration-200 ease-out hover:-translate-y-px hover:opacity-100 active:scale-[0.96] focus-visible:ring-2 motion-reduce:transform-none motion-reduce:transition-none"
+        data-club-sidebar-brand-state={showExpandedWordmark ? "expanded" : "compact"}
+        className="group/brand relative flex h-16 shrink-0 items-center overflow-hidden rounded-2xl bg-transparent outline-none transition-[width,opacity,transform] duration-200 ease-out hover:-translate-y-px hover:opacity-100 active:scale-[0.96] focus-visible:ring-2 motion-reduce:transform-none motion-reduce:transition-none"
         style={{
+          width: showExpandedWordmark ? "168px" : "64px",
           color: accent,
           // @ts-expect-error CSS custom property is supported by React at runtime.
           "--tw-ring-color": accent,
         }}
       >
         <img
-          src={OTB_THUMBNAIL_LOGO}
+          src={compactBrandLogo}
           alt="OTB!!"
-          className={`h-14 w-14 origin-center object-contain transition-transform duration-200 ease-out group-hover/brand:scale-[1.08] motion-reduce:transition-none ${expanded ? "scale-[1.04]" : "scale-100"}`}
+          aria-hidden={showExpandedWordmark}
+          className="absolute h-14 w-14 origin-center object-contain transition-[opacity,transform] duration-200 ease-out group-hover/brand:scale-[1.08] motion-reduce:transition-none"
+          style={{
+            opacity: showExpandedWordmark ? 0 : 1,
+            transform: showExpandedWordmark ? "scale(0.88)" : "scale(1)",
+          }}
           draggable={false}
         />
+        {expandedBrandLogo && (
+          <img
+            src={expandedBrandLogo}
+            alt="OTB!!"
+            aria-hidden={!showExpandedWordmark}
+            className="absolute left-0 top-1/2 w-[168px] object-contain transition-[opacity,transform] duration-200 ease-out motion-reduce:transition-none"
+            style={{
+              opacity: showExpandedWordmark ? 1 : 0,
+              transform: showExpandedWordmark ? "translateY(-50%) translateX(0) scale(1)" : "translateY(-50%) translateX(-8px) scale(0.97)",
+            }}
+            draggable={false}
+          />
+        )}
       </button>
     );
 

@@ -63,6 +63,23 @@ describe("ClubDashboardSidebar", () => {
     expect(screen.getByRole("button", { name: "Back to Club dashboard" })).toBeTruthy();
   });
 
+  it("crossfades a League-provided wordmark only when the rail expands", () => {
+    const { rerender, props } = renderSidebar({
+      compactBrandLogo: "/brand/otb-animated-nav-thumbnail.webp",
+      expandedBrandLogo: "/brand/otb-retro-cream-green-rail-wordmark.webp",
+    });
+    const brandButton = screen.getByRole("button", { name: "Back to all clubs" });
+
+    expect(brandButton.getAttribute("data-club-sidebar-brand-state")).toBe("compact");
+    expect(brandButton.style.width).toBe("64px");
+    expect(brandButton.querySelectorAll("img")[0].getAttribute("src")).toBe("/brand/otb-animated-nav-thumbnail.webp");
+
+    rerender(<ClubDashboardSidebar {...props} temporarilyExpanded />);
+    expect(brandButton.getAttribute("data-club-sidebar-brand-state")).toBe("expanded");
+    expect(brandButton.style.width).toBe("168px");
+    expect(brandButton.querySelectorAll("img")[1].getAttribute("src")).toBe("/brand/otb-retro-cream-green-rail-wordmark.webp");
+  });
+
   it("keeps Settings in the footer so the branded header is the single Club-return action", () => {
     renderSidebar({ temporarilyExpanded: true });
 

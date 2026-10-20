@@ -28,11 +28,15 @@ describe("League Dashboard implementation", () => {
     expect(dashboard).toContain('temporarilyExpanded={sidebarExpanded}');
     expect(dashboard).toContain('ariaLabel="League dashboard sidebar"');
     expect(dashboard).toContain('footerAction={{');
+    expect(dashboard).toContain('compactBrandLogo="/brand/otb-animated-nav-thumbnail.webp"');
+    expect(dashboard).toContain('expandedBrandLogo="/brand/otb-retro-cream-green-rail-wordmark.webp"');
     expect(demo).toContain('<ClubDashboardSidebar');
     expect(demo).toContain("const sidebarExpanded = sidebarHovered || sidebarKeyboardExpanded;");
     expect(demo).toContain('style={{ width: sidebarExpanded ? "264px" : "72px", minWidth: sidebarExpanded ? "264px" : "72px" }}');
     expect(demo).toContain('temporarilyExpanded={sidebarExpanded}');
     expect(demo).toContain('ariaLabel="League demo sidebar"');
+    expect(demo).toContain('compactBrandLogo="/brand/otb-animated-nav-thumbnail.webp"');
+    expect(demo).toContain('expandedBrandLogo="/brand/otb-retro-cream-green-rail-wordmark.webp"');
   });
 
   it("uses the expandable League rail labels instead of redundant hover tooltips", () => {
@@ -112,7 +116,7 @@ describe("League Demo implementation", () => {
   it("registers the public route and landing-page destination", () => {
     expect(app).toContain('<Route path={"/league-demo"} component={LeagueDemo} />');
     expect(home).toContain('href="/league-demo"');
-    expect(home).toContain('tooltip: isGuest ? "View League Demo" : "Open your Club Leagues"');
+    expect(home).toContain('tooltip: isGuest ? "View League Demo" : "Open your League dashboard"');
   });
 
   it("includes 23 mock players plus player, commissioner, matchup, standings, schedule, and bracket views", () => {
