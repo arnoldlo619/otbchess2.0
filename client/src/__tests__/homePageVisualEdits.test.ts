@@ -16,7 +16,8 @@ describe("Home page visual edits", () => {
 
     expect(hero).toContain("Chess Tournaments,");
     expect(hero).toContain('text="Over the Board."');
-    expect(hero).toContain("For the Chess Clubs playing more Chess OTB.");
+    expect(hero).toContain("For the local chess clubs.");
+    expect(hero).not.toContain("For the Chess Clubs playing more Chess OTB.");
     expect(hero).not.toContain("Chess Clubs,");
     expect(hero).not.toContain("Host tournaments with automatic pairings.");
   });

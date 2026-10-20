@@ -449,7 +449,7 @@ function Hero({ onCreateTournament }: { onCreateTournament: () => void }) {
               className="opacity-0-init animate-fade-in-up text-sm sm:text-lg leading-relaxed mb-0 sm:mb-10 max-w-xl mx-auto text-muted-foreground px-4 sm:px-0"
               style={{ animationDelay: "0.35s", animationFillMode: "forwards", fontWeight: 400 }}
             >
-              For the Chess Clubs playing more Chess OTB.
+              For the local chess clubs.
             </h2>
           </div>
 
