@@ -52,7 +52,9 @@ describe("League dashboard content readability", () => {
     expect(dashboardSource).toContain("Your Match · Week {league.currentWeek}");
     expect(dashboardSource).toContain("<LeagueMonthCalendar");
     expect(dashboardSource).not.toContain("/* ── Current Matchup Hero");
-    expect(dashboardSource).not.toContain('data-testid="league-commissioner-workspace"');
+    expect(dashboardSource).toContain('data-testid="league-commissioner-workspace"');
+    expect(dashboardSource).toContain('className="league-operations-panel overflow-hidden rounded-2xl"');
+    expect(dashboardSource).toContain('className="league-data-surface overflow-hidden rounded-2xl"');
     expect(dashboardSource).toContain("{/* Match cards */}");
     expect(demoSource).toContain("league-matchup-card league-data-surface");
     expect(dashboardSource).toContain("onClick={shareSeasonCard}");

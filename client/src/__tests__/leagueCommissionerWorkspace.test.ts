@@ -7,22 +7,26 @@ const dashboardSource = readFileSync(resolve(clientRoot, "pages/LeagueDashboard.
 const demoSource = readFileSync(resolve(clientRoot, "pages/LeagueDemo.tsx"), "utf8");
 
 describe("League player and commissioner workspace separation", () => {
-  it("adds a dedicated commissioner tab without a duplicate operations banner", () => {
+  it("gives the live Commissioner tab the same operations hierarchy as the Demo", () => {
     expect(dashboardSource).toContain('"commissioner" | "matchups"');
     expect(dashboardSource).toContain('label: "Commissioner", icon: ShieldCheck');
     expect(dashboardSource).toContain('label: "Settings", icon: OtbSettingsIcon');
-    expect(dashboardSource).not.toContain('data-testid="league-commissioner-workspace"');
-    expect(dashboardSource).not.toContain("Week {league.currentWeek} operations");
-    expect(dashboardSource).toContain("{/* Match cards */}");
-    expect(dashboardSource).toContain("Submit Report");
+    expect(dashboardSource).toContain('data-testid="league-commissioner-workspace"');
+    expect(dashboardSource).toContain('className="mx-auto max-w-4xl space-y-5 px-4 pb-4 lg:px-6 lg:pb-6"');
+    expect(dashboardSource).toContain("Week {selectedWeek} operations");
+    expect(dashboardSource).toContain("Results reported");
+    expect(dashboardSource).toContain("Board reporting");
+    expect(dashboardSource).toContain('onClick={() => handleCommissionerBoardResult(match, result)}');
+    expect(dashboardSource).toContain('aria-label="Set week deadline"');
     expect(dashboardSource).not.toContain("{/* Prep button for my matches */}");
   });
 
   it("routes hero reporting and advancement actions into the commissioner workspace", () => {
     expect(dashboardSource).toContain('setActiveTab("commissioner")');
     expect(dashboardSource).toContain('setSelectedWeek(league.currentWeek)');
-    expect(dashboardSource).toContain('activeTab === "commissioner" && league.status === "active"');
-    expect(dashboardSource).toContain('return league?.commissionerId === user.id && activeTab === "commissioner"');
+    expect(dashboardSource).toContain('isCommissioner && league.status === "active"');
+    expect(dashboardSource).toContain('activeTab === "commissioner" && (');
+    expect(dashboardSource).toContain('method: isDisputeResolution ? "PATCH" : "POST"');
   });
 
   it("keeps the player overview focused on the current matchup and personal form", () => {

@@ -678,6 +678,7 @@ export default function LeagueDashboard() {
   const [expandedHistoryWeek, setExpandedHistoryWeek] = useState<number | null>(null);
   const [reportingMatch, setReportingMatch] = useState<LeagueMatch | null>(null);
   const [isCommissionerReport, setIsCommissionerReport] = useState(false);
+  const [submittingCommissionerMatchId, setSubmittingCommissionerMatchId] = useState<number | null>(null);
   const [editingMatch, setEditingMatch] = useState<LeagueMatch | null>(null);
   const [confettiFired, setConfettiFired] = useState(false);
   const [toast, setToast] = useState<{ msg: string; type: "success" | "error" } | null>(null);
@@ -1043,6 +1044,7 @@ export default function LeagueDashboard() {
       const d = await res.json().catch(() => ({ message: "Result recorded!" }));
       showToast(d.message ?? "Result recorded!");
       setReportingMatch(null);
+      setIsCommissionerReport(false);
       await fetchAll();
     } else {
       const d = await res.json().catch(() => ({}));
@@ -1050,21 +1052,27 @@ export default function LeagueDashboard() {
     }
   }
 
-  // Commissioner resolves a disputed match
-  async function handleResolveDispute(matchId: number, result: "white_win" | "black_win" | "draw") {
+  async function handleCommissionerBoardResult(match: LeagueMatch, result: "white_win" | "black_win" | "draw") {
     if (!leagueId) return;
-    const res = await authFetch(`/api/leagues/${leagueId}/matches/${matchId}/result`, {
-      method: "PATCH",
-      credentials: "include",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ result }),
-    });
-    if (res.ok) {
-      showToast("Dispute resolved!");
-      await fetchAll();
-    } else {
-      const d = await res.json().catch(() => ({}));
-      showToast(d.error ?? "Failed to resolve", "error");
+    const isDisputeResolution = match.resultStatus === "disputed";
+    setSubmittingCommissionerMatchId(match.id);
+    try {
+      const res = await authFetch(`/api/leagues/${leagueId}/matches/${match.id}/result`, {
+        method: isDisputeResolution ? "PATCH" : "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(isDisputeResolution ? { result } : { result, commissionerOverride: true }),
+      });
+      if (res.ok) {
+        const data = await res.json().catch(() => ({}));
+        showToast(data.message ?? (isDisputeResolution ? "Dispute resolved!" : "Result recorded!"));
+        await fetchAll();
+      } else {
+        const data = await res.json().catch(() => ({}));
+        showToast(data.error ?? (isDisputeResolution ? "Failed to resolve dispute" : "Failed to save result"), "error");
+      }
+    } finally {
+      setSubmittingCommissionerMatchId(null);
     }
   }
 
@@ -1194,13 +1202,6 @@ export default function LeagueDashboard() {
     if (match.result === "white_win") return `${match.playerWhiteName} won`;
     if (match.result === "black_win") return `${match.playerBlackName} won`;
     return "Draw";
-  }
-  function canReport(match: LeagueMatch) {
-    // Result entry lives in the dedicated commissioner workspace so player
-    // Matchups remains a clear, read-only week view.
-    if (match.resultStatus === "completed") return false;
-    if (!user) return false;
-    return league?.commissionerId === user.id && activeTab === "commissioner";
   }
   function isMyMatch(match: LeagueMatch) {
     return !!(user && (match.playerWhiteId === user.id || match.playerBlackId === user.id));
@@ -1961,15 +1962,7 @@ export default function LeagueDashboard() {
                         >
                           VS
                         </div>
-                        {canReport(myMatchThisWeek) && (
-                          <button
-                            onClick={() => setReportingMatch(myMatchThisWeek)}
-                            className="text-xs font-semibold px-2 py-0.5 rounded-full mt-1"
-                            style={{ background: accent, color: "#fff" }}
-                          >
-                            Report
-                          </button>
-                        )}
+
                       </>
                     )}
                   </div>
@@ -2062,8 +2055,242 @@ export default function LeagueDashboard() {
           </>
         )}
 
+        {/* ── COMMISSIONER WORKSPACE ────────────────────────────────────────── */}
+        {activeTab === "commissioner" && (
+          <div
+            data-testid="league-commissioner-workspace"
+            className="mx-auto max-w-4xl space-y-5 px-4 pb-4 lg:px-6 lg:pb-6"
+          >
+            {isFullSeason && fullSeasonDetail ? (
+              <FullSeasonMatchSet
+                league={league}
+                detail={fullSeasonDetail}
+                selectedWeek={selectedWeek}
+                onSelectWeek={setSelectedWeek}
+                isCommissioner={isCommissioner}
+                isBusy={advancingWeek}
+                onWeekAction={handleFullSeasonWeekAction}
+                onReport={(game: FullSeasonGame) => { setIsCommissionerReport(true); setReportingMatch(game as unknown as LeagueMatch); }}
+                textMain={textMain}
+                textMuted={textMuted}
+                cardBg={cardBg}
+                cardBorder={cardBorder}
+                accent={accent}
+                isDark={isDark}
+              />
+            ) : (() => {
+              const selectedWeekObj = weeks.find((week) => week.weekNumber === selectedWeek);
+              const reportedCount = currentWeekMatches.filter((match) => match.resultStatus === "completed").length;
+              const allReported = currentWeekMatches.length > 0 && reportedCount === currentWeekMatches.length;
+              const deadline = selectedWeekObj?.deadline ? new Date(selectedWeekObj.deadline) : null;
+              const now = new Date();
+              const isOverdue = Boolean(deadline && deadline < now);
+              const isClose = Boolean(deadline && !isOverdue && deadline.getTime() - now.getTime() < 48 * 60 * 60 * 1000);
+              const deadlineTone = isOverdue
+                ? (isDark ? "oklch(0.70 0.2 25)" : "oklch(0.42 0.2 25)")
+                : isClose
+                  ? (isDark ? "oklch(0.75 0.18 60)" : "oklch(0.45 0.18 60)")
+                  : textMuted;
+
+              return (
+                <>
+                  <section
+                    className="league-operations-panel overflow-hidden rounded-2xl"
+                    style={{ background: cardBg, border: `1.5px solid ${accent}55` }}
+                  >
+                    <div
+                      className="flex flex-col gap-4 px-5 py-5 sm:flex-row sm:items-center sm:justify-between"
+                      style={{ background: isDark ? "linear-gradient(135deg, oklch(0.23 0.08 145), oklch(0.18 0.05 145))" : "linear-gradient(135deg, oklch(0.93 0.07 145), #fff)" }}
+                    >
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <Settings size={15} aria-hidden="true" style={{ color: accent }} />
+                          <p className="text-xs font-bold uppercase tracking-[0.14em]" style={{ color: accent }}>Commissioner workspace</p>
+                        </div>
+                        <h1 className="mt-2 text-xl font-black tracking-tight" style={{ color: textMain }}>Week {selectedWeek} operations</h1>
+                        <p className="mt-1 max-w-xl text-sm leading-relaxed" style={{ color: textMuted }}>Report each board, review the completed week, then generate the next set of matchups.</p>
+                      </div>
+                      <div className="min-w-[8.5rem] rounded-xl px-4 py-3 text-center" style={{ background: `${accent}12`, border: `1px solid ${accent}22` }}>
+                        <p className="text-[10px] font-bold uppercase tracking-wider" style={{ color: textMuted }}>Results reported</p>
+                        <p className="mt-1 text-xl font-black tabular-nums" style={{ color: textMain }}>{reportedCount}/{currentWeekMatches.length}</p>
+                      </div>
+                    </div>
+                    <div className="flex flex-col gap-3 border-t px-5 py-4 sm:flex-row sm:items-center sm:justify-between" style={{ borderColor: cardBorder }}>
+                      <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide" aria-label="Select league week">
+                        {weeks.map((week) => (
+                          <button
+                            key={week.weekNumber}
+                            type="button"
+                            onClick={() => setSelectedWeek(week.weekNumber)}
+                            aria-pressed={selectedWeek === week.weekNumber}
+                            className="min-h-11 flex-shrink-0 rounded-xl px-3 text-sm font-semibold transition-colors"
+                            style={{
+                              background: selectedWeek === week.weekNumber ? accent : (isDark ? "oklch(0.23 0.06 145)" : "#f3f4f6"),
+                              color: selectedWeek === week.weekNumber ? "#fff" : textMuted,
+                              border: week.weekNumber === league.currentWeek ? `1.5px solid ${accent}` : "1.5px solid transparent",
+                            }}
+                          >
+                            W{week.weekNumber}{week.isComplete ? " ✓" : ""}
+                          </button>
+                        ))}
+                      </div>
+                      <div className="flex flex-wrap items-center gap-2 sm:justify-end">
+                        <span className="rounded-full px-2.5 py-1 text-xs font-semibold" style={{ background: allReported ? `${accent}22` : "oklch(0.55 0.15 60 / 0.18)", color: allReported ? accent : (isDark ? "oklch(0.75 0.16 60)" : "oklch(0.42 0.15 60)") }}>
+                          {selectedWeekObj?.isComplete ? "Week complete" : allReported ? "Ready to advance" : "Results pending"}
+                        </span>
+                        {selectedWeekObj && !selectedWeekObj.isComplete && (
+                          <label className="flex min-h-11 items-center gap-2 rounded-xl px-2.5 text-xs font-medium" style={{ background: isDark ? "oklch(0.21 0.055 145)" : "#f7f9f7", border: `1px solid ${cardBorder}`, color: deadlineTone }}>
+                            <Clock size={13} aria-hidden="true" />
+                            <span className="sr-only">Set week deadline</span>
+                            <input
+                              key={selectedWeekObj.id}
+                              aria-label="Set week deadline"
+                              type="datetime-local"
+                              className="min-w-0 bg-transparent text-xs outline-none"
+                              style={{ color: textMain }}
+                              defaultValue={deadline ? deadline.toISOString().slice(0, 16) : ""}
+                              onChange={(event) => {
+                                const value = event.target.value;
+                                if (value) handleSetDeadline(selectedWeekObj.id, new Date(value).toISOString());
+                              }}
+                            />
+                          </label>
+                        )}
+                        {deadline && selectedWeekObj && !selectedWeekObj.isComplete && (
+                          <button
+                            type="button"
+                            onClick={() => handleSetDeadline(selectedWeekObj.id, null)}
+                            className="min-h-11 rounded-xl px-3 text-xs font-semibold transition-colors"
+                            style={{ background: isDark ? "oklch(0.25 0.06 145)" : "#f3f4f6", color: textMuted }}
+                          >
+                            Clear deadline
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  </section>
+
+                  <section className="league-data-surface overflow-hidden rounded-2xl" style={{ background: cardBg, border: `1px solid ${cardBorder}` }}>
+                    <div className="flex items-center justify-between gap-3 px-5 py-4" style={{ borderBottom: `1px solid ${cardBorder}` }}>
+                      <div>
+                        <p className="text-xs font-bold uppercase tracking-[0.14em]" style={{ color: accent }}>Active week</p>
+                        <h2 className="mt-1 text-lg font-bold" style={{ color: textMain }}>Board reporting</h2>
+                      </div>
+                      <span className="text-sm font-semibold tabular-nums" style={{ color: textMuted }}>{reportedCount}/{currentWeekMatches.length}</span>
+                    </div>
+                    {currentWeekMatches.length === 0 ? (
+                      <div className="px-5 py-10 text-center">
+                        <Calendar size={28} className="mx-auto mb-2" style={{ color: textMuted }} />
+                        <p className="text-sm font-medium" style={{ color: textMain }}>No boards in this week</p>
+                        <p className="mt-1 text-sm" style={{ color: textMuted }}>Choose another week or generate matchups when the roster is ready.</p>
+                      </div>
+                    ) : (
+                      <div className="divide-y" style={{ borderColor: cardBorder }}>
+                        {currentWeekMatches.map((match, index) => {
+                          const isCompleted = match.resultStatus === "completed";
+                          const isDisputed = match.resultStatus === "disputed";
+                          const isSubmitting = submittingCommissionerMatchId === match.id;
+                          const resultCopy = match.result === "white_win"
+                            ? `${match.playerWhiteName.split(" ")[0]} won`
+                            : match.result === "black_win"
+                              ? `${match.playerBlackName.split(" ")[0]} won`
+                              : match.result === "draw" ? "Draw" : "Result recorded";
+                          const score = match.result === "white_win" ? "1 – 0" : match.result === "black_win" ? "0 – 1" : "½ – ½";
+                          const statusCopy = isCompleted ? resultCopy : isDisputed ? "Needs resolution" : match.resultStatus === "awaiting_confirmation" ? "Awaiting confirmation" : "Awaiting result";
+                          const statusColor = isCompleted ? accent : isDisputed ? (isDark ? "oklch(0.75 0.18 25)" : "oklch(0.44 0.18 25)") : textMuted;
+                          const outcomes: Array<["white_win" | "black_win" | "draw", string]> = [
+                            ["white_win", `${match.playerWhiteName.split(" ")[0]} wins`],
+                            ["draw", "Draw"],
+                            ["black_win", `${match.playerBlackName.split(" ")[0]} wins`],
+                          ];
+
+                          return (
+                            <div key={match.id} className="px-5 py-4">
+                              <div className="mb-3 flex items-center justify-between gap-3">
+                                <span className="text-xs font-bold uppercase tracking-wider" style={{ color: textMuted }}>Board {index + 1}</span>
+                                <span className="text-xs font-semibold" style={{ color: statusColor }}>{statusCopy}</span>
+                              </div>
+                              <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-3">
+                                <span className="truncate text-sm font-semibold" style={{ color: textMain }}>{match.playerWhiteName}</span>
+                                <span className="text-xs font-bold" style={{ color: textMuted }}>vs</span>
+                                <span className="truncate text-right text-sm font-semibold" style={{ color: textMain }}>{match.playerBlackName}</span>
+                              </div>
+                              {isCompleted ? (
+                                <div className="mt-3 flex items-center justify-between gap-3">
+                                  <span className="text-sm font-bold tabular-nums" style={{ color: accent }}>{score}</span>
+                                  <button
+                                    type="button"
+                                    onClick={() => setEditingMatch(match)}
+                                    className="inline-flex min-h-10 items-center gap-1.5 rounded-xl px-3 text-xs font-semibold transition-colors"
+                                    style={{ background: `${accent}12`, color: accent, border: `1px solid ${accent}28` }}
+                                  >
+                                    <Pencil size={12} aria-hidden="true" />
+                                    Edit result
+                                  </button>
+                                </div>
+                              ) : (
+                                <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-3">
+                                  {outcomes.map(([result, label]) => (
+                                    <button
+                                      key={result}
+                                      type="button"
+                                      disabled={isSubmitting}
+                                      onClick={() => handleCommissionerBoardResult(match, result)}
+                                      className="min-h-11 rounded-xl px-3 text-xs font-semibold transition-[background-color,transform] duration-200 hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 active:translate-y-0 disabled:cursor-not-allowed disabled:opacity-55"
+                                      style={{
+                                        background: result === "draw" ? (isDark ? "oklch(0.25 0.06 145)" : "#f3f4f6") : `${accent}14`,
+                                        color: result === "draw" ? textMain : accent,
+                                        border: `1px solid ${result === "draw" ? cardBorder : `${accent}35`}`,
+                                        outlineColor: accent,
+                                      }}
+                                    >
+                                      {isSubmitting ? "Saving…" : label}
+                                    </button>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </section>
+
+                  {league.status === "active" && league.currentWeek < league.totalWeeks && selectedWeek === league.currentWeek && currentWeekMatches.length > 0 && currentWeekMatches.every((match) => match.resultStatus === "completed") && (
+                    <div
+                      data-testid="league-advance-ready-footer"
+                      role="status"
+                      aria-live="polite"
+                      className="league-advance-footer sticky bottom-3 z-20 flex flex-col items-start justify-between gap-3 rounded-2xl p-4 sm:flex-row sm:items-center"
+                      style={{ background: isDark ? "oklch(0.22 0.07 145 / 0.96)" : "oklch(0.96 0.04 145 / 0.96)", border: `1.5px solid ${accent}66` }}
+                    >
+                      <div className="flex flex-col gap-0.5">
+                        <span className="flex items-center gap-1.5 text-sm font-semibold" style={{ color: textMain }}>
+                          <CheckCircle2 size={14} style={{ color: accent }} />
+                          Week {league.currentWeek} complete
+                        </span>
+                        <span className="text-xs" style={{ color: textMuted }}>All board results are reported. Generate the next week when you are ready.</span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setShowAdvanceConfirm(true)}
+                        disabled={advancingWeek}
+                        className="league-advance-footer__button flex min-h-11 flex-shrink-0 items-center gap-2 rounded-xl px-4 py-2 text-sm font-bold active:scale-95 disabled:opacity-50"
+                        style={{ background: accent, color: "#fff" }}
+                      >
+                        {advancingWeek ? <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" /> : <ChevronRight size={15} />}
+                        Close Week & Advance
+                      </button>
+                    </div>
+                  )}
+                </>
+              );
+            })()}
+          </div>
+        )}
+
         {/* ── MATCHUPS ──────────────────────────────────────────────────────── */}
-        {(activeTab === "matchups" || activeTab === "commissioner") && (
+        {activeTab === "matchups" && (
           <div className="space-y-4">
           {isFullSeason && fullSeasonDetail ? (
             <FullSeasonMatchSet
@@ -2071,7 +2298,7 @@ export default function LeagueDashboard() {
               detail={fullSeasonDetail}
               selectedWeek={selectedWeek}
               onSelectWeek={setSelectedWeek}
-              isCommissioner={isCommissioner && activeTab === "commissioner"}
+              isCommissioner={false}
               isBusy={advancingWeek}
               onWeekAction={handleFullSeasonWeekAction}
               onReport={(game: FullSeasonGame) => { setIsCommissionerReport(true); setReportingMatch(game as unknown as LeagueMatch); }}
@@ -2142,30 +2369,7 @@ export default function LeagueDashboard() {
                   ) : (
                     <span className="text-xs" style={{ color: textMuted }}>No deadline set</span>
                   )}
-                  {isCommissioner && activeTab === "commissioner" && selectedWeekObj && !selectedWeekObj.isComplete && (
-                    <div className="flex items-center gap-2">
-                      <input
-                        aria-label="Set week deadline"
-                        type="datetime-local"
-                        className="text-xs rounded-lg px-2 py-1"
-                        style={{ background: isDark ? "oklch(0.22 0.06 145)" : "#f3f4f6", color: textMain, border: `1px solid ${cardBorder}` }}
-                        defaultValue={dl ? dl.toISOString().slice(0, 16) : ""}
-                        onChange={(e) => {
-                          const val = e.target.value;
-                          if (val) handleSetDeadline(selectedWeekObj.id, new Date(val).toISOString());
-                        }}
-                      />
-                      {dl && (
-                        <button
-                          onClick={() => selectedWeekObj && handleSetDeadline(selectedWeekObj.id, null)}
-                          className="text-[10px] px-2 py-1 rounded-lg"
-                          style={{ background: isDark ? "oklch(0.25 0.06 145)" : "#f3f4f6", color: textMuted }}
-                        >
-                          Clear
-                        </button>
-                      )}
-                    </div>
-                  )}
+
                 </div>
               );
             })()}
@@ -2218,37 +2422,14 @@ export default function LeagueDashboard() {
                                 {match.result === "white_win" ? "1 – 0" : match.result === "black_win" ? "0 – 1" : "½ – ½"}
                               </span>
                               <span className="text-xs" style={{ color: textMuted }}>{label}</span>
-                              {isCommissioner && activeTab === "commissioner" && (
-                                <button
-                                  onClick={(e) => { e.stopPropagation(); setEditingMatch(match); }}
-                                  className="mt-1 p-1 rounded-full opacity-50 hover:opacity-100 transition-opacity"
-                                  style={{ background: `${accent}20`, color: accent }}
-                                  title="Edit result"
-                                >
-                                  <Pencil size={10} />
-                                </button>
-                              )}
+
                             </>
                           ) : match.resultStatus === "disputed" ? (
                             <>
                               <span className="text-xs font-semibold px-2 py-0.5 rounded-full" style={{ background: "oklch(0.45 0.18 25)", color: "#fff" }}>
                                 Disputed
                               </span>
-                              {isCommissioner && activeTab === "commissioner" && (
-                                <div className="flex gap-1 mt-1">
-                                  {(["white_win", "black_win", "draw"] as const).map((r) => (
-                                    <button
-                                      key={r}
-                                      onClick={() => handleResolveDispute(match.id, r)}
-                                      className="text-xs font-semibold px-2 py-0.5 rounded-full"
-                                      style={{ background: accent, color: "#fff" }}
-                                      title={r === "white_win" ? `${match.playerWhiteName} wins` : r === "black_win" ? `${match.playerBlackName} wins` : "Draw"}
-                                    >
-                                      {r === "white_win" ? "W" : r === "black_win" ? "B" : "½"}
-                                    </button>
-                                  ))}
-                                </div>
-                              )}
+
                             </>
                           ) : match.resultStatus === "awaiting_confirmation" ? (
                             <>
@@ -2259,15 +2440,7 @@ export default function LeagueDashboard() {
                           ) : (
                             <>
                               <span className="text-xs font-medium" style={{ color: textMuted }}>vs</span>
-                              {canReport(match) && (
-                                <button
-                                  onClick={() => setReportingMatch(match)}
-                                  className="mt-1 text-xs font-semibold px-3 py-1.5 rounded-full"
-                                  style={{ background: accent, color: "#fff" }}
-                                >
-                                  Report
-                                </button>
-                              )}
+
                             </>
                           )}
                         </div>
@@ -2292,62 +2465,14 @@ export default function LeagueDashboard() {
                           <span className="text-xs" style={{ color: textMuted }}>Black</span>
                         </div>
                       </div>
-                      {/* Commissioner: Submit Report button — locks in result for any non-completed match */}
-                      {isCommissioner && activeTab === "commissioner" && match.resultStatus !== "completed" && (
-                        <div className="px-4 pb-3">
-                          <button
-                            onClick={(e) => { e.stopPropagation(); setIsCommissionerReport(true); setReportingMatch(match); }}
-                            className="w-full flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-xs font-semibold transition-all hover:opacity-90 active:scale-95"
-                            style={{
-                              background: isDark ? "oklch(0.32 0.10 80)" : "oklch(0.92 0.08 80)",
-                              color: isDark ? "oklch(0.92 0.15 80)" : "oklch(0.35 0.12 80)",
-                              border: `1px solid oklch(0.65 0.14 80 / 0.4)`,
-                            }}
-                          >
-                            <Crown size={11} />
-                            Submit Report
-                          </button>
-                        </div>
-                      )}
+
                     </div>
                   );
                 })
               )}
             </div>
 
-            {/* Appears only after the Commissioner has completed every board in the active week. */}
-            {isCommissioner && activeTab === "commissioner" && league.status === "active" && league.currentWeek < league.totalWeeks && selectedWeek === league.currentWeek && currentWeekMatches.length > 0 && currentWeekMatches.every((match) => match.resultStatus === "completed") && (
-              <div
-                data-testid="league-advance-ready-footer"
-                role="status"
-                aria-live="polite"
-                className="league-advance-footer sticky bottom-3 z-20 rounded-2xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3"
-                style={{ background: isDark ? "oklch(0.22 0.07 145 / 0.96)" : "oklch(0.96 0.04 145 / 0.96)", border: `1.5px solid ${accent}66` }}
-              >
-                <div className="flex flex-col gap-0.5">
-                  <span className="text-sm font-semibold flex items-center gap-1.5" style={{ color: textMain }}>
-                    <CheckCircle2 size={14} style={{ color: accent }} />
-                    Week {league.currentWeek} complete
-                  </span>
-                  <span className="text-xs" style={{ color: textMuted }}>
-                    All board results are reported. Generate the next week when you are ready.
-                  </span>
-                </div>
-                <button
-                  onClick={() => setShowAdvanceConfirm(true)}
-                  disabled={advancingWeek}
-                  className="league-advance-footer__button flex min-h-11 items-center gap-2 rounded-xl px-4 py-2 text-sm font-bold active:scale-95 disabled:opacity-50 flex-shrink-0"
-                  style={{ background: accent, color: "#fff" }}
-                >
-                  {advancingWeek ? (
-                    <span className="w-4 h-4 rounded-full border-2 border-white/30 border-t-white animate-spin" />
-                  ) : (
-                    <ChevronRight size={15} />
-                  )}
-                  Close Week & Advance
-                </button>
-              </div>
-            )}
+
           </>}
           </div>
         )}

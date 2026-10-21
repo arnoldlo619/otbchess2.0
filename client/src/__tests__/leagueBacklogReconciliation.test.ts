@@ -52,8 +52,9 @@ describe("League Dashboard implementation", () => {
     expect(dashboard).toContain("Upcoming Matchups");
     expect(dashboard).toContain(">League form</p>");
     expect(dashboard).toContain('data-testid="league-player-recent-form"');
-    expect(dashboard).not.toContain('data-testid="league-commissioner-workspace"');
-    expect(dashboard).toContain("Submit Report");
+    expect(dashboard).toContain('data-testid="league-commissioner-workspace"');
+    expect(dashboard).toContain("Board reporting");
+    expect(dashboard).toContain("handleCommissionerBoardResult(match, result)");
     expect(dashboard).toContain("Season Final Standings");
     expect(dashboard).toContain(">POS</span>");
     expect(dashboard).toContain(">MP</span>");

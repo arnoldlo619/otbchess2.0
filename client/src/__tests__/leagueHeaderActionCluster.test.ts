@@ -54,7 +54,11 @@ describe("League commissioner header action cluster", () => {
       dashboardSource.indexOf('data-testid="league-player-matchup-empty-state"')
     );
     const commissionerSource = dashboardSource.slice(
-      dashboardSource.indexOf("{/* Match cards */}"),
+      dashboardSource.indexOf("/* ── COMMISSIONER WORKSPACE"),
+      dashboardSource.indexOf("/* ── MATCHUPS")
+    );
+    const matchupsSource = dashboardSource.slice(
+      dashboardSource.indexOf("/* ── MATCHUPS"),
       dashboardSource.indexOf("/* ── STANDINGS")
     );
 
@@ -64,9 +68,12 @@ describe("League commissioner header action cluster", () => {
     expect(overviewSource).toContain("League form");
     expect(overviewSource).not.toContain("Recent league results");
     expect(overviewSource).not.toContain("My Standing");
-    expect(commissionerSource).not.toContain("Commissioner workspace");
-    expect(commissionerSource).toContain("Submit Report");
+    expect(commissionerSource).toContain("Commissioner workspace");
+    expect(commissionerSource).toContain("Board reporting");
+    expect(commissionerSource).toContain("handleCommissionerBoardResult(match, result)");
     expect(commissionerSource).toContain('data-testid="league-advance-ready-footer"');
+    expect(matchupsSource).not.toContain("handleCommissionerBoardResult(match, result)");
+    expect(matchupsSource).not.toContain("Submit Report");
   });
 
   it("uses a reduced-motion-safe gradient glow interaction rather than continuous animation", () => {
