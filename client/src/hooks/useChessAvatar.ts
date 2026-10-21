@@ -153,6 +153,7 @@ export function useChessAvatars(usernames: string[]): {
 } {
   // Deduplicate and normalise
   const keys = Array.from(new Set(usernames.map((u) => u.toLowerCase().trim()).filter(Boolean)));
+  const keysKey = keys.join(",");
 
   const [avatars, setAvatars] = useState<Map<string, string | null>>(() => {
     const map = new Map<string, string | null>();
@@ -180,6 +181,31 @@ export function useChessAvatars(usernames: string[]): {
       return;
     }
 
+    // League and tournament data frequently arrives after this hook's first
+    // render. Reconcile cache-backed values here as well as in the state
+    // initializer, otherwise a late roster can remain on initials despite a
+    // Chess.com avatar already being available in this browser session.
+    const cachedAvatars = new Map<string, string | null>();
+    for (const key of keys) {
+      if (memCache.has(key)) {
+        cachedAvatars.set(key, memCache.get(key)!);
+        continue;
+      }
+      const sessionValue = readSession(key);
+      if (sessionValue !== undefined) {
+        memCache.set(key, sessionValue);
+        cachedAvatars.set(key, sessionValue);
+      }
+    }
+
+    if (cachedAvatars.size > 0) {
+      setAvatars((prev) => {
+        const next = new Map(prev);
+        cachedAvatars.forEach((url, key) => next.set(key, url));
+        return next;
+      });
+    }
+
     const missing = keys.filter(
       (k) => !memCache.has(k) && readSession(k) === undefined
     );
@@ -189,6 +215,7 @@ export function useChessAvatars(usernames: string[]): {
       return;
     }
 
+    setAllLoaded(false);
     let cancelled = false;
 
     Promise.all(missing.map((k) => fetchAvatar(k).then((url) => ({ k, url })))).then(
@@ -205,7 +232,7 @@ export function useChessAvatars(usernames: string[]): {
 
     return () => { cancelled = true; };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [keys.join(",")]);
+  }, [keysKey]);
 
   return { avatars, allLoaded };
 }

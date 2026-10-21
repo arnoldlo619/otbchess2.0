@@ -131,6 +131,29 @@ function parseLastResults(raw?: string): string[] {
   try { return JSON.parse(raw); } catch { return raw.split("-").filter(Boolean); }
 }
 
+function getHeadToHeadSummary(matches: LeagueMatch[], whitePlayerId: string, blackPlayerId: string) {
+  return matches.reduce(
+    (summary, match) => {
+      const isSamePair =
+        (match.playerWhiteId === whitePlayerId && match.playerBlackId === blackPlayerId) ||
+        (match.playerWhiteId === blackPlayerId && match.playerBlackId === whitePlayerId);
+      if (!isSamePair || match.resultStatus !== "completed" || !match.result) return summary;
+
+      summary.total += 1;
+      if (match.result === "draw") {
+        summary.draws += 1;
+        return summary;
+      }
+
+      const winnerId = match.result === "white_win" ? match.playerWhiteId : match.playerBlackId;
+      if (winnerId === whitePlayerId) summary.whiteWins += 1;
+      if (winnerId === blackPlayerId) summary.blackWins += 1;
+      return summary;
+    },
+    { whiteWins: 0, draws: 0, blackWins: 0, total: 0 },
+  );
+}
+
 function ResultDot({ r }: { r: string }) {
   const color = r === "W" ? "#4ade80" : r === "L" ? "#f87171" : "#facc15";
   const label = r === "W" ? "Win" : r === "L" ? "Loss" : "Draw";
@@ -152,9 +175,9 @@ function MovementIcon({ movement }: { movement?: string }) {
 }
 
 function Avatar({
-  url, chesscomUrl, name, size = 8, ring = false, glow = false, loading = false,
-}: { url?: string | null; chesscomUrl?: string | null; name: string; size?: number; ring?: boolean; glow?: boolean; loading?: boolean }) {
-  const sizeClass = `w-${size} h-${size}`;
+  url, chesscomUrl, name, size = 8, sizeClass, ring = false, glow = false, loading = false,
+}: { url?: string | null; chesscomUrl?: string | null; name: string; size?: number; sizeClass?: string; ring?: boolean; glow?: boolean; loading?: boolean }) {
+  const avatarSizeClass = sizeClass ?? `w-${size} h-${size}`;
   const resolvedUrl = chesscomUrl ?? url ?? null;
   const glowStyle = glow ? { boxShadow: "0 0 14px oklch(0.55 0.13 145 / 0.55), 0 2px 8px rgba(0,0,0,0.45)" } : { boxShadow: "0 2px 6px rgba(0,0,0,0.35)" };
 
@@ -162,7 +185,7 @@ function Avatar({
   if (loading) {
     return (
       <div
-        className={`${sizeClass} rounded-full flex-shrink-0 overflow-hidden${ring ? " ring-2 ring-white/20" : ""}`}
+        className={`${avatarSizeClass} rounded-full flex-shrink-0 overflow-hidden${ring ? " ring-2 ring-white/20" : ""}`}
         style={{ background: "oklch(0.22 0.06 145)", position: "relative" }}
         aria-label="Loading avatar"
       >
@@ -183,7 +206,7 @@ function Avatar({
       <img
         src={resolvedUrl}
         alt={name}
-        className={`${sizeClass} rounded-full object-cover flex-shrink-0${ring ? " ring-2 ring-white/30" : ""}`}
+        className={`${avatarSizeClass} rounded-full object-cover flex-shrink-0${ring ? " ring-2 ring-white/30" : ""}`}
         style={glowStyle}
       />
     );
@@ -191,7 +214,7 @@ function Avatar({
   const initials = name.split(" ").map(w => w[0]).slice(0, 2).join("").toUpperCase();
   return (
     <div
-      className={`${sizeClass} rounded-full flex items-center justify-center font-bold flex-shrink-0${ring ? " ring-2 ring-white/30" : ""}`}
+      className={`${avatarSizeClass} rounded-full flex items-center justify-center font-bold flex-shrink-0${ring ? " ring-2 ring-white/30" : ""}`}
       style={{
         background: "linear-gradient(135deg, oklch(0.32 0.10 145), oklch(0.22 0.07 145))",
         color: "oklch(0.75 0.12 145)",
@@ -1251,6 +1274,14 @@ export default function LeagueDashboard() {
     return league?.players.find(p => p.playerId === playerId);
   }
 
+  const currentMatchWhitePlayer = myMatchThisWeek ? getPlayer(myMatchThisWeek.playerWhiteId) : undefined;
+  const currentMatchBlackPlayer = myMatchThisWeek ? getPlayer(myMatchThisWeek.playerBlackId) : undefined;
+  const currentMatchWhiteRating = currentMatchWhitePlayer?.leagueRating ?? currentMatchWhitePlayer?.rating;
+  const currentMatchBlackRating = currentMatchBlackPlayer?.leagueRating ?? currentMatchBlackPlayer?.rating;
+  const currentMatchHeadToHead = myMatchThisWeek
+    ? getHeadToHeadSummary(allMatches, myMatchThisWeek.playerWhiteId, myMatchThisWeek.playerBlackId)
+    : null;
+
   // Helper: open the player profile modal
   function openPlayerProfile(playerId: string) {
     const p = getPlayer(playerId);
@@ -1573,7 +1604,7 @@ export default function LeagueDashboard() {
           {/* Scrollable content */}
           <div className="flex-1 min-w-0 overflow-x-hidden overflow-y-auto pb-[calc(7rem+env(safe-area-inset-bottom,0px))] lg:pb-6">
             <div data-testid="league-dashboard-content-shell" className={`league-content-scale ${isDark ? "league-content-scale--dark" : ""} px-4 pt-4 pb-4 lg:px-6 lg:pt-5 lg:pb-6`}>
-              <div className="flex flex-col lg:flex-row gap-4 items-start">
+              <div className="flex flex-col items-stretch gap-4 lg:flex-row lg:items-start">
                 {/* Main content column */}
                                 <div className="flex-1 min-w-0 space-y-4">
         <TabTransition tabKey={activeTab}>
@@ -1877,7 +1908,7 @@ export default function LeagueDashboard() {
             {/* Your Match This Week */}
             {myMatchThisWeek && (
               <div
-                className="rounded-2xl overflow-hidden"
+                className="league-matchup-card rounded-2xl overflow-hidden"
                 style={{ background: cardBg, border: `1.5px solid ${accent}55` }}
               >
                 <div
@@ -1907,27 +1938,39 @@ export default function LeagueDashboard() {
                     );
                   })()}
                 </div>
-                <div className="px-4 py-4 flex items-center gap-3">
+                <div className="px-4 py-5 sm:px-6 sm:py-6">
+                  <div className="flex items-start justify-between gap-2 sm:gap-5">
                   {/* White player */}
-                  <div className={`flex-1 flex flex-col items-center gap-1.5 ${myMatchThisWeek.playerWhiteId === user?.id ? "opacity-100" : "opacity-70"}`}>
-                    <button onClick={() => openPlayerProfile(myMatchThisWeek.playerWhiteId)} className="block rounded-full transition-transform hover:scale-105 focus:outline-none" title={`View ${myMatchThisWeek.playerWhiteName}'s profile`}>
+                  <div className={`flex min-w-0 flex-1 flex-col items-center gap-2 ${myMatchThisWeek.playerWhiteId === user?.id ? "opacity-100" : "opacity-75"}`}>
+                    <button
+                      onClick={() => openPlayerProfile(myMatchThisWeek.playerWhiteId)}
+                      className="group relative block rounded-full transition-transform duration-200 hover:scale-105 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 motion-reduce:transition-none"
+                      style={{ "--tw-ring-color": accent, "--tw-ring-offset-color": cardBg } as React.CSSProperties}
+                      title={`View ${myMatchThisWeek.playerWhiteName}'s profile`}
+                      aria-label={`Open ${myMatchThisWeek.playerWhiteName}'s League profile`}
+                    >
                       <Avatar
-                        url={league.players.find(p => p.playerId === myMatchThisWeek.playerWhiteId)?.avatarUrl}
-                        chesscomUrl={getChesscomAvatar(league.players.find(p => p.playerId === myMatchThisWeek.playerWhiteId)?.chesscomUsername)}
+                        url={currentMatchWhitePlayer?.avatarUrl}
+                        chesscomUrl={getChesscomAvatar(currentMatchWhitePlayer?.chesscomUsername)}
                         name={myMatchThisWeek.playerWhiteName}
-                        size={12}
+                        size={18}
+                        sizeClass="h-16 w-16 sm:h-[4.5rem] sm:w-[4.5rem]"
                         ring
                         glow={myMatchThisWeek.playerWhiteId === user?.id}
-                        loading={isChesscomAvatarLoading(league.players.find(p => p.playerId === myMatchThisWeek.playerWhiteId)?.chesscomUsername)}
+                        loading={isChesscomAvatarLoading(currentMatchWhitePlayer?.chesscomUsername)}
                       />
+                      <span className="absolute -bottom-2 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full px-2 py-0.5 text-[10px] font-black tracking-[0.12em] shadow-sm" style={{ background: "#f0f5ee", color: "#111827" }}>
+                        WHITE
+                      </span>
                     </button>
-                    <span className="text-xs font-medium text-center truncate max-w-[80px]" style={{ color: textMain }}>
-                      {myMatchThisWeek.playerWhiteName}
-                    </span>
-                    <span className="text-[10px]" style={{ color: textMuted }}>White</span>
+                    <div className="mt-1 min-w-0 text-center">
+                      <h3 className="truncate text-[15px] font-black leading-tight sm:text-lg" style={{ color: textMain }}>{myMatchThisWeek.playerWhiteName}</h3>
+                      <p className="mt-0.5 text-xs font-semibold" style={{ color: accent }}>White</p>
+                      {currentMatchWhiteRating != null && <p className="mt-0.5 text-sm font-semibold tabular-nums" style={{ color: accent }}>{currentMatchWhiteRating.toLocaleString()} ELO</p>}
+                    </div>
                   </div>
                   {/* VS / result */}
-                  <div className="flex flex-col items-center gap-1 flex-shrink-0">
+                  <div className="flex min-w-[4.5rem] shrink-0 flex-col items-center gap-1.5 pt-5 text-center sm:min-w-24 sm:pt-6" aria-live="polite">
                     {myMatchThisWeek.resultStatus === "completed" ? (
                       <>
                         {(() => {
@@ -1956,34 +1999,64 @@ export default function LeagueDashboard() {
                       </>
                     ) : (
                       <>
-                        <div
-                          className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold"
-                          style={{ background: `${accent}22`, color: accent }}
-                        >
-                          VS
-                        </div>
-
+                        <span className="text-2xl font-black leading-none sm:text-3xl" style={{ color: textMuted }}>VS</span>
+                        <span className="text-xs font-semibold" style={{ color: textMuted }}>This week</span>
                       </>
                     )}
                   </div>
                   {/* Black player */}
-                  <div className={`flex-1 flex flex-col items-center gap-1.5 ${myMatchThisWeek.playerBlackId === user?.id ? "opacity-100" : "opacity-70"}`}>
-                    <button onClick={() => openPlayerProfile(myMatchThisWeek.playerBlackId)} className="block rounded-full transition-transform hover:scale-105 focus:outline-none" title={`View ${myMatchThisWeek.playerBlackName}'s profile`}>
+                  <div className={`flex min-w-0 flex-1 flex-col items-center gap-2 ${myMatchThisWeek.playerBlackId === user?.id ? "opacity-100" : "opacity-75"}`}>
+                    <button
+                      onClick={() => openPlayerProfile(myMatchThisWeek.playerBlackId)}
+                      className="group relative block rounded-full transition-transform duration-200 hover:scale-105 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 motion-reduce:transition-none"
+                      style={{ "--tw-ring-color": accent, "--tw-ring-offset-color": cardBg } as React.CSSProperties}
+                      title={`View ${myMatchThisWeek.playerBlackName}'s profile`}
+                      aria-label={`Open ${myMatchThisWeek.playerBlackName}'s League profile`}
+                    >
                       <Avatar
-                        url={league.players.find(p => p.playerId === myMatchThisWeek.playerBlackId)?.avatarUrl}
-                        chesscomUrl={getChesscomAvatar(league.players.find(p => p.playerId === myMatchThisWeek.playerBlackId)?.chesscomUsername)}
+                        url={currentMatchBlackPlayer?.avatarUrl}
+                        chesscomUrl={getChesscomAvatar(currentMatchBlackPlayer?.chesscomUsername)}
                         name={myMatchThisWeek.playerBlackName}
-                        size={12}
+                        size={18}
+                        sizeClass="h-16 w-16 sm:h-[4.5rem] sm:w-[4.5rem]"
                         ring
                         glow={myMatchThisWeek.playerBlackId === user?.id}
-                        loading={isChesscomAvatarLoading(league.players.find(p => p.playerId === myMatchThisWeek.playerBlackId)?.chesscomUsername)}
+                        loading={isChesscomAvatarLoading(currentMatchBlackPlayer?.chesscomUsername)}
                       />
+                      <span className="absolute -bottom-2 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full px-2 py-0.5 text-[10px] font-black tracking-[0.12em] shadow-sm" style={{ background: "#111827", color: "#f0f5ee" }}>
+                        BLACK
+                      </span>
                     </button>
-                    <span className="text-xs font-medium text-center truncate max-w-[80px]" style={{ color: textMain }}>
-                      {myMatchThisWeek.playerBlackName}
-                    </span>
-                    <span className="text-[10px]" style={{ color: textMuted }}>Black</span>
+                    <div className="mt-1 min-w-0 text-center">
+                      <h3 className="truncate text-[15px] font-black leading-tight sm:text-lg" style={{ color: textMain }}>{myMatchThisWeek.playerBlackName}</h3>
+                      <p className="mt-0.5 text-xs font-semibold" style={{ color: accent }}>Black</p>
+                      {currentMatchBlackRating != null && <p className="mt-0.5 text-sm font-semibold tabular-nums" style={{ color: accent }}>{currentMatchBlackRating.toLocaleString()} ELO</p>}
+                    </div>
                   </div>
+                  </div>
+                  {currentMatchHeadToHead && currentMatchHeadToHead.total > 0 && (
+                    <div data-testid="league-player-head-to-head" className="mt-5 border-t pt-4" style={{ borderColor: cardBorder }}>
+                      <div className="mb-2 flex items-center justify-between gap-3">
+                        <span className="min-w-0 truncate text-xs font-semibold" style={{ color: textMain }}>{myMatchThisWeek.playerWhiteName.split(" ")[0]}</span>
+                        <span className="shrink-0 text-xs font-bold uppercase tracking-[0.14em]" style={{ color: textMuted }}>Head to head</span>
+                        <span className="min-w-0 truncate text-right text-xs font-semibold" style={{ color: textMain }}>{myMatchThisWeek.playerBlackName.split(" ")[0]}</span>
+                      </div>
+                      <div className="mb-1.5 flex items-center justify-between text-xs font-bold tabular-nums">
+                        <span style={{ color: isDark ? "oklch(0.78 0.2 145)" : "oklch(0.35 0.18 145)" }}>{currentMatchHeadToHead.whiteWins}W</span>
+                        <span style={{ color: textMuted }}>{currentMatchHeadToHead.draws}D</span>
+                        <span style={{ color: isDark ? "oklch(0.72 0.2 25)" : "oklch(0.42 0.2 25)" }}>{currentMatchHeadToHead.blackWins}W</span>
+                      </div>
+                      <div
+                        className="flex h-2 overflow-hidden rounded-full"
+                        role="img"
+                        aria-label={`${myMatchThisWeek.playerWhiteName}: ${currentMatchHeadToHead.whiteWins} wins. ${currentMatchHeadToHead.draws} draws. ${myMatchThisWeek.playerBlackName}: ${currentMatchHeadToHead.blackWins} wins.`}
+                      >
+                        <div style={{ width: `${(currentMatchHeadToHead.whiteWins / currentMatchHeadToHead.total) * 100}%`, background: isDark ? "oklch(0.65 0.2 145)" : "oklch(0.45 0.18 145)" }} />
+                        <div style={{ width: `${(currentMatchHeadToHead.draws / currentMatchHeadToHead.total) * 100}%`, background: isDark ? "oklch(0.45 0.04 145)" : "oklch(0.72 0.04 145)" }} />
+                        <div style={{ width: `${(currentMatchHeadToHead.blackWins / currentMatchHeadToHead.total) * 100}%`, background: isDark ? "oklch(0.6 0.2 25)" : "oklch(0.50 0.2 25)" }} />
+                      </div>
+                    </div>
+                  )}
                 </div>
                 {user && myStanding && (
                   <div
