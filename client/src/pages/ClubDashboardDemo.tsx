@@ -545,6 +545,8 @@ export default function ClubDashboardDemo() {
           background="oklch(0.115 0.025 145)"
           expandedBackground="oklch(0.115 0.025 145)"
           borderColor={NAV_BORDER}
+          compactBrandLogo="/brand/otb-animated-nav-thumbnail.webp"
+          expandedBrandLogo="/brand/otb-retro-cream-green-rail-wordmark.webp"
           items={DEMO_NAV}
           activeId={tab}
           collapsed

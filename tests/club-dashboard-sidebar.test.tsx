@@ -63,7 +63,7 @@ describe("ClubDashboardSidebar", () => {
     expect(screen.getByRole("button", { name: "Back to Club dashboard" })).toBeTruthy();
   });
 
-  it("crossfades a League-provided wordmark only when the rail expands", () => {
+  it("crossfades the shared dashboard wordmark only when the rail expands", () => {
     const { rerender, props } = renderSidebar({
       compactBrandLogo: "/brand/otb-animated-nav-thumbnail.webp",
       expandedBrandLogo: "/brand/otb-retro-cream-green-rail-wordmark.webp",
@@ -76,7 +76,7 @@ describe("ClubDashboardSidebar", () => {
 
     rerender(<ClubDashboardSidebar {...props} temporarilyExpanded />);
     expect(brandButton.getAttribute("data-club-sidebar-brand-state")).toBe("expanded");
-    expect(brandButton.style.width).toBe("168px");
+    expect(brandButton.style.width).toBe("120px");
     expect(brandButton.querySelectorAll("img")[1].getAttribute("src")).toBe("/brand/otb-retro-cream-green-rail-wordmark.webp");
   });
 

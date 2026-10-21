@@ -4053,6 +4053,8 @@ export default function ClubDashboard() {
           background={sidebarBg ?? "oklch(0.115 0.025 145)"}
           expandedBackground={navTint ?? "oklch(0.115 0.025 145)"}
           borderColor={navBorder}
+          compactBrandLogo="/brand/otb-animated-nav-thumbnail.webp"
+          expandedBrandLogo="/brand/otb-retro-cream-green-rail-wordmark.webp"
           brandActionLabel="Back to all clubs"
           items={clubTabs.filter((item) => !item.ownerOnly || isOwnerOrDirector)}
           activeId={tab}

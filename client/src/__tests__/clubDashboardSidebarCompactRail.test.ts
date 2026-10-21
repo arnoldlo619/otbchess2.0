@@ -68,7 +68,7 @@ describe("Club Dashboard shared sidebar", () => {
     expect(demoSource).toContain('expandedBackground="oklch(0.115 0.025 145)"');
   });
 
-  it("renders the OTB thumbnail as the permanent Club dashboard header identity", () => {
+  it("renders the OTB thumbnail as the compact Club dashboard header identity", () => {
     expect(sidebarSource).toContain('const OTB_THUMBNAIL_LOGO = "/brand/otb-retro-app-icon-512.png"');
     expect(sidebarSource).toContain("compactBrandLogo = OTB_THUMBNAIL_LOGO,");
     expect(sidebarSource).toContain('src={compactBrandLogo}');
@@ -80,17 +80,22 @@ describe("Club Dashboard shared sidebar", () => {
     expect(dashboardSource).not.toContain("brandImageSrc={club.avatarUrl}");
   });
 
-  it("supports a League-only thumbnail-to-wordmark brand transition without changing the default Club mark", () => {
+  it("uses the same restrained thumbnail-to-wordmark transition across Club and League dashboards", () => {
     expect(sidebarSource).toContain("compactBrandLogo?: string;");
     expect(sidebarSource).toContain("expandedBrandLogo?: string;");
     expect(sidebarSource).toContain("const showExpandedWordmark = expanded && Boolean(expandedBrandLogo);");
     expect(sidebarSource).toContain('data-club-sidebar-brand-state={showExpandedWordmark ? "expanded" : "compact"}');
-    expect(sidebarSource).toContain('width: showExpandedWordmark ? "168px" : "64px"');
+    expect(sidebarSource).toContain('width: showExpandedWordmark ? "120px" : "64px"');
+    expect(sidebarSource).toContain('w-[120px]');
     expect(sidebarSource).toContain('transition-[opacity,transform] duration-200 ease-out');
     expect(sidebarSource).toContain("motion-reduce:transition-none");
     expect(sidebarSource).toContain('src={compactBrandLogo}');
     expect(sidebarSource).toContain('src={expandedBrandLogo}');
     expect(sidebarSource).toContain("compactBrandLogo = OTB_THUMBNAIL_LOGO,");
+    expect(dashboardSource).toContain('compactBrandLogo="/brand/otb-animated-nav-thumbnail.webp"');
+    expect(dashboardSource).toContain('expandedBrandLogo="/brand/otb-retro-cream-green-rail-wordmark.webp"');
+    expect(demoSource).toContain('compactBrandLogo="/brand/otb-animated-nav-thumbnail.webp"');
+    expect(demoSource).toContain('expandedBrandLogo="/brand/otb-retro-cream-green-rail-wordmark.webp"');
   });
 
   it("keeps Settings in the sidebar footer and removes the redundant Back to Club footer action", () => {
