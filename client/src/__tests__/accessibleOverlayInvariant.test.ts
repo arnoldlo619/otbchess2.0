@@ -34,6 +34,7 @@ const migratedOverlays = [
   "client/src/components/CreateLeagueWizard.tsx",
   "client/src/components/EditClubDetailsModal.tsx",
   "client/src/components/club/ClubPromoModal.tsx",
+  "client/src/components/club/JoinClubByCodeDialog.tsx",
   "client/src/components/club/ClubQRProjectionModal.tsx",
   "client/src/components/ArchivePasswordModal.tsx",
   "client/src/components/InstallBanner.tsx",

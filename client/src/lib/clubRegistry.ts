@@ -82,6 +82,8 @@ export interface Club {
   /** Membership settings */
   joinPolicy?: "public" | "approval" | "invite";
   intakeQuestions?: string;
+  /** Manager-visible, revocable Club Code used for private membership. */
+  joinCode?: string;
   /** Publication status */
   status?: "draft" | "published";
   /** Pinned announcement shown at the top of the profile */

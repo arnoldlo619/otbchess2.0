@@ -37,6 +37,21 @@ export interface ClubTournamentLeaderboardReconciliation {
   unmatchedUsernames: string[];
 }
 
+export interface ClubCodePreview {
+  id: string;
+  name: string;
+  avatarUrl: string | null;
+  accentColor: string;
+  memberCount: number;
+}
+
+type ClubCodeJoinMember = {
+  displayName: string;
+  chesscomUsername?: string | null;
+  lichessUsername?: string | null;
+  avatarUrl?: string | null;
+};
+
 // ── List all public clubs (Discover page) ─────────────────────────────────────
 export async function apiListPublicClubs(opts?: {
   search?: string;
@@ -133,6 +148,59 @@ export async function apiGetClub(id: string): Promise<Club | null> {
     return (await res.json()) as Club;
   } catch {
     return null;
+  }
+}
+
+// ── Club Codes — scoped invitation lookup, redemption, and management ─────────
+export async function apiPreviewClubCode(code: string): Promise<ClubCodePreview | null> {
+  try {
+    const res = await authFetch(`${BASE}/join-preview/code/${encodeURIComponent(code)}`);
+    if (!res.ok) return null;
+    return await res.json() as ClubCodePreview;
+  } catch {
+    return null;
+  }
+}
+
+export async function apiJoinClubByCode(
+  code: string,
+  member: ClubCodeJoinMember,
+): Promise<{ ok: true; club: Club; alreadyMember: boolean } | { ok: false; error: string }> {
+  try {
+    const res = await authFetch(`${BASE}/join-by-code`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ code, ...member }),
+    });
+    const body = await res.json().catch(() => ({}));
+    if (!res.ok) return { ok: false, error: body.error ?? "Unable to join this club right now" };
+    return { ok: true, club: body.club as Club, alreadyMember: Boolean(body.alreadyMember) };
+  } catch {
+    return { ok: false, error: "Network error. Check your connection and try again." };
+  }
+}
+
+export async function apiGetClubJoinCode(clubId: string): Promise<string | null> {
+  try {
+    const res = await authFetch(`${BASE}/${clubId}/join-code`);
+    if (!res.ok) return null;
+    const body = await res.json();
+    return typeof body.code === "string" ? body.code : null;
+  } catch {
+    return null;
+  }
+}
+
+export async function apiRotateClubJoinCode(clubId: string): Promise<{ ok: true; code: string } | { ok: false; error: string }> {
+  try {
+    const res = await authFetch(`${BASE}/${clubId}/join-code/rotate`, { method: "POST" });
+    const body = await res.json().catch(() => ({}));
+    if (!res.ok || typeof body.code !== "string") {
+      return { ok: false, error: body.error ?? "Unable to rotate the Club Code" };
+    }
+    return { ok: true, code: body.code };
+  } catch {
+    return { ok: false, error: "Network error. Check your connection and try again." };
   }
 }
 

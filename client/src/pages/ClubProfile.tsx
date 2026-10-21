@@ -4183,6 +4183,7 @@ export default function ClubProfile() {
           open={showClubQR}
           onClose={() => setShowClubQR(false)}
           clubName={club.name}
+          clubId={club.id}
           clubSlug={club.slug ?? club.id}
           accent={accent}
           flag={flag}

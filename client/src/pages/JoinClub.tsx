@@ -1,5 +1,5 @@
 /**
- * JoinClub — /join-club/:clubId
+ * JoinClub — /join-club/:clubId or /join-club/code/:code
  *
  * Deep-link landing page for the "Join Club" QR code.
  * Flow:
@@ -14,7 +14,7 @@ import { useParams, useLocation } from "wouter";
 import { NavLogo } from "@/components/NavLogo";
 import AuthModal from "@/components/AuthModal";
 import { useAuthContext } from "@/context/AuthContext";
-import { apiJoinClub } from "@/lib/clubsApi";
+import { apiJoinClub, apiJoinClubByCode, apiPreviewClubCode } from "@/lib/clubsApi";
 import { joinClub } from "@/lib/clubRegistry";
 import { toast } from "sonner";
 import { Users, CheckCircle2, Loader2 } from "lucide-react";
@@ -43,7 +43,7 @@ function fireConfetti(accentHex: string) {
 }
 
 export default function JoinClub() {
-  const { clubId } = useParams<{ clubId: string }>();
+  const { clubId, code } = useParams<{ clubId?: string; code?: string }>();
   const [, navigate] = useLocation();
   const { user } = useAuthContext();
 
@@ -52,17 +52,23 @@ export default function JoinClub() {
   const [errorMsg, setErrorMsg] = useState("");
   const [authOpen, setAuthOpen] = useState(false);
   const confettiFired = useRef(false);
+  const isCodeJoin = Boolean(code);
+  const invitation = code ?? clubId ?? "";
 
   // ── Resolve club info ──────────────────────────────────────────────────────
   useEffect(() => {
     async function resolveClub() {
-      if (!clubId) { setPhase("error"); setErrorMsg("No club ID provided."); return; }
+      if (!invitation) { setPhase("error"); setErrorMsg("No Club Code provided."); return; }
       let found: { id: string; name: string; avatarUrl?: string | null; accentColor?: string | null } | null = null;
       try {
-        const res = await fetch(`/api/clubs/join-preview/${encodeURIComponent(clubId)}`);
-        if (res.ok) found = await res.json();
+        if (isCodeJoin) {
+          found = await apiPreviewClubCode(invitation);
+        } else {
+          const res = await fetch(`/api/clubs/join-preview/${encodeURIComponent(invitation)}`);
+          if (res.ok) found = await res.json();
+        }
       } catch { /* the QR entry page renders its existing recovery state */ }
-      if (!found) { setPhase("error"); setErrorMsg("Club not found."); return; }
+      if (!found) { setPhase("error"); setErrorMsg(isCodeJoin ? "This Club Code is no longer valid. Ask the organizer for a new one." : "Club not found."); return; }
       setClub(found);
       if (user) {
         setPhase("joining");
@@ -73,19 +79,26 @@ export default function JoinClub() {
     }
     resolveClub();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [clubId]);
+  }, [invitation, isCodeJoin]);
 
   // ── Auto-join once we have a user ─────────────────────────────────────────
   const doJoin = useCallback(async () => {
     if (!club || !user) return;
     setPhase("joining");
     try {
-      await apiJoinClub(club.id, {
+      const member = {
         displayName: user.displayName ?? "Player",
         chesscomUsername: user.chesscomUsername ?? null,
         lichessUsername: user.lichessUsername ?? null,
         avatarUrl: user.avatarUrl ?? null,
-      });
+      };
+      if (isCodeJoin) {
+        const result = await apiJoinClubByCode(invitation, member);
+        if (!result.ok) throw new Error(result.error);
+      } else {
+        const joined = await apiJoinClub(club.id, member);
+        if (!joined) throw new Error("Unable to join this club right now.");
+      }
       joinClub(club.id, {
         userId: user.id,
         displayName: user.displayName ?? "Player",
@@ -125,7 +138,7 @@ export default function JoinClub() {
                 {/* Text */}
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-bold text-white leading-tight truncate">
-                    🎉 Welcome to {club.name}!
+                    Welcome to {club.name}
                   </p>
                   <p className="text-xs text-white/50 mt-0.5">You're now a member.</p>
                 </div>
@@ -157,7 +170,7 @@ export default function JoinClub() {
         setErrorMsg(msg);
       }
     }
-  }, [club, user, navigate]);
+  }, [club, user, navigate, invitation, isCodeJoin]);
 
   useEffect(() => {
     if (phase === "joining") doJoin();
@@ -255,7 +268,7 @@ export default function JoinClub() {
                   <div className="rounded-2xl border border-red-500/20 bg-red-500/08 px-4 py-3 text-sm text-red-400 leading-relaxed">
                     {errorMsg || "Something went wrong. Please try again."}
                     <button
-                      onClick={() => navigate(`/clubs/${clubId}`)}
+                      onClick={() => navigate(`/clubs/${clubId ?? ""}`)}
                       className="block mt-2 text-white/50 hover:text-white/80 text-xs underline"
                     >
                       Go to club page instead →

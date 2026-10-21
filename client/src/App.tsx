@@ -227,6 +227,7 @@ function Router() {
         <Route path={"/checkin/:eventId"} component={CheckInPage} />
         <Route path={"/rsvp/:slug"} component={RsvpFormPage} />
         <Route path={"/clubs/:id/messages"} component={ClubMessages} />
+        <Route path={"/join-club/code/:code"} component={JoinClub} />
         <Route path={"/join-club/:clubId"} component={JoinClub} />
         <Route path={"/clubs/:id"} component={ClubProfile} />
         <Route path={"/tournament/:id/broadcast-console"} component={BroadcastConsole} />

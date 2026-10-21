@@ -192,10 +192,12 @@ import { computeWeeklyBattleTrend } from "@/lib/battleTrend";
 import { ClubFeedMediaGallery } from "@/components/club/ClubFeedMediaGallery";
 import {
   apiGetClub,
+  apiGetClubJoinCode,
   apiGetClubTournamentLeaderboard,
   apiListClubMembers,
   apiListMyClubs,
   apiReconcileClubTournamentLeaderboard,
+  apiRotateClubJoinCode,
   apiTransferOwnership,
   type ClubTournamentLeaderboard as ClubTournamentLeaderboardData,
 } from "@/lib/clubsApi";
@@ -3015,6 +3017,8 @@ export default function ClubDashboard() {
   // ── Join Club QR modal (header button) ───────────────────────────────────
   const [showJoinQRModal, setShowJoinQRModal] = useState(false);
   const [joinQRCopied, setJoinQRCopied] = useState(false);
+  const [clubJoinCode, setClubJoinCode] = useState<string | null>(null);
+  const [rotatingClubJoinCode, setRotatingClubJoinCode] = useState(false);
   // ── RSVP management state ─────────────────────────────────────────────────
   const [rsvpPanelEventId, setRsvpPanelEventId] = useState<string | null>(null);
   const [eventRsvpList, setEventRsvpList] = useState<ClubEventRSVP[]>([]);
@@ -3632,6 +3636,32 @@ export default function ClubDashboard() {
   const isClubOwner = !!(user && club && club.ownerId === user.id);
   const isActiveClubMember = !!(user && club && (club.ownerId === user.id || members.some((member) => member.userId === user.id)));
 
+  useEffect(() => {
+    if (!club || !isOwnerOrDirector) {
+      setClubJoinCode(null);
+      return;
+    }
+    let cancelled = false;
+    apiGetClubJoinCode(club.id).then((code) => {
+      if (!cancelled) setClubJoinCode(code);
+    });
+    return () => { cancelled = true; };
+  }, [club?.id, isOwnerOrDirector]);
+
+  async function handleRotateClubJoinCode() {
+    if (!club || !isClubOwner || rotatingClubJoinCode) return;
+    if (!window.confirm("Rotate this Club Code? Existing QR images and shared links will stop working immediately.")) return;
+    setRotatingClubJoinCode(true);
+    const result = await apiRotateClubJoinCode(club.id);
+    setRotatingClubJoinCode(false);
+    if (!result.ok) {
+      toast.error(result.error);
+      return;
+    }
+    setClubJoinCode(result.code);
+    toast.success("Club Code rotated. Share the new code or QR link with members.");
+  }
+
   // ── Transfer Ownership handler ───────────────────────────────────────────────
   async function handleTransferOwnership() {
     if (!club || !transferTargetId) return;
@@ -4148,13 +4178,17 @@ export default function ClubDashboard() {
 
           {/* ── JOIN CLUB QR MODAL ────────────────────────────────────────── */}
           {showJoinQRModal && club && (() => {
-            const joinUrl = `${window.location.origin}/join-club/${club.id}`;
+            const joinUrl = clubJoinCode
+              ? `${window.location.origin}/join-club/code/${encodeURIComponent(clubJoinCode)}`
+              : null;
             async function handleCopyJoinLink() {
+              if (!joinUrl) return;
               await navigator.clipboard.writeText(joinUrl);
               setJoinQRCopied(true);
               setTimeout(() => setJoinQRCopied(false), 2000);
             }
             function handleDownloadJoinQR() {
+              if (!joinUrl) return;
               const svg = document.getElementById("club-join-qr");
               if (!svg) return;
               const svgData = new XMLSerializer().serializeToString(svg);
@@ -4210,21 +4244,29 @@ export default function ClubDashboard() {
                       >
                         {club.name}
                       </h1>
+                      <div className="mt-4 inline-flex items-center gap-3 rounded-xl border border-white/12 bg-white/[0.055] px-4 py-3 text-left">
+                        <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-white/45">Club Code</span>
+                        <span className="font-mono text-base font-bold tracking-[0.12em] text-[#d8f19d]">{clubJoinCode ?? "Loading…"}</span>
+                      </div>
                     </div>
 
                     {/* QR code */}
                     <div className="relative">
                       <div className="absolute inset-0 rounded-3xl bg-[#4CAF50]/20 blur-2xl scale-110 pointer-events-none" />
                       <div className="relative p-5 sm:p-7 bg-white rounded-3xl shadow-2xl">
-                        <QRCodeSVG
-                          id="club-join-qr"
-                          value={joinUrl}
-                          size={220}
-                          level="H"
-                          includeMargin={false}
-                          fgColor="#1a1a1a"
-                          bgColor="#ffffff"
-                        />
+                        {joinUrl ? (
+                          <QRCodeSVG
+                            id="club-join-qr"
+                            value={joinUrl}
+                            size={220}
+                            level="H"
+                            includeMargin={false}
+                            fgColor="#1a1a1a"
+                            bgColor="#ffffff"
+                          />
+                        ) : (
+                          <div className="flex h-[220px] w-[220px] items-center justify-center text-sm font-medium text-slate-500">Generating Code QR…</div>
+                        )}
                       </div>
                       {(["top-0 left-0", "top-0 right-0", "bottom-0 left-0", "bottom-0 right-0"] as const).map((pos) => (
                         <div
@@ -4251,7 +4293,8 @@ export default function ClubDashboard() {
                         onClick={handleCopyJoinLink}
                         title="Click to copy"
                         aria-label="Copy join link"
-                        className="group relative flex items-center gap-3 px-8 py-4 rounded-2xl transition-all duration-300 active:scale-95 touch-manipulation overflow-hidden"
+                        disabled={!joinUrl}
+                        className="group relative flex items-center gap-3 px-8 py-4 rounded-2xl transition-all duration-300 active:scale-95 touch-manipulation overflow-hidden disabled:cursor-not-allowed disabled:opacity-50"
                         style={{
                           background: joinQRCopied ? "rgba(76,175,80,0.18)" : "rgba(255,255,255,0.06)",
                           border: joinQRCopied ? "1.5px solid rgba(76,175,80,0.55)" : "1.5px solid rgba(255,255,255,0.12)",
@@ -4268,7 +4311,7 @@ export default function ClubDashboard() {
                           className="relative font-mono font-bold tracking-[0.15em] text-lg sm:text-xl select-all transition-colors duration-300 break-all max-w-xs"
                           style={{ color: joinQRCopied ? "#6EE77A" : "#ffffff", textShadow: joinQRCopied ? "0 0 18px rgba(76,175,80,0.70)" : "none" }}
                         >
-                          {joinUrl.replace(/^https?:\/\//, "")}
+                          {joinUrl ? joinUrl.replace(/^https?:\/\//, "") : "Preparing invite link…"}
                         </span>
                         <span className="relative text-white/30 group-hover:text-white/60 transition-colors flex-shrink-0">
                           {joinQRCopied ? <Check className="w-5 h-5" style={{ color: "#4CAF50" }} /> : <Copy className="w-5 h-5" />}
@@ -4277,12 +4320,13 @@ export default function ClubDashboard() {
                     </div>
 
                     {/* Short URL hint */}
-                    <p className="text-white/25 text-xs font-mono tracking-wide">{joinUrl}</p>
+                    <p className="text-white/25 text-xs font-mono tracking-wide">{joinUrl ?? "Generating a private Club Code invitation…"}</p>
 
                     {/* Download button */}
                     <button
                       onClick={handleDownloadJoinQR}
-                      className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold text-white/60 hover:text-white border border-white/10 hover:border-white/20 transition-all active:scale-95"
+                      disabled={!joinUrl}
+                      className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold text-white/60 hover:text-white border border-white/10 hover:border-white/20 transition-all active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
                     >
                       <Download className="w-4 h-4" />
                       Save QR Image
@@ -5974,6 +6018,39 @@ export default function ClubDashboard() {
                     <p className="text-white/40 text-xs">Control how new members can join {club.name}</p>
                   </div>
                 </div>
+                <div data-testid="club-code-settings" className="rounded-2xl border border-[#8fcb75]/24 bg-[#4CAF50]/[0.07] p-5">
+                  <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                      <p className="text-xs font-bold uppercase tracking-[0.15em] text-[#b9e596]">Club Code</p>
+                      <p className="mt-1 text-xs leading-5 text-white/48">Share this code or the Join Club QR with new members. Rotating it invalidates old QR images and links.</p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <code className="rounded-lg border border-white/12 bg-black/20 px-3 py-2 font-mono text-sm font-bold tracking-[0.12em] text-[#e3f5ae]">{clubJoinCode ?? "Loading…"}</code>
+                      <button
+                        type="button"
+                        disabled={!clubJoinCode}
+                        onClick={() => {
+                          if (!clubJoinCode) return;
+                          navigator.clipboard.writeText(clubJoinCode).then(() => toast.success("Club Code copied"));
+                        }}
+                        className="inline-flex min-h-10 items-center gap-1.5 rounded-lg border border-white/12 px-3 text-xs font-semibold text-white/75 transition hover:bg-white/8 disabled:cursor-not-allowed disabled:opacity-45"
+                      >
+                        <Copy className="h-3.5 w-3.5" aria-hidden="true" />Copy
+                      </button>
+                    </div>
+                  </div>
+                  {isClubOwner && (
+                    <button
+                      type="button"
+                      onClick={handleRotateClubJoinCode}
+                      disabled={rotatingClubJoinCode || !clubJoinCode}
+                      className="mt-4 inline-flex min-h-10 items-center gap-1.5 rounded-lg border border-white/12 px-3 text-xs font-semibold text-white/70 transition hover:border-white/22 hover:bg-white/8 disabled:cursor-not-allowed disabled:opacity-45"
+                    >
+                      <RefreshCw className={`h-3.5 w-3.5 ${rotatingClubJoinCode ? "animate-spin" : ""}`} aria-hidden="true" />
+                      {rotatingClubJoinCode ? "Rotating…" : "Rotate code"}
+                    </button>
+                  )}
+                </div>
                 {/* Join Policy */}
                 <div className="rounded-2xl border border-white/08 p-5 space-y-4" style={{ background: "oklch(0.16 0.05 145)" }}>
                   <h3 className="text-white/60 text-xs font-bold uppercase tracking-widest">Join Policy</h3>
@@ -6029,7 +6106,9 @@ export default function ClubDashboard() {
 
                 {/* ── QR TOOLS SECTION (moved from standalone QR Tools tab) ── */}
                 {(() => {
-                  const joinUrl = `${window.location.origin}/clubs/${club.id}`;
+                  const joinUrl = clubJoinCode
+                    ? `${window.location.origin}/join-club/code/${encodeURIComponent(clubJoinCode)}`
+                    : "";
                   const selectedEvent = qrEventId ? events.find(e => e.id === qrEventId) : null;
                   const rsvpUrl = selectedEvent ? `${window.location.origin}/clubs/${club.id}/meetup/${selectedEvent.id}` : "";
                   const checkinUrl = selectedEvent ? `${window.location.origin}/checkin/${selectedEvent.id}` : "";
@@ -6087,7 +6166,7 @@ export default function ClubDashboard() {
                       </div>
                     ) : (
                       <div className="text-center py-8 text-white/30 text-sm">
-                        {qrMode === "join" ? "QR code ready above" : "Select an event to generate a QR code"}
+                        {qrMode === "join" ? "Preparing the Club Code QR…" : "Select an event to generate a QR code"}
                       </div>
                     )}
                     {/* Tips */}

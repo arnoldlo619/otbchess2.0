@@ -741,6 +741,8 @@ export const dbClubs = mysqlTable(
     meetingNotes: text("meeting_notes"),
     joinPolicy: varchar("join_policy", { length: 20 }).notNull().default("public"),
     intakeQuestions: text("intake_questions"),
+    /** Owner-managed bearer code for private Club membership. */
+    joinCode: varchar("join_code", { length: 8 }),
     status: varchar("status", { length: 20 }).notNull().default("published"),
     announcement: text("announcement"),
     // Landing page extended fields
@@ -775,6 +777,7 @@ export const dbClubs = mysqlTable(
     slugIdx: index("clubs_slug_idx").on(table.slug),
     ownerIdx: index("clubs_owner_idx").on(table.ownerId),
     publicIdx: index("clubs_public_idx").on(table.isPublic),
+    joinCodeIdx: uniqueIndex("clubs_join_code_unique").on(table.joinCode),
   })
 );
 export type DbClubRow = typeof dbClubs.$inferSelect;

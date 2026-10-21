@@ -12,6 +12,7 @@ import { AvatarNavDropdown } from "@/components/AvatarNavDropdown";
 import { CreateClubWizard, CREATE_CLUB_WIZARD_ACTIVE_KEY } from "@/components/CreateClubWizard";
 import { SpinBorderButton } from "@/components/ui/spin-border-button";
 import { PatternText } from "@/components/ui/pattern-text";
+import { JoinClubByCodeDialog } from "@/components/club/JoinClubByCodeDialog";
 import { useAuthContext } from "@/context/AuthContext";
 import { useTheme } from "@/contexts/ThemeContext";
 import { listMyClubs, type Club } from "@/lib/clubRegistry";
@@ -88,7 +89,7 @@ function ClubCard({ club, isDark, isOwned }: { club: Club; isDark: boolean; isOw
   );
 }
 
-function PrivateClubEmptyState({ isDark, onCreate }: { isDark: boolean; onCreate: () => void }) {
+function PrivateClubEmptyState({ isDark, onCreate, onJoin }: { isDark: boolean; onCreate: () => void; onJoin: () => void }) {
   const rule = isDark ? "border-white/10" : "border-[#dbe6d9]";
   const textMain = isDark ? "text-white" : "text-[#15291c]";
   const textMuted = isDark ? "text-white/60" : "text-[#516555]";
@@ -97,14 +98,24 @@ function PrivateClubEmptyState({ isDark, onCreate }: { isDark: boolean; onCreate
     <section className={`max-w-xl border-t pt-6 ${rule}`}>
       <p className={`text-base font-semibold ${textMain}`}>No clubs yet</p>
       <p className={`mt-1 max-w-lg text-sm leading-6 ${textMuted}`}>Create a home for your players, or join a club with an invitation.</p>
-      <button
-        type="button"
-        onClick={onCreate}
-        className="mt-5 inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-[#426f45] px-4 text-sm font-semibold text-white transition-colors hover:bg-[#345c38] active:scale-[0.98] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#4CAF50] focus-visible:ring-offset-2"
-      >
-        <Plus className="h-4 w-4" aria-hidden="true" />
-        Create a club
-      </button>
+      <div className="mt-5 flex flex-col gap-2 sm:flex-row">
+        <button
+          type="button"
+          onClick={onCreate}
+          className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-[#426f45] px-4 text-sm font-semibold text-white transition-colors hover:bg-[#345c38] active:scale-[0.98] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#4CAF50] focus-visible:ring-offset-2"
+        >
+          <Plus className="h-4 w-4" aria-hidden="true" />
+          Create a club
+        </button>
+        <button
+          type="button"
+          onClick={onJoin}
+          className={`inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border px-4 text-sm font-semibold transition-colors active:scale-[0.98] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#4CAF50] focus-visible:ring-offset-2 ${isDark ? "border-white/14 bg-white/[0.05] text-white hover:bg-white/[0.09]" : "border-[#bfd1bc] bg-white text-[#234128] hover:bg-[#f0f7ee]"}`}
+        >
+          <Users className="h-4 w-4" aria-hidden="true" />
+          Join a club
+        </button>
+      </div>
     </section>
   );
 }
@@ -154,6 +165,7 @@ export default function MyClubs() {
   const [myClubs, setMyClubs] = useState<Club[]>([]);
   const [loading, setLoading] = useState(Boolean(user));
   const [showWizard, setShowWizard] = useState(() => typeof window !== "undefined" && window.sessionStorage.getItem(CREATE_CLUB_WIZARD_ACTIVE_KEY) === "1");
+  const [showJoinDialog, setShowJoinDialog] = useState(false);
 
   const closeWizard = useCallback(() => {
     try { window.sessionStorage.removeItem(CREATE_CLUB_WIZARD_ACTIVE_KEY); } catch { /* storage unavailable */ }
@@ -300,7 +312,7 @@ export default function MyClubs() {
               {Array.from({ length: 3 }).map((_, index) => <div key={index} className={`h-64 animate-pulse rounded-2xl ${isDark ? "bg-white/[0.055]" : "bg-[#e6eee3]"}`} />)}
             </div>
           ) : orderedClubs.length === 0 ? (
-            <PrivateClubEmptyState isDark={isDark} onCreate={openCreateClub} />
+            <PrivateClubEmptyState isDark={isDark} onCreate={openCreateClub} onJoin={() => setShowJoinDialog(true)} />
           ) : (
             <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
               {orderedClubs.map((club) => <ClubCard key={club.id} club={club} isDark={isDark} isOwned={club.ownerId === user?.id} />)}
@@ -311,6 +323,24 @@ export default function MyClubs() {
       </main>
 
       {showWizard && <CreateClubWizard onClose={closeWizard} />}
+      {user && (
+        <JoinClubByCodeDialog
+          open={showJoinDialog}
+          onClose={() => setShowJoinDialog(false)}
+          isDark={isDark}
+          member={{
+            displayName: user.displayName,
+            chesscomUsername: user.chesscomUsername,
+            lichessUsername: user.lichessUsername,
+            avatarUrl: user.avatarUrl,
+          }}
+          onJoined={(club) => {
+            setShowJoinDialog(false);
+            void refreshClubs();
+            navigate(`/clubs/${club.id}/home`);
+          }}
+        />
+      )}
     </div>
   );
 }

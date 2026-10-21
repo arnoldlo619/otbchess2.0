@@ -25,11 +25,13 @@ import {
   X, Maximize2, Copy, Check, Users, ExternalLink, QrCode,
 } from "lucide-react";
 import { toast } from "sonner";
+import { apiGetClubJoinCode } from "@/lib/clubsApi";
 
 interface ClubQRProjectionModalProps {
   open: boolean;
   onClose: () => void;
   clubName: string;
+  clubId?: string;
   clubSlug: string;
   /** Hex accent color for the club (used for glow + corner marks) */
   accent?: string;
@@ -42,12 +44,14 @@ export function ClubQRProjectionModal({
   open,
   onClose,
   clubName,
+  clubId,
   clubSlug,
   accent = "#4CAF50",
   flag = "♟",
   memberCount,
 }: ClubQRProjectionModalProps) {
   const [copied, setCopied] = useState(false);
+  const [clubJoinCode, setClubJoinCode] = useState<string | null>(null);
   const dialogRef = useRef<HTMLDivElement>(null);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
   useAccessibleOverlay({
@@ -60,12 +64,23 @@ export function ClubQRProjectionModal({
   // Keep screen awake while the QR is displayed
   useWakeLock(open);
 
+  useEffect(() => {
+    if (!open || !clubId) return;
+    let cancelled = false;
+    apiGetClubJoinCode(clubId).then((code) => {
+      if (!cancelled) setClubJoinCode(code);
+    });
+    return () => { cancelled = true; };
+  }, [clubId, open]);
+
   // Build the club URL — always the public club profile page
   const clubUrl = (() => {
     const base = typeof window !== "undefined"
       ? `${window.location.protocol}//${window.location.host}`
       : "https://chessotb.club";
-    return `${base}/clubs/${encodeURIComponent(clubSlug)}`;
+    return clubJoinCode
+      ? `${base}/join-club/code/${encodeURIComponent(clubJoinCode)}`
+      : `${base}/join-club/${encodeURIComponent(clubSlug)}`;
   })();
 
   const displayUrl = (() => {
@@ -177,8 +192,15 @@ export function ClubQRProjectionModal({
 
             {/* Instruction text */}
             <p className="text-white/40 text-sm sm:text-base leading-relaxed">
-              Scan the QR code to join the club. New members will be prompted to create an account — existing members will be taken straight to the club page.
+              Scan the QR code to join the club. New members will be prompted to create an account, while existing members will be taken straight to the club page.
             </p>
+
+            {clubJoinCode && (
+              <div className="flex w-full items-center justify-between gap-3 rounded-xl border border-white/10 bg-white/[0.06] px-4 py-3">
+                <span className="text-[10px] font-semibold uppercase tracking-[0.16em] text-white/42">Club Code</span>
+                <code className="font-mono text-base font-bold tracking-[0.12em] text-[#d8f19d]">{clubJoinCode}</code>
+              </div>
+            )}
 
             {/* URL display */}
             <div

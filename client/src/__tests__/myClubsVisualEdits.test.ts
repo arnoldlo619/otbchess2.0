@@ -99,7 +99,9 @@ describe("My Clubs visual system", () => {
     expect(globalStylesSource).toContain("@media (prefers-reduced-motion: reduce)");
     expect(globalStylesSource).toContain(".otb-pattern-text::after");
     expect(memberIndex).toContain("Your chess clubs hub.");
-    expect(memberIndex).toContain("<PrivateClubEmptyState isDark={isDark} onCreate={openCreateClub} />");
+    expect(memberIndex).toContain("<PrivateClubEmptyState isDark={isDark} onCreate={openCreateClub} onJoin={() => setShowJoinDialog(true)} />");
+    expect(myClubsSource).toContain("Join a club");
+    expect(myClubsSource).toContain("JoinClubByCodeDialog");
     expect(memberIndex).not.toContain('href="/clubs/demo"');
   });
 });

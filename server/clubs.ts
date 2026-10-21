@@ -54,8 +54,8 @@ import {
   clubFeedAttachments,
   users,
 } from "../shared/schema";
-import { eq, and, desc, or, sql } from "drizzle-orm";
-import { nanoid } from "nanoid";
+import { eq, and, desc, or, sql, isNull } from "drizzle-orm";
+import { customAlphabet, nanoid } from "nanoid";
 import type { Request, Response } from "express";
 import { requireAuth as authMiddleware, requireFullAuth } from "./auth.js";
 import { createClubMeetupRsvpQuestions } from "../shared/rsvpMeetupTemplate";
@@ -158,6 +158,133 @@ async function getAuthorizedClub(req: Request, res: Response, idOrSlug: string) 
 
   return { db, club, userId };
 }
+
+const CLUB_CODE_ALPHABET = "ABCDEFGHJKMNPQRSTUVWXYZ23456789";
+const makeClubCodeSuffix = customAlphabet(CLUB_CODE_ALPHABET, 4);
+const CLUB_CODE_PATTERN = /^OTB-[A-HJ-NP-Z2-9]{4}$/;
+
+type ClubJoinMemberInput = {
+  displayName?: string;
+  chesscomUsername?: string | null;
+  lichessUsername?: string | null;
+  avatarUrl?: string | null;
+};
+
+function normalizeClubCode(value: unknown): string | null {
+  if (typeof value !== "string") return null;
+  const compact = value.trim().toUpperCase().replace(/[\s_-]+/g, "");
+  const normalized = compact.startsWith("OTB") && compact.length === 7
+    ? `OTB-${compact.slice(3)}`
+    : value.trim().toUpperCase();
+  return CLUB_CODE_PATTERN.test(normalized) ? normalized : null;
+}
+
+function clubJoinPreview(row: typeof dbClubs.$inferSelect) {
+  return {
+    id: row.id,
+    name: row.name,
+    avatarUrl: row.avatarUrl ?? null,
+    accentColor: row.accentColor,
+    memberCount: row.memberCount,
+  };
+}
+
+async function generateAvailableClubCode(db: Awaited<ReturnType<typeof getDb>>): Promise<string> {
+  for (let attempt = 0; attempt < 12; attempt += 1) {
+    const candidate = `OTB-${makeClubCodeSuffix()}`;
+    const [existing] = await db
+      .select({ id: dbClubs.id })
+      .from(dbClubs)
+      .where(eq(dbClubs.joinCode, candidate))
+      .limit(1);
+    if (!existing) return candidate;
+  }
+  throw new Error("Unable to allocate a unique Club Code");
+}
+
+async function ensureClubJoinCode(
+  db: Awaited<ReturnType<typeof getDb>>,
+  club: typeof dbClubs.$inferSelect,
+): Promise<string> {
+  if (club.joinCode) return club.joinCode;
+  for (let attempt = 0; attempt < 12; attempt += 1) {
+    const candidate = await generateAvailableClubCode(db);
+    try {
+      await db
+        .update(dbClubs)
+        .set({ joinCode: candidate })
+        .where(and(eq(dbClubs.id, club.id), isNull(dbClubs.joinCode)));
+      const [updated] = await db
+        .select({ joinCode: dbClubs.joinCode })
+        .from(dbClubs)
+        .where(eq(dbClubs.id, club.id))
+        .limit(1);
+      if (updated?.joinCode) return updated.joinCode;
+    } catch (error) {
+      if (!String(error).toLowerCase().includes("duplicate")) throw error;
+    }
+  }
+  throw new Error("Unable to provision a Club Code");
+}
+
+async function joinClubMember(
+  db: Awaited<ReturnType<typeof getDb>>,
+  club: typeof dbClubs.$inferSelect,
+  userId: string,
+  member: ClubJoinMemberInput,
+): Promise<{ alreadyMember: boolean }> {
+  const [existing] = await db
+    .select({ id: dbClubMembers.id })
+    .from(dbClubMembers)
+    .where(and(eq(dbClubMembers.clubId, club.id), eq(dbClubMembers.userId, userId)))
+    .limit(1);
+  if (existing) return { alreadyMember: true };
+
+  const displayName = member.displayName?.trim() || "Player";
+  try {
+    await db.insert(dbClubMembers).values({
+      clubId: club.id,
+      userId,
+      displayName,
+      chesscomUsername: member.chesscomUsername || null,
+      lichessUsername: member.lichessUsername || null,
+      avatarUrl: member.avatarUrl || null,
+      role: "member",
+    });
+  } catch (error) {
+    if (String(error).toLowerCase().includes("duplicate")) return { alreadyMember: true };
+    throw error;
+  }
+
+  await db.update(dbClubs)
+    .set({ memberCount: sql`member_count + 1` })
+    .where(eq(dbClubs.id, club.id));
+  broadcastClubEvent(club.id, "member_joined", {
+    userId,
+    displayName,
+    chesscomUsername: member.chesscomUsername || null,
+    avatarUrl: member.avatarUrl || null,
+  });
+  return { alreadyMember: false };
+}
+
+async function backfillLegacyClubJoinCodes(): Promise<void> {
+  try {
+    const db = await getDb();
+    const legacyClubs = await db.select().from(dbClubs).where(isNull(dbClubs.joinCode));
+    for (const club of legacyClubs) {
+      await ensureClubJoinCode(db, club);
+    }
+    if (legacyClubs.length > 0) {
+      logger.info("club_join_code_backfill_complete", { count: legacyClubs.length });
+    }
+  } catch (error) {
+    // A temporary database outage must not prevent the Club API from starting.
+    logger.warn("club_join_code_backfill_deferred", { error });
+  }
+}
+
+void backfillLegacyClubJoinCodes();
 
 function dbRowToClub(row: typeof dbClubs.$inferSelect) {
   return {
@@ -321,6 +448,27 @@ clubsRouter.get("/", async (req: Request, res: Response) => {
   } catch (err) {
     logger.error("[clubs] GET / error:", err);
     res.status(500).json({ error: "Failed to list clubs" });
+  }
+});
+
+// ── GET /api/clubs/join-preview/code/:code — scoped Code invitation preview ──
+clubsRouter.get("/join-preview/code/:code", async (req: Request, res: Response) => {
+  try {
+    const code = normalizeClubCode(req.params.code);
+    if (!code) {
+      res.status(404).json({ error: "Club code not found" });
+      return;
+    }
+    const db = await getDb();
+    const [club] = await db.select().from(dbClubs).where(eq(dbClubs.joinCode, code)).limit(1);
+    if (!club) {
+      res.status(404).json({ error: "Club code not found" });
+      return;
+    }
+    res.json(clubJoinPreview(club));
+  } catch (error) {
+    logger.error("club_code_preview_failed", { error });
+    res.status(500).json({ error: "Failed to load club invitation" });
   }
 });
 
@@ -595,6 +743,8 @@ clubsRouter.post("/", requireFullAuth, async (req: Request, res: Response) => {
         .replace(/[^a-z0-9]+/g, "-")
         .replace(/^-|-$/g, "");
 
+    const joinCode = await generateAvailableClubCode(db);
+
     await db.insert(dbClubs).values({
       id: clubId,
       name: name.trim(),
@@ -629,6 +779,7 @@ clubsRouter.post("/", requireFullAuth, async (req: Request, res: Response) => {
       meetingNotes: meetingNotes || null,
       joinPolicy,
       intakeQuestions: intakeQuestions || null,
+      joinCode,
       status,
       announcement: announcement || null,
       foundedAt: foundedAt ? new Date(foundedAt) : new Date(),
@@ -759,6 +910,81 @@ clubsRouter.post("/sync", requireFullAuth, async (req: Request, res: Response) =
   } catch (err) {
     logger.error("[clubs] POST /sync error:", err);
     res.status(500).json({ error: "Sync failed" });
+  }
+});
+
+// ── POST /api/clubs/join-by-code — authenticated Club Code redemption ────────
+clubsRouter.post("/join-by-code", requireFullAuth, async (req: Request, res: Response) => {
+  const userId = getUserId(req, res);
+  if (!userId) return;
+  try {
+    const code = normalizeClubCode(req.body?.code);
+    if (!code) {
+      res.status(400).json({ error: "Enter a valid Club Code" });
+      return;
+    }
+    const db = await getDb();
+    const [club] = await db.select().from(dbClubs).where(eq(dbClubs.joinCode, code)).limit(1);
+    if (!club) {
+      res.status(404).json({ error: "We couldn’t find that Club Code. Check with the organizer." });
+      return;
+    }
+    const outcome = await joinClubMember(db, club, userId, req.body ?? {});
+    res.status(outcome.alreadyMember ? 200 : 201).json({
+      club: dbRowToClub(club),
+      alreadyMember: outcome.alreadyMember,
+    });
+  } catch (error) {
+    logger.error("club_join_by_code_failed", { error });
+    res.status(500).json({ error: "Unable to join this club right now" });
+  }
+});
+
+// ── GET /api/clubs/:id/join-code — manager-only Code display ─────────────────
+clubsRouter.get("/:id/join-code", requireFullAuth, async (req: Request, res: Response) => {
+  const userId = getUserId(req, res);
+  if (!userId) return;
+  try {
+    const access = await getAuthorizedClub(req, res, req.params.id);
+    if (!access) return;
+    const [membership] = await access.db
+      .select({ role: dbClubMembers.role })
+      .from(dbClubMembers)
+      .where(and(eq(dbClubMembers.clubId, access.club.id), eq(dbClubMembers.userId, userId)))
+      .limit(1);
+    if (access.club.ownerId !== userId && membership?.role !== "director") {
+      res.status(403).json({ error: "Only club managers can view the Club Code" });
+      return;
+    }
+    const code = await ensureClubJoinCode(access.db, access.club);
+    res.json({ code });
+  } catch (error) {
+    logger.error("club_join_code_get_failed", { clubId: req.params.id, error });
+    res.status(500).json({ error: "Failed to load Club Code" });
+  }
+});
+
+// ── POST /api/clubs/:id/join-code/rotate — owner-only Code rotation ─────────
+clubsRouter.post("/:id/join-code/rotate", requireFullAuth, async (req: Request, res: Response) => {
+  const userId = getUserId(req, res);
+  if (!userId) return;
+  try {
+    const db = await getDb();
+    const [club] = await db.select().from(dbClubs).where(eq(dbClubs.id, req.params.id)).limit(1);
+    if (!club) {
+      res.status(404).json({ error: "Club not found" });
+      return;
+    }
+    if (club.ownerId !== userId) {
+      res.status(403).json({ error: "Only the club owner can rotate the Club Code" });
+      return;
+    }
+    const code = await generateAvailableClubCode(db);
+    await db.update(dbClubs).set({ joinCode: code }).where(eq(dbClubs.id, club.id));
+    res.json({ code });
+  } catch (error) {
+    logger.error("club_join_code_rotate_failed", { clubId: req.params.id, error });
+    res.status(500).json({ error: "Failed to rotate Club Code" });
   }
 });
 
@@ -1038,36 +1264,11 @@ clubsRouter.post("/:id/members", requireFullAuth, async (req: Request, res: Resp
       res.status(404).json({ error: "Club not found" });
       return;
     }
-    const [existing] = await db
-      .select()
-      .from(dbClubMembers)
-      .where(and(eq(dbClubMembers.clubId, id), eq(dbClubMembers.userId, userId)));
-    if (existing) {
+    const outcome = await joinClubMember(db, club, userId, req.body ?? {});
+    if (outcome.alreadyMember) {
       res.status(409).json({ error: "Already a member" });
       return;
     }
-    const { displayName = "", chesscomUsername, lichessUsername, avatarUrl } = req.body;
-    await db.insert(dbClubMembers).values({
-      clubId: id,
-      userId,
-      displayName,
-      chesscomUsername: chesscomUsername || null,
-      lichessUsername: lichessUsername || null,
-      avatarUrl: avatarUrl || null,
-      role: "member",
-    });
-    // Atomic increment — avoids race condition from read-then-write
-    await db.update(dbClubs)
-      .set({ memberCount: sql`member_count + 1` })
-      .where(eq(dbClubs.id, id));
-    // Broadcast to all SSE clients watching this club
-    broadcastClubEvent(id, "member_joined", {
-      userId,
-      displayName,
-      chesscomUsername: chesscomUsername || null,
-      avatarUrl: avatarUrl || null,
-    });
-
     res.status(201).json({ success: true });
   } catch (err) {
     logger.error("[clubs] POST /:id/members error:", err);
