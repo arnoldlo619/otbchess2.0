@@ -85,8 +85,8 @@ describe("Club Dashboard shared sidebar", () => {
     expect(sidebarSource).toContain("expandedBrandLogo?: string;");
     expect(sidebarSource).toContain("const showExpandedWordmark = expanded && Boolean(expandedBrandLogo);");
     expect(sidebarSource).toContain('data-club-sidebar-brand-state={showExpandedWordmark ? "expanded" : "compact"}');
-    expect(sidebarSource).toContain('width: showExpandedWordmark ? "120px" : "64px"');
-    expect(sidebarSource).toContain('w-[120px]');
+    expect(sidebarSource).toContain('width: showExpandedWordmark ? "80px" : "64px"');
+    expect(sidebarSource).toContain('w-20');
     expect(sidebarSource).toContain('transition-[opacity,transform] duration-200 ease-out');
     expect(sidebarSource).toContain("motion-reduce:transition-none");
     expect(sidebarSource).toContain('src={compactBrandLogo}');

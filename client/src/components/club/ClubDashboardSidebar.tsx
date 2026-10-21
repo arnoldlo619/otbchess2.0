@@ -293,7 +293,7 @@ export function ClubDashboardSidebar({
         data-club-sidebar-brand-state={showExpandedWordmark ? "expanded" : "compact"}
         className="group/brand relative flex h-16 shrink-0 items-center overflow-hidden rounded-2xl bg-transparent outline-none transition-[width,opacity,transform] duration-200 ease-out hover:-translate-y-px hover:opacity-100 active:scale-[0.96] focus-visible:ring-2 motion-reduce:transform-none motion-reduce:transition-none"
         style={{
-          width: showExpandedWordmark ? "120px" : "64px",
+          width: showExpandedWordmark ? "80px" : "64px",
           color: accent,
           // @ts-expect-error CSS custom property is supported by React at runtime.
           "--tw-ring-color": accent,
@@ -315,7 +315,7 @@ export function ClubDashboardSidebar({
             src={expandedBrandLogo}
             alt="OTB!!"
             aria-hidden={!showExpandedWordmark}
-            className="absolute left-0 top-1/2 w-[120px] object-contain transition-[opacity,transform] duration-200 ease-out motion-reduce:transition-none"
+            className="absolute left-0 top-1/2 w-20 object-contain transition-[opacity,transform] duration-200 ease-out motion-reduce:transition-none"
             style={{
               opacity: showExpandedWordmark ? 1 : 0,
               transform: showExpandedWordmark ? "translateY(-50%) translateX(0) scale(1)" : "translateY(-50%) translateX(-8px) scale(0.97)",

@@ -76,7 +76,7 @@ describe("ClubDashboardSidebar", () => {
 
     rerender(<ClubDashboardSidebar {...props} temporarilyExpanded />);
     expect(brandButton.getAttribute("data-club-sidebar-brand-state")).toBe("expanded");
-    expect(brandButton.style.width).toBe("120px");
+    expect(brandButton.style.width).toBe("80px");
     expect(brandButton.querySelectorAll("img")[1].getAttribute("src")).toBe("/brand/otb-retro-cream-green-rail-wordmark.webp");
   });
 
