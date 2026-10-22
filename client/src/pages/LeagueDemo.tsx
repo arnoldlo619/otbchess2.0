@@ -22,6 +22,7 @@ import { AsciiArt } from "@/components/ui/d60-hero";
 import { LeagueBracket } from "@/components/LeagueBracket";
 import { LeaguePlayerProfileModal, type LeagueProfileRecentMatch } from "@/components/league/LeaguePlayerProfileModal";
 import { LeagueMonthCalendar } from "@/components/league/LeagueMonthCalendar";
+import { LeagueMobileTabBar } from "@/components/league/LeagueMobileTabBar";
 import { ClubDashboardSidebar, type ClubDashboardSidebarItem } from "@/components/club/ClubDashboardSidebar";
 import "@/styles/leagueContentReadability.css";
 
@@ -176,10 +177,10 @@ export default function LeagueDemo() {
   const [, navigate] = useLocation();
   const { theme } = useTheme();
   const isDark = theme === "dark";
-  const [activeTab, setActiveTab] = useState<TabId>("standings");
+  const [activeTab, setActiveTab] = useState<TabId>("overview");
   const [sidebarHovered, setSidebarHovered] = useState(false);
   const [sidebarKeyboardExpanded, setSidebarKeyboardExpanded] = useState(false);
-  const [standingsView, setStandingsView] = useState<"table" | "bracket">("bracket");
+  const [standingsView, setStandingsView] = useState<"table" | "bracket">("table");
   const [selectedScheduleWeek, setSelectedScheduleWeek] = useState(14);
   const [commissionerResults, setCommissionerResults] = useState<Record<number, "white_win" | "black_win" | "draw">>({});
   const { user } = useAuthContext();
@@ -287,9 +288,9 @@ export default function LeagueDemo() {
   // ── Render ──────────────────────────────────────────────────────────────────
   return (
     <>
-    <div className="min-h-screen" style={{ background: pageBg }}>
+    <div className="h-[100dvh] w-full max-w-full overflow-hidden overscroll-x-none" style={{ background: pageBg }}>
       {/* ── MAIN LAYOUT ─────────────────────────────────────────────────────── */}
-      <div className="flex min-h-screen">
+      <div className="flex h-full">
 
         {/* Desktop League demo navigation — compact by default; hover or focus reveals labels. */}
         <div
@@ -328,7 +329,7 @@ export default function LeagueDemo() {
 
           {/* ── BRANDED TOP BAR ───────────────────────────────────────────── */}
           <div
-            className="relative flex-shrink-0 flex items-center gap-3 px-4 py-2.5 lg:hidden"
+            className="relative flex-shrink-0 flex items-center gap-3 px-4 py-2.5 otb-header-safe lg:hidden"
             style={{
               background: isDark ? "oklch(0.15 0.04 145 / 0.97)" : "#0f1f14",
               backdropFilter: "blur(12px)",
@@ -414,7 +415,7 @@ export default function LeagueDemo() {
           </div>
 
           {/* ── SCROLLABLE CONTENT ────────────────────────────────────────── */}
-          <div className={`league-content-scale ${isDark ? "league-content-scale--dark" : ""} flex-1`}>
+          <div className={`league-content-scale ${isDark ? "league-content-scale--dark" : ""} flex-1 min-h-0 overflow-x-hidden overflow-y-auto pb-[calc(7rem+env(safe-area-inset-bottom,0px))] lg:pb-6`}>
 
             {/* ── OVERVIEW TAB ──────────────────────────────────────────────── */}
             {activeTab === "overview" && (
@@ -651,11 +652,11 @@ export default function LeagueDemo() {
                           <div key={`${match.white.id}-${match.black.id}`} className="px-5 py-4">
                             <div className="mb-3 flex items-center justify-between gap-3"><span className="text-xs font-bold uppercase tracking-wider" style={{ color: textMuted }}>Board {index + 1}</span><span className="text-xs font-semibold" style={{ color: result ? accent : textMuted }}>{result === "white_win" ? `${match.white.displayName.split(" ")[0]} won` : result === "black_win" ? `${match.black.displayName.split(" ")[0]} won` : result === "draw" ? "Draw" : "Awaiting result"}</span></div>
                             <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-3"><span className="truncate text-sm font-semibold" style={{ color: textMain }}>{match.white.displayName}</span><span className="text-xs font-bold" style={{ color: textMuted }}>vs</span><span className="truncate text-right text-sm font-semibold" style={{ color: textMain }}>{match.black.displayName}</span></div>
-                            {!result && <div className="mt-3 grid grid-cols-3 gap-2">{([
+                            {!result && <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-3">{([
                               ["white_win", `${match.white.displayName.split(" ")[0]} wins`],
                               ["draw", "Draw"],
                               ["black_win", `${match.black.displayName.split(" ")[0]} wins`],
-                            ] as const).map(([value, label]) => <button key={value} onClick={() => setCommissionerResults((current) => ({ ...current, [index]: value }))} className="min-h-10 rounded-xl px-2 text-xs font-semibold transition-opacity hover:opacity-80" style={{ background: value === "draw" ? (isDark ? "oklch(0.25 0.06 145)" : "#f3f4f6") : `${accent}18`, border: `1px solid ${value === "draw" ? cardBorder : `${accent}33`}`, color: value === "draw" ? textMain : accent }}>{label}</button>)}</div>}
+                            ] as const).map(([value, label]) => <button key={value} onClick={() => setCommissionerResults((current) => ({ ...current, [index]: value }))} className="min-h-11 rounded-xl px-3 text-xs font-semibold transition-opacity hover:opacity-80" style={{ background: value === "draw" ? (isDark ? "oklch(0.25 0.06 145)" : "#f3f4f6") : `${accent}18`, border: `1px solid ${value === "draw" ? cardBorder : `${accent}33`}`, color: value === "draw" ? textMain : accent }}>{label}</button>)}</div>}
                           </div>
                         );
                       })}
@@ -666,14 +667,14 @@ export default function LeagueDemo() {
                       data-testid="league-demo-advance-ready-footer"
                       role="status"
                       aria-live="polite"
-                      className="league-advance-footer sticky bottom-3 z-20 flex flex-col items-start justify-between gap-3 rounded-2xl p-4 sm:flex-row sm:items-center"
+                      className="league-advance-footer sticky bottom-[calc(5.5rem+env(safe-area-inset-bottom,0px))] z-20 flex flex-col items-start justify-between gap-3 rounded-2xl p-4 lg:bottom-3 sm:flex-row sm:items-center"
                       style={{ background: isDark ? "oklch(0.22 0.07 145 / 0.96)" : "oklch(0.96 0.04 145 / 0.96)", border: `1.5px solid ${accent}66` }}
                     >
                       <div>
                         <p className="flex items-center gap-1.5 text-sm font-semibold" style={{ color: textMain }}><Trophy size={14} style={{ color: accent }} />Week 14 complete</p>
                         <p className="mt-0.5 text-xs" style={{ color: textMuted }}>All board results are reported. Review Week 15 matchups next.</p>
                       </div>
-                      <button type="button" onClick={() => { setSelectedScheduleWeek(15); setActiveTab("schedule"); }} className="league-advance-footer__button inline-flex min-h-11 items-center gap-2 rounded-xl px-4 text-sm font-bold" style={{ background: accent, color: "#fff" }}><span>Advance to Week 15</span><span aria-hidden="true">→</span></button>
+                      <button type="button" onClick={() => { setSelectedScheduleWeek(15); setActiveTab("schedule"); }} className="league-advance-footer__button inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl px-4 text-sm font-bold sm:w-auto" style={{ background: accent, color: "#fff" }}><span>Advance to Week 15</span><span aria-hidden="true">→</span></button>
                     </div>
                   )}
                 </div>
@@ -1130,36 +1131,16 @@ export default function LeagueDemo() {
               </div>
             )}
 
-            {/* ── MOBILE BOTTOM NAV ─────────────────────────────────────────── */}
-            <div
-              className="lg:hidden fixed bottom-0 left-0 right-0 flex items-center justify-around px-2 py-2 z-40"
-              style={{
-                background: isDark ? "oklch(0.15 0.04 145 / 0.97)" : "#0f1f14",
-                borderTop: `1px solid ${isDark ? "oklch(0.22 0.06 145)" : "oklch(0.22 0.08 145)"}`,
-                backdropFilter: "blur(12px)",
-              }}
-            >
-              {TABS.map((tab) => {
-                const Icon = tab.icon;
-                const isActive = activeTab === tab.id;
-                return (
-                  <button
-                    key={tab.id}
-                    onClick={() => setActiveTab(tab.id)}
-                    className="flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl transition-all"
-                    style={{
-                      background: isActive ? `${accent}22` : "transparent",
-                      color: isActive ? accent : "oklch(0.72 0.06 145)",
-                    }}
-                  >
-                    <span className={`otb-icon otb-nav-tap${isActive ? " otb-icon--active" : ""}`}>
-                      <Icon size={18} />
-                    </span>
-                    <span className="text-[11px] font-semibold">{tab.label}</span>
-                  </button>
-                );
-              })}
-             </div>
+            <LeagueMobileTabBar
+              items={TABS}
+              activeId={activeTab}
+              onSelect={setActiveTab}
+              isDark={isDark}
+              accent={accent}
+              textMain={textMain}
+              textMuted={textMuted}
+              ariaLabel="League demo navigation"
+            />
           </div>
         </div>
       </div>

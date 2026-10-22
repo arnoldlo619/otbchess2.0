@@ -149,14 +149,14 @@ export function LeagueMonthCalendar({
       </header>
 
       {hasScheduledWeeks ? (
-        <div className="relative z-10 mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4" role="list" aria-label="League schedule by week">
+        <div className="relative z-10 mt-4 grid grid-cols-1 gap-3 min-[420px]:grid-cols-2 xl:grid-cols-4" role="list" aria-label="League schedule by week">
           {weeks.map((week) => {
             const isSelected = week.weekNumber === selectedWeekNumber;
             const status = getWeekStatus(week, currentWeek, leagueStatus);
             const scheduledDate = dateForWeek(week, seasonStartAt);
             const hasMatchProgress = typeof week.matchCount === "number" && week.matchCount > 0;
             const matchProgress = hasMatchProgress ? Math.round(((week.completedMatchCount ?? 0) / week.matchCount!) * 100) : 0;
-            const statusColor = status.tone === "complete" ? accent : status.tone === "current" ? accent : status.tone === "attention" ? "#d97706" : textMuted;
+            const statusColor = status.tone === "complete" ? accent : status.tone === "current" ? accent : status.tone === "attention" ? (isDark ? "#fbbf24" : "#9a5b00") : textMuted;
 
           return (
             <button
@@ -166,7 +166,7 @@ export function LeagueMonthCalendar({
               onClick={() => onSelectWeek(week.weekNumber)}
               aria-pressed={isSelected}
               aria-label={`Select Week ${week.weekNumber}, ${status.label}`}
-              className="group relative min-h-[144px] overflow-hidden rounded-2xl border p-4 text-left transition-[transform,background-color,border-color,box-shadow] duration-200 ease-out hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 active:translate-y-0"
+              className={`group relative min-h-[144px] overflow-hidden rounded-2xl border p-4 text-left transition-[transform,background-color,border-color,box-shadow] duration-200 ease-out hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 active:translate-y-0 ${isSelected ? "order-first min-[420px]:order-none" : ""}`}
               style={{
                 borderColor: isSelected ? `${accent}b3` : isDark ? "rgba(255,255,255,0.12)" : "rgba(21,62,37,0.14)",
                 background: isSelected

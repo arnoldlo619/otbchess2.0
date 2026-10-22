@@ -52,7 +52,7 @@ describe("League player and commissioner workspace separation", () => {
   it("reveals the sticky next-week action only after the active League week is complete", () => {
     expect(dashboardSource).toContain('data-testid="league-advance-ready-footer"');
     expect(dashboardSource).toContain('currentWeekMatches.every((match) => match.resultStatus === "completed")');
-    expect(dashboardSource).toContain('sticky bottom-3 z-20');
+    expect(dashboardSource).toContain('sticky bottom-[calc(5.5rem+env(safe-area-inset-bottom,0px))] z-20');
     expect(dashboardSource).toContain("All board results are reported. Generate the next week when you are ready.");
     expect(dashboardSource).not.toContain("Commissioner Controls");
   });

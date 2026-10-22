@@ -103,6 +103,17 @@
   outline-offset: 3px;
 }
 
+/* The optional PWA install prompt must not cover League navigation on phones. */
+@media (max-width: 1023px) {
+  body:has([data-testid="league-mobile-tab-bar"]) [aria-label="Install OTB Chess app"] {
+    bottom: calc(4.75rem + env(safe-area-inset-bottom, 0px));
+  }
+
+  body:has([data-testid="league-mobile-tab-bar"]):has([aria-label="Install OTB Chess app"]) .league-content-scale {
+    padding-bottom: calc(12rem + env(safe-area-inset-bottom, 0px));
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .league-content-scale *,
   .league-content-scale *::before,

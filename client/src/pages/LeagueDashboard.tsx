@@ -23,6 +23,7 @@ import { useChessAvatars } from "@/hooks/useChessAvatar";
 import { useAccessibleOverlay } from "@/hooks/useAccessibleOverlay";
 import { LeaguePlayerProfileModal, type LeagueProfileRecentMatch } from "@/components/league/LeaguePlayerProfileModal";
 import { LeagueMonthCalendar } from "@/components/league/LeagueMonthCalendar";
+import { LeagueMobileTabBar } from "@/components/league/LeagueMobileTabBar";
 import { ClubDashboardSidebar, type ClubDashboardSidebarItem } from "@/components/club/ClubDashboardSidebar";
 import "@/styles/leagueContentReadability.css";
 import { logger } from "@/lib/logger";
@@ -1912,10 +1913,10 @@ export default function LeagueDashboard() {
                 style={{ background: cardBg, border: `1.5px solid ${accent}55` }}
               >
                 <div
-                  className="relative flex min-h-[4.5rem] items-center justify-center px-5 py-4"
+                  className="relative flex min-h-[4.5rem] flex-col items-center justify-center gap-2 px-5 py-4 sm:flex-row sm:gap-0"
                   style={{ background: `${accent}18`, borderBottom: `1px solid ${accent}33` }}
                 >
-                  <h2 className="max-w-[calc(100%-5.5rem)] text-center text-2xl font-black leading-tight tracking-tight sm:text-3xl" style={{ color: textMain }}>
+                  <h2 className="max-w-full text-center text-2xl font-black leading-tight tracking-tight sm:max-w-[calc(100%-5.5rem)] sm:text-3xl" style={{ color: textMain }}>
                     Your Match · Week {league.currentWeek}
                   </h2>
                   {(() => {
@@ -1925,14 +1926,14 @@ export default function LeagueDashboard() {
                     const now = new Date();
                     const diff = dl.getTime() - now.getTime();
                     if (diff <= 0) return (
-                      <span className="absolute right-5 top-1/2 -translate-y-1/2 rounded-full px-2 py-0.5 text-[10px] font-semibold" style={{ background: "oklch(0.45 0.18 25)", color: "#fff" }}>Overdue</span>
+                      <span className="static rounded-full px-2 py-0.5 text-[10px] font-semibold sm:absolute sm:right-5 sm:top-1/2 sm:-translate-y-1/2" style={{ background: "oklch(0.45 0.18 25)", color: "#fff" }}>Overdue</span>
                     );
                     const days = Math.floor(diff / (1000 * 60 * 60 * 24));
                     const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
                     const isUrgent = diff < 48 * 60 * 60 * 1000;
                     const timeStr = days > 0 ? `${days}d ${hours}h left` : `${hours}h left`;
                     return (
-                      <span className="absolute right-5 top-1/2 flex -translate-y-1/2 items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold" style={{ background: isUrgent ? "oklch(0.65 0.18 60)22" : `${accent}22`, color: isUrgent ? "oklch(0.65 0.18 60)" : accent }}>
+                      <span className="static flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold sm:absolute sm:right-5 sm:top-1/2 sm:-translate-y-1/2" style={{ background: isUrgent ? "oklch(0.65 0.18 60)22" : `${accent}22`, color: isUrgent ? "oklch(0.65 0.18 60)" : accent }}>
                         <Clock size={10} />{timeStr}
                       </span>
                     );
@@ -2334,7 +2335,7 @@ export default function LeagueDashboard() {
                       data-testid="league-advance-ready-footer"
                       role="status"
                       aria-live="polite"
-                      className="league-advance-footer sticky bottom-3 z-20 flex flex-col items-start justify-between gap-3 rounded-2xl p-4 sm:flex-row sm:items-center"
+                      className="league-advance-footer sticky bottom-[calc(5.5rem+env(safe-area-inset-bottom,0px))] z-20 flex flex-col items-start justify-between gap-3 rounded-2xl p-4 lg:bottom-3 sm:flex-row sm:items-center"
                       style={{ background: isDark ? "oklch(0.22 0.07 145 / 0.96)" : "oklch(0.96 0.04 145 / 0.96)", border: `1.5px solid ${accent}66` }}
                     >
                       <div className="flex flex-col gap-0.5">
@@ -2348,7 +2349,7 @@ export default function LeagueDashboard() {
                         type="button"
                         onClick={() => setShowAdvanceConfirm(true)}
                         disabled={advancingWeek}
-                        className="league-advance-footer__button flex min-h-11 flex-shrink-0 items-center gap-2 rounded-xl px-4 py-2 text-sm font-bold active:scale-95 disabled:opacity-50"
+                        className="league-advance-footer__button flex min-h-11 w-full flex-shrink-0 items-center justify-center gap-2 rounded-xl px-4 py-2 text-sm font-bold active:scale-95 disabled:opacity-50 sm:w-auto"
                         style={{ background: accent, color: "#fff" }}
                       >
                         {advancingWeek ? <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" /> : <ChevronRight size={15} />}
@@ -3659,50 +3660,16 @@ export default function LeagueDashboard() {
         </div>{/* end main content area */}
       </div>{/* end flex layout */}
 
-      {/* Mobile bottom nav bar */}
-      <div
-        className="lg:hidden fixed bottom-0 left-0 right-0 z-30 flex items-center justify-around px-1"
-        style={{
-          background: isDark ? "oklch(0.14 0.04 145 / 0.98)" : "rgba(255,255,255,0.98)",
-          backdropFilter: "blur(16px) saturate(1.4)",
-          borderTop: `1px solid ${isDark ? "oklch(0.24 0.06 145)" : "oklch(0.90 0.02 145)"}`,
-          paddingTop: "6px",
-          paddingBottom: "calc(6px + env(safe-area-inset-bottom, 0px))",
-        }}
-      >
-        {tabs.map((tab) => {
-          const Icon = tab.icon;
-          const isActive = activeTab === tab.id;
-          return (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className="flex flex-col items-center gap-0.5 min-w-[44px] min-h-[44px] justify-center rounded-xl relative transition-all"
-              style={{ color: isActive ? accent : textMuted }}
-            >
-              {/* Active indicator bar */}
-              {isActive && (
-                <span
-                  className="absolute top-0 left-1/2 -translate-x-1/2 w-5 h-[3px] rounded-full"
-                  style={{ background: accent }}
-                />
-              )}
-              <span className={`otb-nav-tap otb-icon${isActive ? " otb-icon--active" : ""} mt-0.5`}>
-                <Icon size={20} />
-              </span>
-              <span className={`text-[11px] font-medium ${isActive ? "font-semibold" : ""}`}>{tab.label}</span>
-              {((tab as { id: string; label: string; icon: React.ElementType; badge?: number }).badge ?? 0) > 0 && (
-                <span
-                  className="absolute top-1 right-0 w-4 h-4 rounded-full flex items-center justify-center text-[10px] font-bold shadow-sm"
-                  style={{ background: "#ef4444", color: "#fff" }}
-                >
-                  {(tab as { id: string; label: string; icon: React.ElementType; badge?: number }).badge}
-                </span>
-              )}
-            </button>
-          );
-        })}
-      </div>
+      <LeagueMobileTabBar
+        items={tabs}
+        activeId={activeTab}
+        onSelect={(nextTab) => setActiveTab(nextTab)}
+        isDark={isDark}
+        accent={accent}
+        textMain={textMain}
+        textMuted={textMuted}
+        ariaLabel="League navigation"
+      />
 
       {/* Result report modal */}
       {reportingMatch && (

@@ -5,16 +5,21 @@ import { describe, expect, it } from "vitest";
 const projectRoot = resolve(import.meta.dirname, "../../..");
 const dashboard = readFileSync(resolve(projectRoot, "client/src/pages/LeagueDashboard.tsx"), "utf8");
 const demo = readFileSync(resolve(projectRoot, "client/src/pages/LeagueDemo.tsx"), "utf8");
+const mobileNav = readFileSync(resolve(projectRoot, "client/src/components/league/LeagueMobileTabBar.tsx"), "utf8");
 const app = readFileSync(resolve(projectRoot, "client/src/App.tsx"), "utf8");
 const home = readFileSync(resolve(projectRoot, "client/src/pages/Home.tsx"), "utf8");
 const server = readFileSync(resolve(projectRoot, "server/leagues.ts"), "utf8");
 
 describe("League Dashboard implementation", () => {
   it("uses a persistent desktop sidebar and safe-area mobile bottom navigation", () => {
-    expect(dashboard).toContain("Mobile bottom nav bar");
-    expect(dashboard).toContain("lg:hidden fixed bottom-0 left-0 right-0");
-    expect(dashboard).toContain("env(safe-area-inset-bottom, 0px)");
-    expect(dashboard).toContain("min-w-[44px] min-h-[44px]");
+    expect(dashboard).toContain('import { LeagueMobileTabBar } from "@/components/league/LeagueMobileTabBar"');
+    expect(dashboard).toContain('<LeagueMobileTabBar');
+    expect(dashboard).toContain('ariaLabel="League navigation"');
+    expect(demo).toContain('<LeagueMobileTabBar');
+    expect(demo).toContain('ariaLabel="League demo navigation"');
+    expect(mobileNav).toContain("fixed inset-x-0 bottom-0 z-40");
+    expect(mobileNav).toContain("env(safe-area-inset-bottom, 0px)");
+    expect(mobileNav).toContain("min-h-12");
     expect(dashboard).toContain('label: "Overview"');
     expect(dashboard).toContain('label: "Standings"');
     expect(dashboard).toContain('label: "Schedule"');

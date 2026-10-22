@@ -47,8 +47,8 @@ describe("League dashboard content readability", () => {
     expect(dashboardSource).not.toContain('data-testid="league-overview-context"');
     expect(dashboardSource).not.toContain("league-page-intro");
     expect(demoSource).not.toContain("league-page-intro");
-    expect(dashboardSource).toContain('<h2 className="max-w-[calc(100%-5.5rem)] text-center text-2xl font-black leading-tight tracking-tight sm:text-3xl"');
-    expect(dashboardSource).toContain('className="relative flex min-h-[4.5rem] items-center justify-center px-5 py-4"');
+    expect(dashboardSource).toContain('<h2 className="max-w-full text-center text-2xl font-black leading-tight tracking-tight sm:max-w-[calc(100%-5.5rem)] sm:text-3xl"');
+    expect(dashboardSource).toContain('className="relative flex min-h-[4.5rem] flex-col items-center justify-center gap-2 px-5 py-4 sm:flex-row sm:gap-0"');
     expect(dashboardSource).toContain("Your Match · Week {league.currentWeek}");
     expect(dashboardSource).toContain("<LeagueMonthCalendar");
     expect(dashboardSource).not.toContain("/* ── Current Matchup Hero");
