@@ -12,6 +12,7 @@ import { useParams, useLocation, Link } from "wouter";
 import { NavLogo } from "@/components/NavLogo";
 import { PlayerAvatar } from "@/components/PlayerAvatar";
 import { ClubProfileNavigationItems } from "@/components/club/ClubProfileNavigationItems";
+import { ClubDashboardSidebar, type ClubDashboardSidebarItem } from "@/components/club/ClubDashboardSidebar";
 import { useAuthContext } from "@/context/AuthContext";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useAccessibleOverlay } from "@/hooks/useAccessibleOverlay";
@@ -106,7 +107,6 @@ import {
   Zap,
   Star,
   Megaphone,
-  MoreHorizontal,
   Share2,
   X,
   PlusCircle,
@@ -153,6 +153,7 @@ import {
   TournamentsIcon as OtbTournaments,
   LeaguesIcon as OtbLeagues,
   HomeIcon as OtbHome,
+  SettingsIcon as OtbSettings,
   ClubsIcon as OtbClubs,
   AcademyIcon as OtbAcademy,
   ProfileIcon as OtbProfile,
@@ -926,7 +927,10 @@ export default function ClubProfile() {
       setEventsFilter("tournaments");
     }
   }, [activeTab]);
-  // Sidebar is now always icon-only (Partiful-style rail)
+  // The shared desktop rail remains compact until pointer hover or keyboard focus reveals labels.
+  const [sidebarHovered, setSidebarHovered] = useState(false);
+  const [sidebarKeyboardExpanded, setSidebarKeyboardExpanded] = useState(false);
+  const sidebarExpanded = sidebarHovered || sidebarKeyboardExpanded;
   const [clubLeagues, setClubLeagues] = useState<Array<{ id: string; name: string; status: string; currentWeek: number; totalWeeks: number; playerCount: number; maxPlayers?: number }>>([]);
   const [leaguesLoading, setLeaguesLoading] = useState(false);
   const [showCreateLeague, setShowCreateLeague] = useState(false);
@@ -1486,6 +1490,39 @@ export default function ClubProfile() {
   // Because `club` is in React state and updated by the onClubChange subscriber,
   // this re-derives automatically whenever the owner saves a new color in Settings.
   const accent = club?.accentColor ?? (isDark ? "#4CAF50" : "#436850");
+  const profileSidebarItems: ClubDashboardSidebarItem[] = clubProfileNavigationTabs(joined).map((tab) => {
+    const itemMeta: Record<ClubTabId, Omit<ClubDashboardSidebarItem, "id" | "badge" | "group">> = {
+      home: { label: "Home", description: "View this club's overview.", icon: OtbHome },
+      feed: { label: "Feed", description: "Read club posts and updates.", icon: OtbFeed },
+      events: { label: "Events", description: "Browse club events and tournaments.", icon: OtbEvents },
+      members: { label: "Members", description: "View the club member directory.", icon: OtbMembers },
+      album: { label: "Album", description: "Browse club photos and albums.", icon: OtbAlbum },
+      leagues: { label: "Leagues", description: "Open the club league workspace.", icon: OtbLeagues },
+    };
+    const unseenBadgeByTab: Partial<Record<ClubTabId, number>> = {
+      feed: feedEvents.length,
+      events: clubEvents.length + tournaments.length + liveTournaments.length,
+      leagues: clubLeagues.length,
+    };
+    const badge = seenTabs.has(tab) ? undefined : unseenBadgeByTab[tab];
+
+    return {
+      id: tab,
+      ...itemMeta[tab],
+      ...(badge ? { badge } : {}),
+      group: "workspace",
+    };
+  });
+
+  if (isOwner || isDirector) {
+    profileSidebarItems.push({
+      id: "settings",
+      label: "Settings",
+      description: "Manage club settings and access.",
+      icon: OtbSettings,
+      group: "manage",
+    });
+  }
 
   const clubBgForProfile = club.backgroundImage ?? club.bannerUrl ?? null;
   const useShaderDefault = !clubBgForProfile;
@@ -1503,151 +1540,39 @@ export default function ClubProfile() {
       )}
       <div className="flex h-[100dvh] w-full max-w-full overflow-hidden overscroll-x-none">
 
-        {/* ── LEFT SIDEBAR — Partiful-style: icon rail expands to icon+label rows on hover ─── */}
-        <aside
-          className="hidden lg:flex flex-col flex-shrink-0 h-full group/sidebar"
-          style={{
-            position: "absolute",
-            top: 0,
-            left: 0,
-            bottom: 0,
-            width: "68px",
-            transition: "width 0.26s cubic-bezier(0.4,0,0.2,1)",
-            backgroundImage: isDark
-              ? `repeating-conic-gradient(oklch(0.17 0.05 145) 0% 25%, oklch(0.13 0.04 145) 0% 50%)`
-              : `repeating-conic-gradient(oklch(0.16 0.06 145) 0% 25%, oklch(0.12 0.04 145) 0% 50%)`,
-            backgroundSize: "12px 12px",
-            borderRight: `1px solid rgba(255,255,255,0.07)`,
-            overflow: "hidden",
-            zIndex: 40,
+        {/* Desktop profile navigation uses the shared Club rail. Its spacer follows expansion so labels never overlap page content. */}
+        <div
+          aria-hidden="true"
+          className="hidden flex-shrink-0 transition-[width,min-width] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none lg:block"
+          style={{ width: sidebarExpanded ? "264px" : "72px", minWidth: sidebarExpanded ? "264px" : "72px" }}
+        />
+        <ClubDashboardSidebar
+          accent={accent}
+          background="oklch(0.115 0.025 145)"
+          expandedBackground="oklch(0.115 0.025 145)"
+          borderColor="oklch(0.22 0.06 145)"
+          compactBrandLogo="/brand/otb-animated-nav-thumbnail.webp"
+          expandedBrandLogo="/brand/otb-retro-cream-green-rail-wordmark.webp"
+          brandActionLabel="Back to all clubs"
+          ariaLabel="Club profile sidebar"
+          footerAriaLabel="Club profile footer navigation"
+          items={profileSidebarItems}
+          activeId={activeTab}
+          collapsed
+          temporarilyExpanded={sidebarExpanded}
+          onPointerExpandedChange={setSidebarHovered}
+          onFocusExpandedChange={setSidebarKeyboardExpanded}
+          onSelect={(nextTab) => {
+            if (nextTab === "settings") {
+              setPendingAvatar(undefined);
+              setShowSettings(true);
+              return;
+            }
+            handleTabChange(nextTab as ClubTabId);
           }}
-          onMouseEnter={(e) => { e.currentTarget.style.width = "210px"; }}
-          onMouseLeave={(e) => { e.currentTarget.style.width = "68px"; }}
-        >
-          {/* Top: persist the Club identity here; fall back to the shared OTB!! mark. */}
-          <div className="pt-5 pb-3 px-2 flex-shrink-0">
-            <button
-              onClick={() => navigate("/clubs")}
-              className="relative flex items-center justify-start w-full bg-transparent border-none p-0 cursor-pointer"
-              style={{ height: "60px" }}
-              title="ChessOTB.Club — Back to Clubs"
-            >
-              {club.avatarUrl && !avatarBroken ? (
-                <img
-                  src={club.avatarUrl}
-                  alt={club.name}
-                  className="h-14 w-14 flex-shrink-0 rounded-2xl border border-white/10 object-cover"
-                  onError={() => setAvatarBroken(true)}
-                />
-              ) : (
-                <img
-                  src="/brand/otb-retro-app-icon-512.png"
-                  alt="OTB!!"
-                  className="h-14 w-14 flex-shrink-0 object-contain"
-                />
-              )}
-            </button>
-          </div>
-
-          {/* Nav items — vertically centered, Partiful-style horizontal icon+label rows */}
-          <nav aria-label="Club navigation" className="flex flex-col gap-0 flex-1 justify-center px-2">
-            <ClubProfileNavigationItems joined={joined}>{(t) => {
-              const isActive = activeTab === t;
-              const iconMap: Record<string, React.ReactNode> = {
-                home: <OtbHome size={22} accentColor={isActive ? accent : undefined} />,
-                feed: <OtbFeed size={22} accentColor={isActive ? accent : undefined} />,
-                events: <OtbEvents size={22} accentColor={isActive ? accent : undefined} />,
-                members: <OtbMembers size={22} accentColor={isActive ? accent : undefined} />,
-                album: <OtbAlbum size={22} accentColor={isActive ? accent : undefined} />,
-                leagues: <OtbLeagues size={22} accentColor={isActive ? accent : undefined} />,
-                about: <Info size={22} color={isActive ? accent : undefined} />,
-              };
-              const labelMap: Record<string, string> = {
-                home: "Home",
-                feed: "Feed",
-                events: "Events",
-                members: "Members",
-                album: "Album",
-                leagues: "Leagues",
-                about: "About",
-              };
-              const badgeMap: Record<string, number> = {
-                events: clubEvents.length + tournaments.length + liveTournaments.length,
-                feed: feedEvents.length,
-                leagues: clubLeagues.length,
-              };
-              const badge = seenTabs.has(t) ? 0 : (badgeMap[t] ?? 0);
-              return (
-                <button
-                  key={t}
-                  onClick={() => handleTabChange(t)}
-                  className="relative flex flex-row items-center gap-3 rounded-xl transition-all duration-[240ms] ease-[cubic-bezier(0.4,0,0.2,1)] text-left"
-                  style={{
-                    height: "64px",
-                    minWidth: "44px",
-                    paddingLeft: "14px",
-                    paddingRight: "10px",
-                    background: "transparent",
-                    color: isActive ? "rgba(255,255,255,1)" : "rgba(255,255,255,0.38)",
-                  }}
-                  onMouseEnter={(e) => { if (!isActive) { e.currentTarget.style.color = "rgba(255,255,255,0.85)"; } }}
-                  onMouseLeave={(e) => { if (!isActive) { e.currentTarget.style.color = "rgba(255,255,255,0.38)"; } }}
-                  aria-label={labelMap[t]}
-                >
-                  {/* Icon — fixed width so it doesn't shift on expand */}
-                  <span className={`relative flex-shrink-0 w-7 flex items-center justify-center otb-icon${isActive ? " otb-icon--active" : ""}`}>
-                    {iconMap[t]}
-                    {badge > 0 && (
-                      <span
-                        className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full flex items-center justify-center text-[9px] font-bold"
-                        style={{ background: "#ef4444", color: "#fff" }}
-                      >
-                        {badge > 9 ? "9+" : badge}
-                      </span>
-                    )}
-                  </span>
-                  {/* Label — slides in to the right, stays on same row as icon */}
-                  <span
-                    className="text-[17px] font-bold tracking-tight whitespace-nowrap overflow-hidden transition-all duration-[240ms] ease-[cubic-bezier(0.4,0,0.2,1)] max-w-0 opacity-0 group-hover/sidebar:max-w-[140px] group-hover/sidebar:opacity-100"
-                    style={{ color: "inherit", fontFamily: "'Inter', sans-serif", letterSpacing: "-0.01em" }}
-                  >
-                    {labelMap[t]}
-                  </span>
-                </button>
-              );
-            }}</ClubProfileNavigationItems>
-          </nav>
-
-          {/* Bottom: utility icons */}
-          <div className="pb-5 flex flex-col gap-0.5 px-2">
-            {/* Divider */}
-            <div className="h-px mb-2 mx-1" style={{ background: "rgba(255,255,255,0.08)" }} />
-
-            {/* Avatar / Profile dropdown — replaces the old Share button */}
-            <div
-              className="relative flex flex-row items-center gap-3 rounded-xl"
-              style={{ height: "44px", paddingLeft: "8px", paddingRight: "16px" }}
-            >
-              <AvatarNavDropdown currentPage="Clubs" variant="sidebar" />
-            </div>
-
-            {(isOwner || isDirector) && (
-              <button
-                onClick={() => { setPendingAvatar(undefined); setShowSettings(true); }}
-                className="relative flex flex-row items-center gap-3 rounded-xl transition-all duration-[240ms] ease-[cubic-bezier(0.4,0,0.2,1)]"
-                style={{ height: "52px", paddingLeft: "14px", paddingRight: "10px", color: "rgba(255,255,255,0.38)" }}
-                onMouseEnter={(e) => { e.currentTarget.style.color = "rgba(255,255,255,0.85)"; }}
-                onMouseLeave={(e) => { e.currentTarget.style.color = "rgba(255,255,255,0.38)"; }}
-                aria-label="Settings"
-              >
-                <span className="flex-shrink-0 w-7 flex items-center justify-center"><MoreHorizontal size={24} /></span>
-                <span className="text-[15px] font-semibold tracking-wide uppercase whitespace-nowrap overflow-hidden transition-all duration-[240ms] ease-[cubic-bezier(0.4,0,0.2,1)] max-w-0 opacity-0 group-hover/sidebar:max-w-[140px] group-hover/sidebar:opacity-100" style={{ color: "inherit", fontFamily: "'Inter', sans-serif", letterSpacing: "0.06em" }}>Settings</span>
-              </button>
-            )}
-
-
-          </div>
-        </aside>
+          onBackToClubs={() => navigate("/clubs")}
+          footerContent={<AvatarNavDropdown currentPage="Clubs" variant="sidebar" />}
+        />
 
         {/* ── MAIN CONTENT AREA ────────────────────────────────────────── */}
         {/* Sidebar is absolutely positioned so it overlays without shifting content */}
@@ -1656,7 +1581,7 @@ export default function ClubProfile() {
           {/* ── SCROLLABLE CONTENT ─────────────────────────────────────── */}
           <div className="flex-1 min-w-0 overflow-x-hidden overflow-y-auto pb-[calc(7rem+env(safe-area-inset-bottom,0px))] lg:pb-6">
             {/* ── PADDED HEADER AREA ─────────────────────────────────────── */}
-            <div className="px-4 lg:pl-[88px] lg:pr-8 xl:pl-[96px] xl:pr-12 pt-5 pb-0">
+            <div className="px-4 lg:px-8 xl:px-12 pt-5 pb-0">
               <div className="max-w-5xl mx-auto">
                 {/* ── Contained Club Hero ──────────────────────────────── */}
                 <ClubHero
@@ -1734,7 +1659,7 @@ export default function ClubProfile() {
 
 
             {/* ── PADDED CONTENT BELOW HERO ─────────────────────────── */}
-            <div className="px-4 lg:pl-[88px] lg:pr-8 xl:pl-[96px] xl:pr-12 py-5">
+            <div className="px-4 lg:px-8 xl:px-12 py-5">
               <div className="max-w-5xl mx-auto">
 
         {/* ── Home tab (overview) ─────────────────────────────────────────── */}

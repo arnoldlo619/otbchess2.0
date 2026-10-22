@@ -1,4 +1,4 @@
-import { useState, type ElementType, type FocusEvent } from "react";
+import { useState, type ElementType, type FocusEvent, type ReactNode } from "react";
 import { MessagesSquare, UsersRound } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
@@ -54,6 +54,8 @@ type ClubDashboardSidebarProps = {
   onSelect: (id: string) => void;
   onBackToClubs: () => void;
   footerAction?: ClubDashboardSidebarFooterAction;
+  /** Optional context control, such as the account menu preserved on member-facing Club profiles. */
+  footerContent?: ReactNode;
 };
 
 function badgeLabel(value: number) {
@@ -81,6 +83,7 @@ export function ClubDashboardSidebar({
   onSelect,
   onBackToClubs,
   footerAction,
+  footerContent,
 }: ClubDashboardSidebarProps) {
   const expanded = !collapsed || temporarilyExpanded;
   const [hoveredItemId, setHoveredItemId] = useState<string | null>(null);
@@ -283,6 +286,22 @@ export function ClubDashboardSidebar({
     );
   }
 
+  function renderFooterContent() {
+    if (!footerContent) return null;
+
+    return (
+      <div
+        className="flex h-[52px] items-center"
+        style={{
+          justifyContent: expanded ? "flex-start" : "center",
+          paddingInlineStart: expanded ? "10px" : 0,
+        }}
+      >
+        {footerContent}
+      </div>
+    );
+  }
+
   function renderBrandAction() {
     const showExpandedWordmark = expanded && Boolean(expandedBrandLogo);
     const button = (
@@ -374,8 +393,9 @@ export function ClubDashboardSidebar({
         {renderGroup(primaryItems)}
       </nav>
 
-      {(settingsItem || footerAction) && (
+      {(settingsItem || footerAction || footerContent) && (
         <footer aria-label={footerAriaLabel} className="border-t border-white/[0.065] px-3 py-3">
+          {renderFooterContent()}
           {renderFooter()}
           {renderFooterAction()}
         </footer>

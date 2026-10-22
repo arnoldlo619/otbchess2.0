@@ -7,17 +7,20 @@ const clubProfileSource = readFileSync(
 );
 
 describe("Club Profile side-navigation footer", () => {
-  it("does not render the member-only Contact Owner footer action", () => {
+  it("does not render the member-only Contact Owner footer action and retains account plus Settings access through the shared rail", () => {
     expect(clubProfileSource).not.toContain('aria-label="Contact Owner"');
     expect(clubProfileSource).not.toContain("setShowContactOwner(true)");
-    expect(clubProfileSource).toContain('aria-label="Settings"');
+    expect(clubProfileSource).toContain('footerContent={');
+    expect(clubProfileSource).toContain('<AvatarNavDropdown currentPage="Clubs" variant="sidebar" />');
+    expect(clubProfileSource).toContain('id: "settings"');
+    expect(clubProfileSource).toContain('setShowSettings(true);');
   });
 
   it("uses icon-free members-only gates with a consistent prominent heading hierarchy", () => {
     const lockedHeadingClass = "text-lg font-bold tracking-tight sm:text-xl mb-1.5";
     expect(clubProfileSource.split(lockedHeadingClass)).toHaveLength(5);
-    expect(clubProfileSource).toContain('>Members-only Feed</h3>');
-    expect(clubProfileSource).toContain('>Members-only Events</h3>');
-    expect(clubProfileSource).toContain('>Members-only Leagues</h3>');
+    expect(clubProfileSource).toContain('}>Members-only Feed</h3>');
+    expect(clubProfileSource).toContain('}>Members-only Events</h3>');
+    expect(clubProfileSource).toContain('}>Members-only Leagues</h3>');
   });
 });

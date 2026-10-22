@@ -133,11 +133,13 @@ describe("Club Dashboard shared sidebar", () => {
 
   it("supports branded footer actions and context-specific navigation labels for sibling dashboards", () => {
     expect(sidebarSource).toContain("footerAction?: ClubDashboardSidebarFooterAction;");
+    expect(sidebarSource).toContain("footerContent?: ReactNode;");
     expect(sidebarSource).toContain("ariaLabel?: string;");
     expect(sidebarSource).toContain("footerAriaLabel?: string;");
     expect(sidebarSource).toContain("function renderFooterAction()");
+    expect(sidebarSource).toContain("function renderFooterContent()");
     expect(sidebarSource).toContain("function renderBrandAction()");
     expect(sidebarSource).toContain("description?: string;");
-    expect(sidebarSource).toContain("{(settingsItem || footerAction) && (");
+    expect(sidebarSource).toContain("{(settingsItem || footerAction || footerContent) && (");
   });
 });

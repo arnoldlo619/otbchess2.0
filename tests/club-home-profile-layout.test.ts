@@ -32,7 +32,8 @@ describe("Club Home profile layout", () => {
   it("preserves real owner and visitor profile actions around the redesigned Home content", () => {
     expect(source).toContain('isOwner={isOwner}');
     expect(source).toContain('joined={joined}');
-    expect(source).toContain('joined\n              ? (["home", "feed", "events", "members", "album", "leagues"] as const)');
+    expect(source).toContain('clubProfileNavigationTabs(joined)');
+    expect(source).toContain('ariaLabel="Club profile sidebar"');
     expect(heroSource).toContain('(!isOwner && !isDirector)');
     expect(heroSource).toContain('aria-label={isPublic ? "Join club" : "Request to join club"}');
     expect(heroSource).toContain('{(isOwner || isDirector) && (');
