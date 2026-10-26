@@ -78,7 +78,7 @@ export function InstallBanner() {
           >
             <img
               decoding="async"
-              src="/brand/otb-retro-app-icon-192.png"
+              src="/brand/otb-checker-app-icon-192.png"
               alt="OTB Chess app icon"
               className="w-full h-full object-contain"
               loading="lazy"
@@ -215,7 +215,7 @@ export function InstallBanner() {
                     <img
                       loading="lazy"
                       decoding="async"
-                      src="/brand/otb-retro-app-icon-192.png"
+                      src="/brand/otb-checker-app-icon-192.png"
                       alt=""
                       className="w-4.5 h-4.5 object-contain rounded-md"
                     />

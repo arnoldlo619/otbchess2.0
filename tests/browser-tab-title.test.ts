@@ -7,17 +7,17 @@ const homePage = readFileSync(resolve(process.cwd(), "client/src/pages/Home.tsx"
 const pageMetaHook = readFileSync(resolve(process.cwd(), "client/src/hooks/usePageMeta.ts"), "utf8");
 
 describe("browser tab metadata", () => {
-  it("uses the concise Play Chess OTB document title", () => {
+  it("uses the current ChessOTB Home page title contract", () => {
     expect(documentHtml).toContain("<title>Play Chess OTB</title>");
-    expect(homePage).toContain('title: "Play Chess OTB"');
+    expect(homePage).toContain('title: "ChessOTB | Host Chess Tournaments Over the Board"');
     expect(pageMetaHook).toContain('const DEFAULT_PAGE_TITLE = "Play Chess OTB"');
   });
 
-  it("uses retro cream-and-green favicon references", () => {
+  it("uses the supplied checkerboard OTB favicon references", () => {
     expect(documentHtml).toContain('href="/favicon.ico" sizes="any"');
-    expect(documentHtml).toContain('href="/brand/otb-retro-favicon-16.png"');
-    expect(documentHtml).toContain('href="/brand/otb-retro-favicon-32.png"');
-    expect(documentHtml).toContain('href="/brand/otb-retro-app-icon-192.png"');
-    expect(documentHtml).toContain('href="/brand/otb-retro-app-icon-180.png"');
+    expect(documentHtml).toContain('href="/brand/otb-checker-favicon-16.png"');
+    expect(documentHtml).toContain('href="/brand/otb-checker-favicon-32.png"');
+    expect(documentHtml).toContain('href="/brand/otb-checker-app-icon-192.png"');
+    expect(documentHtml).toContain('href="/brand/otb-checker-app-icon-180.png"');
   });
 });

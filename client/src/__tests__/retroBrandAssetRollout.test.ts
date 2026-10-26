@@ -40,15 +40,15 @@ const retiredLogoIdentifiers = [
   "otb-logo_54fb3385",
 ];
 
-describe("retro OTB!! brand rollout", () => {
-  it("ships the compact retro mark at favicon, app, and maskable sizes", () => {
+describe("OTB!! brand rollout", () => {
+  it("ships the supplied checkerboard mark at favicon, app, and maskable sizes", () => {
     for (const asset of [
-      "brand/otb-retro-app-icon-512.png",
-      "brand/otb-retro-app-icon-maskable-512.png",
-      "brand/otb-retro-app-icon-192.png",
-      "brand/otb-retro-app-icon-180.png",
-      "brand/otb-retro-favicon-32.png",
-      "brand/otb-retro-favicon-16.png",
+      "brand/otb-checker-app-icon-512.png",
+      "brand/otb-checker-app-icon-maskable-512.png",
+      "brand/otb-checker-app-icon-192.png",
+      "brand/otb-checker-app-icon-180.png",
+      "brand/otb-checker-favicon-32.png",
+      "brand/otb-checker-favicon-16.png",
     ]) {
       expect(existsSync(resolve(clientRoot, "public", asset))).toBe(true);
     }
@@ -60,12 +60,12 @@ describe("retro OTB!! brand rollout", () => {
     const manifest = JSON.parse(read("client/public/manifest.json")) as { icons: Array<{ src: string; purpose: string }> };
     const installBanner = read("client/src/components/InstallBanner.tsx");
 
-    expect(indexHtml).toContain('href="/brand/otb-retro-favicon-16.png"');
-    expect(indexHtml).toContain('href="/brand/otb-retro-app-icon-180.png"');
-    expect(indexHtml).toContain('content="/brand/otb-retro-app-icon-192.png"');
-    expect(manifest.icons).toContainEqual(expect.objectContaining({ src: "/brand/otb-retro-app-icon-maskable-512.png", purpose: "maskable" }));
-    expect(manifest.icons).toContainEqual(expect.objectContaining({ src: "/brand/otb-retro-app-icon-512.png", purpose: "any" }));
-    expect(installBanner).toContain('src="/brand/otb-retro-app-icon-192.png"');
+    expect(indexHtml).toContain('href="/brand/otb-checker-favicon-16.png"');
+    expect(indexHtml).toContain('href="/brand/otb-checker-app-icon-180.png"');
+    expect(indexHtml).toContain('content="/brand/otb-checker-app-icon-192.png"');
+    expect(manifest.icons).toContainEqual(expect.objectContaining({ src: "/brand/otb-checker-app-icon-maskable-512.png", purpose: "maskable" }));
+    expect(manifest.icons).toContainEqual(expect.objectContaining({ src: "/brand/otb-checker-app-icon-512.png", purpose: "any" }));
+    expect(installBanner).toContain('src="/brand/otb-checker-app-icon-192.png"');
   });
 
   it("replaces every active legacy logo reference with the matching retro wordmark or compact mark", () => {

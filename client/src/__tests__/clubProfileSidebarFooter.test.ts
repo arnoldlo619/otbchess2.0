@@ -7,6 +7,12 @@ const clubProfileSource = readFileSync(
 );
 
 describe("Club Profile side-navigation footer", () => {
+  it("suppresses redundant visual rail tooltips while preserving the shared sidebar", () => {
+    expect(clubProfileSource).toContain('showTooltips={false}');
+    expect(clubProfileSource).toContain('<ClubDashboardSidebar');
+    expect(clubProfileSource).toContain('ariaLabel="Club profile sidebar"');
+  });
+
   it("does not render the member-only Contact Owner footer action and retains account plus Settings access through the shared rail", () => {
     expect(clubProfileSource).not.toContain('aria-label="Contact Owner"');
     expect(clubProfileSource).not.toContain("setShowContactOwner(true)");

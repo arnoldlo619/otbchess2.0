@@ -1554,6 +1554,7 @@ export default function ClubProfile() {
           compactBrandLogo="/brand/otb-animated-nav-thumbnail.webp"
           expandedBrandLogo="/brand/otb-retro-cream-green-rail-wordmark.webp"
           brandActionLabel="Back to all clubs"
+          showTooltips={false}
           ariaLabel="Club profile sidebar"
           footerAriaLabel="Club profile footer navigation"
           items={profileSidebarItems}
