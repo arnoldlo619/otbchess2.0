@@ -1396,11 +1396,11 @@ export default function LeagueDashboard() {
             setActiveTab(tab);
             if (tab === "commissioner") setSelectedWeek(league.currentWeek);
           }}
-          onBackToClubs={() => navigate(`/clubs/${league.clubId}`)}
+          onBackToClubs={() => navigate(`/clubs/${league.clubId}/home?tab=home`)}
           footerAction={{
             label: "Back to club",
             icon: ArrowLeft,
-            onClick: () => navigate(`/clubs/${league.clubId}`),
+            onClick: () => navigate(`/clubs/${league.clubId}/home?tab=home`),
           }}
         />
 
@@ -1418,7 +1418,7 @@ export default function LeagueDashboard() {
           >
             {/* Mobile back button */}
             <button
-              onClick={() => navigate(`/clubs/${league.clubId}`)}
+              onClick={() => navigate(`/clubs/${league.clubId}/home?tab=home`)}
               className="lg:hidden min-w-[44px] min-h-[44px] flex items-center justify-center rounded-xl transition-opacity hover:opacity-70 touch-manipulation"
               style={{ color: "oklch(0.72 0.12 145)" }}
             >

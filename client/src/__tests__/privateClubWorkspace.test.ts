@@ -24,7 +24,7 @@ describe("private Club workspace model", () => {
   it("registers an isolated public demo route before the dynamic Club profile route", () => {
     expect(app).toContain('const ClubDashboardDemo = lazy(() => import("./pages/ClubDashboardDemo"));');
     expect(app.indexOf('<Route path={"/clubs/demo"} component={ClubDashboardDemo} />'))
-      .toBeLessThan(app.indexOf('<Route path={"/clubs/:id"} component={ClubProfile} />'));
+      .toBeLessThan(app.indexOf('<Route path={"/clubs/:id"} component={CanonicalClubRedirect} />'));
     expect(demo).toContain("Read-only demo");
     expect(demo).toContain('const DEMO_CLUB_NAME = "The OTB Chess Club"');
     expect(demo).toContain('const DEMO_BANNER_IMAGE = "/club-assets/the-otb-chess-club-demo-banner.jpg"');
@@ -114,5 +114,15 @@ describe("private Club workspace model", () => {
     expect(routeBlock("/join-preview/:id")).not.toContain("ownerId:");
     expect(dashboard).toContain("Never hydrate a private workspace");
     expect(profile).toContain("Private Club workspaces always resolve through the authorised server route.");
+  });
+
+  it("uses the unified dashboard Home for member entry and League return actions", () => {
+    expect(app).toContain("function CanonicalClubRedirect()");
+    expect(dashboard).toContain('{ id: "home", label: "Home", icon: Home');
+    expect(dashboard).toContain('setTab("home")');
+    expect(dashboard).toContain('tab === "home" || (tab === "overview" && isOwnerOrDirector)');
+    const league = readFileSync(resolve(root, "client/src/pages/LeagueDashboard.tsx"), "utf8");
+    expect(league).toContain('/home?tab=home');
+    expect(league).not.toContain('navigate(`/clubs/${league.clubId}`)');
   });
 });

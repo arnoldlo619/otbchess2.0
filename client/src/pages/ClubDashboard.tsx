@@ -101,6 +101,7 @@ import {
 import { nanoid } from "nanoid";
 import {
   Users,
+  Home,
   Trophy,
   Calendar,
   MapPin,
@@ -263,7 +264,7 @@ function isUpcoming(event: ClubEvent): boolean {
 
 // ── Sub-components ────────────────────────────────────────────────────────────
 
-type ClubWorkspaceHeaderTab = "feed" | "events" | "members" | "leagues";
+type ClubWorkspaceHeaderTab = "home" | "feed" | "events" | "members" | "leagues";
 
 type ClubLeagueSummary = {
   id: string;
@@ -300,6 +301,12 @@ function ClubWorkspaceSocialHeader({
   action?: { label: string; icon: React.ElementType; onClick: () => void };
 }) {
   const content = {
+    home: {
+      label: "Home",
+      primary: `${eventCount} upcoming event${eventCount === 1 ? "" : "s"}`,
+      secondary: `${memberCount} member${memberCount === 1 ? "" : "s"}`,
+      description: `A quick view of what is happening in ${club.name}.`,
+    },
     feed: {
       label: "Feed",
       primary: `${updateCount} update${updateCount === 1 ? "" : "s"}`,
@@ -2974,7 +2981,7 @@ function ClubDashboardSkeleton() {
 
 // ── Main page ─────────────────────────────────────────────────────────────────
 
-type Tab = "overview" | "events" | "members" | "feed" | "album" | "battles" | "leagues" | "settings"; // battles kept for internal use; tournaments merged into events
+type Tab = "overview" | "home" | "events" | "members" | "feed" | "album" | "battles" | "leagues" | "settings"; // battles kept for internal use; tournaments merged into events
 type SettingsSubTab = "analytics" | "payments" | "profile" | "join" | "danger";
 
 export default function ClubDashboard() {
@@ -3190,6 +3197,8 @@ export default function ClubDashboard() {
     const params = new URLSearchParams(query);
     if (params.get("tab") === "leagues") {
       setTab("leagues");
+    } else if (params.get("tab") === "home") {
+      setTab("home");
     }
   }, [location]);
 
@@ -3683,17 +3692,20 @@ export default function ClubDashboard() {
   }
 
   // Set default landing tab once club + role are resolved:
-  // owners/directors land on Overview; regular members land on Feed.
+  // owners/directors land on Overview; regular members land on Home.
   const defaultTabApplied = useRef(false);
   useEffect(() => {
     if (loading || defaultTabApplied.current) return;
     defaultTabApplied.current = true;
+    const params = new URLSearchParams(location.includes("?") ? location.slice(location.indexOf("?") + 1) : "");
+    if (params.get("tab") === "home" || params.get("tab") === "leagues") return;
     if (isOwnerOrDirector) {
       setTab("overview");
+    } else {
+      setTab("home");
     }
-    // members already default to "feed" via useState initial value
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [loading, isOwnerOrDirector]);
+  }, [loading, isOwnerOrDirector, location]);
   // Load pending invites when Members tab is opened (owner/director only)
   useEffect(() => {
     if (tab === "members" && isOwnerOrDirector) {
@@ -3949,6 +3961,7 @@ export default function ClubDashboard() {
 
     const clubTabs: { id: Tab; label: string; icon: React.ElementType; badge?: number; ownerOnly?: boolean; group: "workspace" | "manage" }[] = [
     { id: "overview", label: "Overview", icon: DashboardIcon, ownerOnly: true, group: "workspace" },
+    { id: "home", label: "Home", icon: Home, group: "workspace" },
     { id: "feed", label: "Feed", icon: OtbFeedIcon, group: "workspace" },
     { id: "album", label: "Album", icon: AlbumIcon, group: "workspace" },
     { id: "events", label: "Events", icon: EventsIcon, badge: (upcomingEvents.length + tournamentEvents.filter(isUpcoming).length) > 0 ? (upcomingEvents.filter(e => !e.tournamentId).length + tournamentEvents.filter(isUpcoming).length) : undefined, group: "workspace" },
@@ -4486,7 +4499,7 @@ export default function ClubDashboard() {
                     )}
                   </section>
                 )}
-                {(tab === "feed" || tab === "events" || tab === "members" || tab === "leagues") && (
+                {(tab === "home" || tab === "feed" || tab === "events" || tab === "members" || tab === "leagues") && (
                   <ClubWorkspaceSocialHeader
                     club={club}
                     tab={tab}
@@ -4522,8 +4535,8 @@ export default function ClubDashboard() {
                   />
                 )}
         <TabTransition tabKey={tab}>
-        {/* ── OVERVIEW TAB (owner/director only) ─────────────────────────────── */}
-        {tab === "overview" && isOwnerOrDirector && (
+        {/* ── HOME TAB (members) / OVERVIEW TAB (owner/director) ─────────────── */}
+        {(tab === "home" || (tab === "overview" && isOwnerOrDirector)) && (
           <div className="relative space-y-5">
             {/* ── Upcoming Event (same editorial row language as Club Timeline) ── */}
             {upcomingEvents.length > 0 && (() => {
@@ -4562,16 +4575,18 @@ export default function ClubDashboard() {
                         {next.venue && <p className="mt-1 truncate text-xs sm:text-sm" style={{ color: isDark ? "rgba(255,255,255,0.34)" : "rgba(21,41,28,0.44)" }}>{next.venue}</p>}
                       </button>
                     </div>
-                    <button
-                      type="button"
-                      onClick={() => openRsvpPanel(next.id)}
-                      className="mt-auto inline-flex min-h-9 shrink-0 items-center gap-1 rounded-lg px-2.5 text-xs font-semibold transition-[background-color,transform] duration-200 hover:-translate-y-px focus:outline-none focus:ring-2 focus:ring-[#4CAF50] active:translate-y-0 active:scale-[0.985] motion-reduce:transition-none"
-                      style={{ background: `${accent}22`, color: accent, border: `1px solid ${accent}44` }}
-                      aria-label={`Open RSVPs for ${next.title}`}
-                    >
-                      <Users className="h-3.5 w-3.5" aria-hidden="true" />
-                      RSVPs
-                    </button>
+                    {isOwnerOrDirector && (
+                      <button
+                        type="button"
+                        onClick={() => openRsvpPanel(next.id)}
+                        className="mt-auto inline-flex min-h-9 shrink-0 items-center gap-1 rounded-lg px-2.5 text-xs font-semibold transition-[background-color,transform] duration-200 hover:-translate-y-px focus:outline-none focus:ring-2 focus:ring-[#4CAF50] active:translate-y-0 active:scale-[0.985] motion-reduce:transition-none"
+                        style={{ background: `${accent}22`, color: accent, border: `1px solid ${accent}44` }}
+                        aria-label={`Open RSVPs for ${next.title}`}
+                      >
+                        <Users className="h-3.5 w-3.5" aria-hidden="true" />
+                        RSVPs
+                      </button>
+                    )}
                   </article>
                 </section>
               );
@@ -4636,7 +4651,7 @@ export default function ClubDashboard() {
 
 
 
-            <section data-club-overview-action-rail aria-labelledby="overview-quick-actions" className="mt-4 min-[1440px]:absolute min-[1440px]:inset-y-0 min-[1440px]:left-full min-[1440px]:mt-0 min-[1440px]:ml-14 min-[1440px]:w-[224px]">
+            {isOwnerOrDirector && <section data-club-overview-action-rail aria-labelledby="overview-quick-actions" className="mt-4 min-[1440px]:absolute min-[1440px]:inset-y-0 min-[1440px]:left-full min-[1440px]:mt-0 min-[1440px]:ml-14 min-[1440px]:w-[224px]">
               <div className="min-[1440px]:sticky min-[1440px]:top-6">
                 <h3 id="overview-quick-actions" className="mb-2.5 text-[10px] font-bold uppercase tracking-[0.16em]" style={{ color: isDark ? "rgba(255,255,255,0.38)" : "rgba(21,41,28,0.48)" }}>Quick Actions</h3>
                 <div className="grid grid-cols-2 gap-x-2 gap-y-1 border-y py-2 sm:grid-cols-4 min-[1440px]:relative min-[1440px]:block min-[1440px]:space-y-2 min-[1440px]:border-y-0 min-[1440px]:py-0 min-[1440px]:pl-8 min-[1440px]:before:absolute min-[1440px]:before:bottom-4 min-[1440px]:before:left-0 min-[1440px]:before:top-4 min-[1440px]:before:w-px min-[1440px]:before:bg-[var(--overview-action-rail-line)]" style={{ borderColor: isDark ? "rgba(255,255,255,0.08)" : "rgba(21,41,28,0.10)", "--overview-action-rail-line": isDark ? "rgba(255,255,255,0.12)" : "rgba(21,41,28,0.14)" } as React.CSSProperties}>
@@ -4664,10 +4679,10 @@ export default function ClubDashboard() {
                 ))}
                 </div>
               </div>
-            </section>
+            </section>}
 
             {/* Empty state for new clubs */}
-            {members.length <= 1 && upcomingEvents.length === 0 && feedEvents.length === 0 && (
+            {isOwnerOrDirector && members.length <= 1 && upcomingEvents.length === 0 && feedEvents.length === 0 && (
               <div className="rounded-2xl border border-dashed border-white/10 py-12 flex flex-col items-center gap-3 text-center px-6">
                 <Zap className="w-10 h-10 opacity-20 text-white" />
                 <p className="text-white/50 font-semibold">Your club is ready to grow</p>

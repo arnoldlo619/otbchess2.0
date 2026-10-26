@@ -3,7 +3,7 @@ import { OTBLoader } from "@/components/OTBLoader";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { MotionConfig } from "framer-motion";
-import { Route, Switch, useLocation } from "wouter";
+import { Route, Switch, useLocation, useParams } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import { InstallBanner } from "./components/InstallBanner";
@@ -32,7 +32,6 @@ const NotFound = lazy(() => import("./pages/NotFound"));
 const FinalStandings = lazy(() => import("./pages/FinalStandings"));
 const ChessClock = lazy(() => import("./pages/ChessClock"));
 const MyClubs = lazy(() => import("./pages/MyClubs"));
-const ClubProfile = lazy(() => import("./pages/ClubProfile"));
 const ClubDashboard = lazy(() => import("./pages/ClubDashboard"));
 const ClubDashboardDemo = lazy(() => import("./pages/ClubDashboardDemo"));
 const ClubManage = lazy(() => import("./pages/ClubManage"));
@@ -169,6 +168,19 @@ function HardRedirect({
   return <PageLoader />;
 }
 
+function CanonicalClubRedirect() {
+  const { id } = useParams<{ id: string }>();
+
+  useEffect(() => {
+    if (!id) return;
+    const query = window.location.search;
+    const hash = window.location.hash;
+    window.location.replace(`/clubs/${encodeURIComponent(id)}/home${query}${hash}`);
+  }, [id]);
+
+  return <PageLoader />;
+}
+
 function Router() {
   const [location] = useLocation();
   const isQrJoinRoute = location === "/join" || location.startsWith("/join/");
@@ -229,7 +241,7 @@ function Router() {
         <Route path={"/clubs/:id/messages"} component={ClubMessages} />
         <Route path={"/join-club/code/:code"} component={JoinClub} />
         <Route path={"/join-club/:clubId"} component={JoinClub} />
-        <Route path={"/clubs/:id"} component={ClubProfile} />
+        <Route path={"/clubs/:id"} component={CanonicalClubRedirect} />
         <Route path={"/tournament/:id/broadcast-console"} component={BroadcastConsole} />
         <Route path={"/tournament/:id/broadcast/:boardNumber"} component={BroadcastControl} />
         <Route path={"/live/board/:slug/display"} component={VenueDisplay} />
