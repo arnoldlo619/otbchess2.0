@@ -3640,8 +3640,9 @@ export default function ClubDashboard() {
     toast.success("Post unpinned");
   }
 
-  const isOwnerOrDirector =
-    user && club && (club.ownerId === user.id || members.find((m) => m.userId === user.id && m.role === "director"));
+  const isOwnerOrDirector = !!(
+    user && club && (club.ownerId === user.id || members.find((m) => m.userId === user.id && m.role === "director"))
+  );
   const isClubOwner = !!(user && club && club.ownerId === user.id);
   const isActiveClubMember = !!(user && club && (club.ownerId === user.id || members.some((member) => member.userId === user.id)));
 
@@ -4099,6 +4100,7 @@ export default function ClubDashboard() {
           compactBrandLogo="/brand/otb-animated-nav-thumbnail.webp"
           expandedBrandLogo="/brand/otb-retro-cream-green-rail-wordmark.webp"
           brandActionLabel="Back to all clubs"
+          showTooltips={isOwnerOrDirector}
           items={clubTabs.filter((item) => !item.ownerOnly || isOwnerOrDirector)}
           activeId={tab}
           collapsed

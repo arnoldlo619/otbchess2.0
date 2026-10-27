@@ -129,6 +129,7 @@ describe("Club Dashboard shared sidebar", () => {
     expect(sidebarSource).toContain("if (!showTooltips) return button;");
     expect(sidebarSource).toContain("<Tooltip key={item.id} delayDuration={expanded ? 600 : 350}>");
     expect(sidebarSource).toContain("aria-label={item.label}");
+    expect(dashboardSource).toContain("showTooltips={isOwnerOrDirector}");
   });
 
   it("supports branded footer actions and context-specific navigation labels for sibling dashboards", () => {
