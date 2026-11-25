@@ -23,6 +23,7 @@ import { Link, useLocation } from "wouter";
 import { toast } from "sonner";
 import { useTheme } from "@/contexts/ThemeContext";
 import { usePageMeta } from "@/hooks/usePageMeta";
+import { useHomepageStructuredData } from "@/hooks/useHomepageStructuredData";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { TournamentWizard } from "@/components/TournamentWizard";
 import { getAllRegistrations } from "@/lib/registrationStore";
@@ -2199,6 +2200,7 @@ export default function Home() {
     keywords: "chess tournaments, over-the-board chess, chess clubs, Swiss pairings, chess leagues, tournament management",
     path: "/",
   });
+  useHomepageStructuredData();
 
   // Handle PWA shortcut: /?action=create opens the wizard immediately
   useEffect(() => {
