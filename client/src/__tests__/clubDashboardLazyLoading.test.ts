@@ -23,8 +23,8 @@ describe("ClubDashboard route code splitting", () => {
   });
 
   it("mounts full-screen creation workflows only while open", () => {
-    expect(source).toContain("{showTournamentWizard && user && (");
-    expect(source).toContain("{showMeetupWizard && user && club && (");
+    expect(source).toContain("{showTournamentWizard && user && isOwnerOrDirector && (");
+    expect(source).toContain("{showMeetupWizard && user && club && isOwnerOrDirector && (");
     expect(source).toContain("<Suspense fallback={<ClubFeatureFallback overlay />}>");
   });
 

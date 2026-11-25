@@ -2987,16 +2987,20 @@ type SettingsSubTab = "analytics" | "payments" | "profile" | "join" | "danger";
 export default function ClubDashboard() {
   const { id } = useParams<{ id: string }>();
   const [location, navigate] = useLocation();
-  const { user } = useAuthContext();
+  const { user, loading: authLoading } = useAuthContext();
+  const currentUserId = user?.id;
   const { theme } = useTheme();
   const isDark = theme === "dark";
   const prefersReducedMotion = useReducedMotion();
 
   const [club, setClub] = useState<Club | null>(null);
   const [members, setMembers] = useState<ClubMember[]>([]);
+  const [resolvedWorkspace, setResolvedWorkspace] = useState<{ routeId: string; userId: string } | null>(null);
+  const workspaceReady = !authLoading && resolvedWorkspace?.routeId === id && resolvedWorkspace?.userId === user?.id;
   const [events, setEvents] = useState<ClubEvent[]>([]);
   const [feedEvents, setFeedEvents] = useState<FeedEvent[]>([]);
   const [tab, setTab] = useState<Tab>("feed");
+  const defaultTabApplied = useRef(false);
   // ── Sidebar disclosure state ───────────────────────────────────────────────
   // The minimalist rail remains compact by default and reveals labels through
   // pointer hover or keyboard focus; no persistent pin control is rendered.
@@ -3240,14 +3244,23 @@ export default function ClubDashboard() {
 
   // Seed and load
   useEffect(() => {
-    if (!id || !user) { navigate("/clubs"); return; }
+    if (authLoading) return;
+    if (!id || !currentUserId) { navigate("/clubs"); return; }
+    let cancelled = false;
+    const routeId = id;
+    const userId = currentUserId;
+    setLoading(true);
+    setResolvedWorkspace(null);
+    setMembers([]);
+    defaultTabApplied.current = false;
 
     async function loadClub() {
       // The server is the privacy authority. Never hydrate a private workspace
       // from localStorage after an unavailable/unauthorised server response.
       let found: Club | null = null;
       try {
-        const serverClub = await apiGetClub(id!);
+        const serverClub = await apiGetClub(routeId);
+        if (cancelled) return;
         if (serverClub) {
           // Keep a local cache for offline display only after authorisation.
           const clubs = (JSON.parse(localStorage.getItem("otb-clubs-v1") || "[]") as Club[]);
@@ -3256,33 +3269,38 @@ export default function ClubDashboard() {
           found = serverClub;
         }
       } catch { /* unavailable private resources resolve to the private index */ }
+      if (cancelled) return;
       if (!found) { navigate("/clubs"); return; }
 
       // The authorised details response proves the current user is a member or owner.
       setClub(found);
       try {
         const serverMembers = await apiListClubMembers(found.id);
+        if (cancelled) return;
         setMembers(serverMembers);
         const allLocal = JSON.parse(localStorage.getItem("otb-club-members-v1") || "[]") as ClubMember[];
         const otherClubMembers = allLocal.filter((m) => m.clubId !== found!.id);
         localStorage.setItem("otb-club-members-v1", JSON.stringify([...otherClubMembers, ...serverMembers]));
       } catch {
+        if (cancelled) return;
         setMembers([]);
       }
       setEvents(listClubEvents(found.id, true));
       setFeedEvents(listFeedEvents(found.id, 50));
+      setResolvedWorkspace({ routeId, userId });
       setLoading(false);
       // Load battles from server (async) + migrate any localStorage battles
       const cid = found.id;
       migrateLocalBattlesToServer(cid).catch(() => {});
-      apiBattleList(cid).then(setBattles).catch(() => setBattles(listBattles(cid)));
+      apiBattleList(cid).then((data) => { if (!cancelled) setBattles(data); }).catch(() => { if (!cancelled) setBattles(listBattles(cid)); });
       // Sync events and feed from server (merges server records into localStorage)
-      syncEventsFromServer(cid).then((merged) => setEvents(merged)).catch(() => {});
-      syncFeedFromServer(cid).then((merged) => setFeedEvents(merged.slice(0, 50))).catch(() => {});
+      syncEventsFromServer(cid).then((merged) => { if (!cancelled) setEvents(merged); }).catch(() => {});
+      syncFeedFromServer(cid).then((merged) => { if (!cancelled) setFeedEvents(merged.slice(0, 50)); }).catch(() => {});
     }
 
     loadClub();
-  }, [id, user, navigate]);
+    return () => { cancelled = true; };
+  }, [id, currentUserId, authLoading, navigate]);
 
   // Poll-close + scheduled-publish interval: every 30 seconds
   // MUST be declared before any early return to comply with Rules of Hooks
@@ -3311,34 +3329,34 @@ export default function ClubDashboard() {
   // Subscribes to /api/clubs/:id/stream and refreshes members + club data
   // when member_joined, member_left, or club_updated events arrive.
   useEffect(() => {
-    if (!clubId) return;
+    if (!clubId || !workspaceReady) return;
+    let cancelled = false;
     const es = new EventSource(`/api/clubs/${clubId}/stream`);
 
-    es.addEventListener("member_joined", () => {
-      apiListClubMembers(clubId).then(setMembers).catch(() => {});
-      apiGetClub(clubId).then((c) => { if (c) setClub(c); }).catch(() => {});
-    });
-
-    es.addEventListener("member_left", () => {
-      apiListClubMembers(clubId).then(setMembers).catch(() => {});
-      apiGetClub(clubId).then((c) => { if (c) setClub(c); }).catch(() => {});
-    });
+    const refreshMembership = () => {
+      apiListClubMembers(clubId).then((data) => { if (!cancelled) setMembers(data); }).catch(() => {});
+      apiGetClub(clubId).then((c) => { if (!cancelled && c) setClub(c); }).catch(() => {});
+    };
+    es.addEventListener("member_joined", refreshMembership);
+    es.addEventListener("member_left", refreshMembership);
+    es.addEventListener("member_role_changed", refreshMembership);
 
     es.addEventListener("club_updated", (e) => {
+      if (cancelled) return;
       try {
         const updated = JSON.parse((e as MessageEvent).data);
         setClub((prev) => prev ? { ...prev, ...updated } : prev);
       } catch {
-        apiGetClub(clubId).then((c) => { if (c) setClub(c); }).catch(() => {});
+        apiGetClub(clubId).then((c) => { if (!cancelled && c) setClub(c); }).catch(() => {});
       }
     });
 
     es.addEventListener("event_created", () => {
-      syncEventsFromServer(clubId).then(setEvents).catch(() => {});
+      syncEventsFromServer(clubId).then((data) => { if (!cancelled) setEvents(data); }).catch(() => {});
     });
 
-    return () => es.close();
-  }, [clubId]);
+    return () => { cancelled = true; es.close(); };
+  }, [clubId, workspaceReady, user?.id]);
 
   useEffect(() => {
     if (!clubId) return;
@@ -3641,10 +3659,39 @@ export default function ClubDashboard() {
   }
 
   const isOwnerOrDirector = !!(
-    user && club && (club.ownerId === user.id || members.find((m) => m.userId === user.id && m.role === "director"))
+    workspaceReady && user && club && (club.ownerId === user.id || members.find((m) => m.clubId === club.id && m.userId === user.id && m.role === "director"))
   );
-  const isClubOwner = !!(user && club && club.ownerId === user.id);
-  const isActiveClubMember = !!(user && club && (club.ownerId === user.id || members.some((member) => member.userId === user.id)));
+  const isClubOwner = !!(workspaceReady && user && club && club.ownerId === user.id);
+  const isActiveClubMember = !!(workspaceReady && user && club && (club.ownerId === user.id || members.some((member) => member.clubId === club.id && member.userId === user.id)));
+
+  // A role/account change must not leave previously opened management UI reachable.
+  useEffect(() => {
+    if (!isOwnerOrDirector) {
+      if (tab === "settings" || tab === "overview") setTab("home");
+      if (membersSubTab === "attendance") setMembersSubTab("members");
+      setSettingsSubTab("profile");
+      setShowJoinQRModal(false);
+      setShowInviteDialog(false);
+      setInviteLink(null);
+      setPendingInvites([]);
+      setShowCreateEvent(false);
+      setShowTournamentWizard(false);
+      setShowMeetupWizard(false);
+      setLeagueWizardOpen(false);
+      setDeleteMeetupId(null);
+      setEditMeetupId(null);
+      setRsvpPanelEventId(null);
+      setBannerCropSrc(null);
+    }
+    if (!isClubOwner) {
+      setShowTransferModal(false);
+      setTransferTargetId(null);
+      setTransferConfirm(false);
+      setRemoveMemberId(null);
+      setMemberMenuOpenId(null);
+      if (settingsSubTab === "danger") setSettingsSubTab("profile");
+    }
+  }, [isOwnerOrDirector, isClubOwner, tab, membersSubTab, settingsSubTab]);
 
   useEffect(() => {
     if (!club || !isOwnerOrDirector) {
@@ -3674,7 +3721,7 @@ export default function ClubDashboard() {
 
   // ── Transfer Ownership handler ───────────────────────────────────────────────
   async function handleTransferOwnership() {
-    if (!club || !transferTargetId) return;
+    if (!club || !isClubOwner || !transferTargetId) return;
     setTransferring(true);
     try {
       const result = await apiTransferOwnership(club.id, transferTargetId);
@@ -3694,9 +3741,8 @@ export default function ClubDashboard() {
 
   // Set default landing tab once club + role are resolved:
   // owners/directors land on Overview; regular members land on Home.
-  const defaultTabApplied = useRef(false);
   useEffect(() => {
-    if (loading || defaultTabApplied.current) return;
+    if (loading || !workspaceReady || defaultTabApplied.current) return;
     defaultTabApplied.current = true;
     const params = new URLSearchParams(location.includes("?") ? location.slice(location.indexOf("?") + 1) : "");
     if (params.get("tab") === "home" || params.get("tab") === "leagues") return;
@@ -3706,7 +3752,7 @@ export default function ClubDashboard() {
       setTab("home");
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [loading, isOwnerOrDirector, location]);
+  }, [loading, workspaceReady, isOwnerOrDirector, location]);
   // Load pending invites when Members tab is opened (owner/director only)
   useEffect(() => {
     if (tab === "members" && isOwnerOrDirector) {
@@ -3850,7 +3896,7 @@ export default function ClubDashboard() {
       (m.chesscomUsername ?? "").toLowerCase().includes(memberSearch.toLowerCase())
   );
 
-  if (loading) {
+  if (loading || !workspaceReady) {
     return <ClubDashboardSkeleton />;
   }
 
@@ -4192,7 +4238,7 @@ export default function ClubDashboard() {
           </div>
 
           {/* ── JOIN CLUB QR MODAL ────────────────────────────────────────── */}
-          {showJoinQRModal && club && (() => {
+          {showJoinQRModal && isOwnerOrDirector && club && (() => {
             const joinUrl = clubJoinCode
               ? `${window.location.origin}/join-club/code/${encodeURIComponent(clubJoinCode)}`
               : null;
@@ -4730,7 +4776,7 @@ export default function ClubDashboard() {
               </section>
             )}
 
-            {deleteMeetupId && (() => {
+            {deleteMeetupId && isOwnerOrDirector && (() => {
               const eventToDelete = events.find((event) => event.id === deleteMeetupId);
               return (
                 <div className="modal-overlay z-[200]">
@@ -4750,7 +4796,7 @@ export default function ClubDashboard() {
               );
             })()}
 
-            {editMeetupId && (() => {
+            {editMeetupId && isOwnerOrDirector && (() => {
               const eventToEdit = events.find((event) => event.id === editMeetupId);
               if (!eventToEdit) return null;
               return <EditEventModal event={eventToEdit} clubAccent={accent} onSaved={(updated) => { setEvents((current) => current.map((event) => event.id === updated.id ? updated : event)); setEditMeetupId(null); toast.success("Event updated"); }} onClose={() => setEditMeetupId(null)} />;
@@ -4971,7 +5017,7 @@ export default function ClubDashboard() {
         )}
 
         {/* ── TRANSFER OWNERSHIP MODAL ──────────────────────────────────────── */}
-        {showTransferModal && (
+        {showTransferModal && isClubOwner && (
           <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 sm:p-6">
             {/* Backdrop */}
             <div
@@ -5449,7 +5495,7 @@ export default function ClubDashboard() {
         )}
 
         {/* ── SETTINGS TABents) ──────────────────── */}
-        {tab === "settings" && (() => {
+        {tab === "settings" && isOwnerOrDirector && (() => {
           // ── Derived analytics data (for owner Home sub-tab) ────────────────
           const completedBattles = battles.filter(b => b.status === "completed");
           const activePlayers = new Set([
@@ -6375,7 +6421,7 @@ export default function ClubDashboard() {
         </div>{/* end main content area */}
       </div>{/* end flex layout */}
       {/* ── Create Event Modal ───────────────────────────────────────────────────────── */}
-      {showCreateEvent && user && ( <CreateEventModal
+      {showCreateEvent && user && isOwnerOrDirector && ( <CreateEventModal
           clubId={club.id}
           clubName={club.name}
           userId={user.id}
@@ -6387,7 +6433,7 @@ export default function ClubDashboard() {
           onOpenMeetupWizard={() => setShowMeetupWizard(true)}
         />
       )}
-      {showTournamentWizard && user && (
+      {showTournamentWizard && user && isOwnerOrDirector && (
         <Suspense fallback={<ClubFeatureFallback overlay />}>
         <TournamentWizard
           open
@@ -6414,7 +6460,7 @@ export default function ClubDashboard() {
         </Suspense>
       )}
       {/* ── Club Meetup Wizard ──────────────────────────────────────────── */}
-      {showMeetupWizard && user && club && (
+      {showMeetupWizard && user && club && isOwnerOrDirector && (
         <Suspense fallback={<ClubFeatureFallback overlay />}>
         <ClubMeetupWizard
           clubId={club.id}
@@ -6635,7 +6681,7 @@ export default function ClubDashboard() {
       )}
 
       {/* ── Remove Member Confirm Dialog ─────────────────────────────────── */}
-      {removeMemberId && (
+      {removeMemberId && isClubOwner && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4" style={{ background: "rgba(0,0,0,0.75)" }}>
           <div
             ref={removeMemberDialogRef}
@@ -6677,7 +6723,7 @@ export default function ClubDashboard() {
         </div>
       )}
       {/* ── RSVP Management Panel ──────────────────────────────────────────── */}
-      {rsvpPanelEventId && (() => {
+      {rsvpPanelEventId && isOwnerOrDirector && (() => {
         const panelEvent = events.find(e => e.id === rsvpPanelEventId);
         return (
           <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4" style={{ background: "rgba(0,0,0,0.75)" }}>

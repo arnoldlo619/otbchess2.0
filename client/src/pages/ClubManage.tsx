@@ -104,11 +104,14 @@ function getChecklistSteps(club: Club, members: ClubMember[], events: ClubEvent[
 export default function ClubManage() {
   const { id } = useParams<{ id: string }>();
   const [, navigate] = useLocation();
-  const { user } = useAuthContext();
+  const { user, loading: authLoading } = useAuthContext();
+  const currentUserId = user?.id;
   const { theme } = useTheme();
   const isDark = theme === "dark";
 
   const [club, setClub] = useState<Club | null>(null);
+  const [resolvedWorkspace, setResolvedWorkspace] = useState<{ routeId: string; userId: string } | null>(null);
+  const workspaceReady = !authLoading && resolvedWorkspace?.routeId === id && resolvedWorkspace?.userId === user?.id;
   const [members, setMembers] = useState<ClubMember[]>([]);
   const [events, setEvents] = useState<ClubEvent[]>([]);
   const [feedEvents, setFeedEvents] = useState<FeedEvent[]>([]);
@@ -118,12 +121,20 @@ export default function ClubManage() {
 
   // ── Load club data ─────────────────────────────────────────────────────────
   useEffect(() => {
-    if (!id || !user) { navigate("/clubs"); return; }
-    const currentUser = user;
+    if (authLoading) return;
+    if (!id || !currentUserId) { navigate("/clubs"); return; }
+    const userId = currentUserId;
+    const routeId = id;
+    let cancelled = false;
+    setLoading(true);
+    setResolvedWorkspace(null);
+    setShowShareModal(false);
+    setPendingInvites([]);
 
     async function loadClub() {
       let found: Club | null = null;
-      try { found = await apiGetClub(id!); } catch { /* unavailable is treated as inaccessible */ }
+      try { found = await apiGetClub(routeId); } catch { /* unavailable is treated as inaccessible */ }
+      if (cancelled) return;
       if (!found) { navigate("/clubs"); return; }
 
       // Access to the workspace itself is authorised by apiGetClub. Management
@@ -132,11 +143,13 @@ export default function ClubManage() {
       try {
         memberList = await apiListClubMembers(found.id);
       } catch {
+        if (cancelled) return;
         navigate("/clubs");
         return;
       }
-      const myMembership = memberList.find((member) => member.userId === currentUser.id);
-      if (found.ownerId !== currentUser.id && !["owner", "director"].includes(myMembership?.role ?? "member")) {
+      if (cancelled) return;
+      const myMembership = memberList.find((member) => member.clubId === found.id && member.userId === userId);
+      if (found.ownerId !== userId && myMembership?.role !== "director") {
         navigate(`/clubs/${found.id}/home`);
         return;
       }
@@ -145,6 +158,7 @@ export default function ClubManage() {
       setMembers(memberList);
       setEvents(listClubEvents(found.id, true));
       setFeedEvents(listFeedEvents(found.id, 20));
+      setResolvedWorkspace({ routeId, userId });
       setLoading(false);
 
       // Load pending invites
@@ -152,13 +166,14 @@ export default function ClubManage() {
         const res = await authFetch(`/api/clubs/${found.id}/invites`, { credentials: "include" });
         if (res.ok) {
           const data = await res.json() as Array<{ id: string; email: string; token: string; expiresAt: string; status: string }>;
-          setPendingInvites(data.filter((i) => i.status === "pending"));
+          if (!cancelled) setPendingInvites(data.filter((i) => i.status === "pending"));
         }
       } catch { /* ignore */ }
     }
 
     loadClub();
-  }, [id, user, navigate]);
+    return () => { cancelled = true; };
+  }, [id, currentUserId, authLoading, navigate]);
 
   // ── Derived data ───────────────────────────────────────────────────────────
   const upcomingEvents = events.filter((e) => new Date(e.startAt) >= new Date());
@@ -180,7 +195,7 @@ export default function ClubManage() {
   const accentText = isDark ? "text-[#4CAF50]" : "text-[#436850]";
 
   // ── Loading state ──────────────────────────────────────────────────────────
-  if (loading) {
+  if (loading || !workspaceReady) {
     return (
       <div className={`min-h-screen flex items-center justify-center ${isDark ? "bg-[#0d1a0f]" : "bg-[#F5F0E8]"}`}>
         <div className="flex flex-col items-center gap-3">

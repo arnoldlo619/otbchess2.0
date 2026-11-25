@@ -183,6 +183,14 @@ export default function RsvpFormBuilderPage() {
     const localDraft = readDraft<RsvpBuilderDraft>(draftKey);
     try {
       const res = await authFetch(`/api/clubs/${clubId}/events/${eventId}/rsvp-form`, { credentials: "include" });
+      if (res.status === 401 || res.status === 403) {
+        latestFormRef.current = null;
+        setForm(null);
+        setResponses([]);
+        setLoading(false);
+        navigate(`/clubs/${clubId}/home`);
+        return;
+      }
       if (res.ok) {
         const data = await res.json() as { form: RsvpFormData; responses: FormResponse[] };
         const remoteUpdatedAt = Date.parse(data.form.updatedAt);
@@ -250,7 +258,7 @@ export default function RsvpFormBuilderPage() {
       }
     }
     setLoading(false);
-  }, [clubId, draftKey, eventId]);
+  }, [clubId, draftKey, eventId, navigate]);
 
   useEffect(() => { void loadForm(); }, [loadForm]);
 

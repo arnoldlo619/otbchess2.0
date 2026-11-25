@@ -54,7 +54,7 @@ import {
   clubFeedAttachments,
   users,
 } from "../shared/schema";
-import { eq, and, desc, or, sql, isNull } from "drizzle-orm";
+import { eq, and, desc, or, sql, isNull, type SQLWrapper } from "drizzle-orm";
 import { customAlphabet, nanoid } from "nanoid";
 import type { Request, Response } from "express";
 import { requireAuth as authMiddleware, requireFullAuth } from "./auth.js";
@@ -864,12 +864,23 @@ clubsRouter.post("/sync", requireFullAuth, async (req: Request, res: Response) =
       if (!c.id || !c.name) continue;
       if (c.ownerId !== userId) continue;
       try {
+        const clubId = String(c.id);
+        const slug = String(c.slug || "");
+        const existing = await db.select({ id: dbClubs.id, ownerId: dbClubs.ownerId })
+          .from(dbClubs)
+          .where(or(eq(dbClubs.id, clubId), eq(dbClubs.slug, slug)));
+        // Submitted ownership is not authority over an existing club or slug.
+        if (existing.some(row => row.id !== clubId || row.ownerId !== userId)) continue;
+        // Recheck the stored row inside the duplicate-key write: ownership may
+        // have changed, or a different club may have claimed the slug meanwhile.
+        const ownedUpdate = (column: SQLWrapper, value: string | number | null) =>
+          sql`IF(${dbClubs.id} = ${clubId} AND ${dbClubs.ownerId} = ${userId}, ${value}, ${column})`;
         await db
           .insert(dbClubs)
           .values({
-            id: String(c.id),
+            id: clubId,
             name: String(c.name),
-            slug: String(c.slug || ""),
+            slug,
             tagline: String(c.tagline || ""),
             description: String(c.description || ""),
             location: String(c.location || ""),
@@ -878,7 +889,7 @@ clubsRouter.post("/sync", requireFullAuth, async (req: Request, res: Response) =
             avatarUrl: c.avatarUrl ? String(c.avatarUrl) : null,
             bannerUrl: c.bannerUrl ? String(c.bannerUrl) : null,
             accentColor: String(c.accentColor || "#4CAF50"),
-            ownerId: String(c.ownerId),
+            ownerId: userId,
             ownerName: String(c.ownerName || ""),
             memberCount: Number(c.memberCount) || 1,
             tournamentCount: Number(c.tournamentCount) || 0,
@@ -892,13 +903,13 @@ clubsRouter.post("/sync", requireFullAuth, async (req: Request, res: Response) =
           })
           .onDuplicateKeyUpdate({
             set: {
-              name: String(c.name),
-              tagline: String(c.tagline || ""),
-              description: String(c.description || ""),
-              location: String(c.location || ""),
-              memberCount: Number(c.memberCount) || 1,
-              isPublic: 0,
-              announcement: c.announcement ? String(c.announcement) : null,
+              name: ownedUpdate(dbClubs.name, String(c.name)),
+              tagline: ownedUpdate(dbClubs.tagline, String(c.tagline || "")),
+              description: ownedUpdate(dbClubs.description, String(c.description || "")),
+              location: ownedUpdate(dbClubs.location, String(c.location || "")),
+              memberCount: ownedUpdate(dbClubs.memberCount, Number(c.memberCount) || 1),
+              isPublic: ownedUpdate(dbClubs.isPublic, 0),
+              announcement: ownedUpdate(dbClubs.announcement, c.announcement ? String(c.announcement) : null),
             },
           });
         upserted++;
@@ -2407,6 +2418,7 @@ clubsRouter.patch(
         .update(dbClubMembers)
         .set({ role })
         .where(and(eq(dbClubMembers.clubId, id), eq(dbClubMembers.userId, memberId)));
+      broadcastClubEvent(id, "member_role_changed", { userId: memberId, role });
       res.json({ success: true, role });
     } catch (err) {
       logger.error("[clubs] PATCH /:id/members/:memberId/role error:", err);
@@ -2854,12 +2866,15 @@ clubsRouter.get("/:id/events/:eventId/recap", requireFullAuth, async (req: Reque
     }
     const { eventRecaps, meetupCheckins } = await import("../shared/schema.js");
     // Check if recap already exists
-    const [existing] = await db.select().from(eventRecaps).where(eq(eventRecaps.eventId, eventId));
+    const [existing] = await db.select().from(eventRecaps)
+      .where(and(eq(eventRecaps.eventId, eventId), eq(eventRecaps.clubId, id)));
     if (existing) { res.json(existing); return; }
     // Generate recap from check-in data
-    const [event] = await db.select().from(clubEvents).where(eq(clubEvents.id, eventId));
+    const [event] = await db.select().from(clubEvents)
+      .where(and(eq(clubEvents.id, eventId), eq(clubEvents.clubId, id)));
     if (!event) { res.status(404).json({ error: "Event not found" }); return; }
-    const checkins = await db.select().from(meetupCheckins).where(eq(meetupCheckins.eventId, eventId));
+    const checkins = await db.select().from(meetupCheckins)
+      .where(and(eq(meetupCheckins.eventId, eventId), eq(meetupCheckins.clubId, id)));
     const attendanceCount = checkins.length;
     const eventDate = event.startAt instanceof Date ? event.startAt : new Date(event.startAt);
     const dateStr = eventDate.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
@@ -3050,16 +3065,25 @@ clubsRouter.post("/:id/events/:eventId/rsvp-form", authMiddleware, async (req: R
   }
 });
 
-/** GET /api/clubs/:id/events/:eventId/rsvp-form — member-only form editor read */
-clubsRouter.get("/:id/events/:eventId/rsvp-form", authMiddleware, async (req: Request, res: Response) => {
+/** GET /api/clubs/:id/events/:eventId/rsvp-form — owner/director-only form editor read */
+clubsRouter.get("/:id/events/:eventId/rsvp-form", requireFullAuth, async (req: Request, res: Response) => {
   const { eventId } = req.params;
   try {
     const access = await getAuthorizedClub(req, res, req.params.id);
     if (!access) return;
     const { db } = access;
-    const [form] = await db.select().from(rsvpForms).where(eq(rsvpForms.eventId, eventId));
+    if (access.club.ownerId !== access.userId) {
+      const [membership] = await db.select({ role: dbClubMembers.role }).from(dbClubMembers)
+        .where(and(eq(dbClubMembers.clubId, access.club.id), eq(dbClubMembers.userId, access.userId))).limit(1);
+      if (membership?.role !== "director") {
+        res.status(403).json({ error: "Only owners and directors can manage RSVP forms" }); return;
+      }
+    }
+    const [form] = await db.select().from(rsvpForms)
+      .where(and(eq(rsvpForms.eventId, eventId), eq(rsvpForms.clubId, access.club.id)));
     if (!form) { res.status(404).json({ error: "No RSVP form found for this event" }); return; }
-    const responses = await db.select().from(rsvpFormResponses).where(eq(rsvpFormResponses.formId, form.id));
+    const responses = await db.select().from(rsvpFormResponses)
+      .where(and(eq(rsvpFormResponses.formId, form.id), eq(rsvpFormResponses.clubId, access.club.id)));
     res.json({ form, responses });
   } catch (err) {
     logger.error("[clubs] GET /:id/events/:eventId/rsvp-form error:", err);
@@ -3137,11 +3161,12 @@ clubsRouter.get("/:id/events/:eventId/rsvp-form/responses", authMiddleware, asyn
     const [member] = await db.select().from(dbClubMembers).where(and(eq(dbClubMembers.clubId, clubId), eq(dbClubMembers.userId, userId)));
     if (!isOwner && member?.role !== "director") { res.status(403).json({ error: "Access denied" }); return; }
 
-    const [form] = await db.select().from(rsvpForms).where(eq(rsvpForms.eventId, eventId));
+    const [form] = await db.select().from(rsvpForms)
+      .where(and(eq(rsvpForms.eventId, eventId), eq(rsvpForms.clubId, clubId)));
     if (!form) { res.status(404).json({ error: "No RSVP form for this event" }); return; }
 
     const responses = await db.select().from(rsvpFormResponses)
-      .where(eq(rsvpFormResponses.formId, form.id))
+      .where(and(eq(rsvpFormResponses.formId, form.id), eq(rsvpFormResponses.clubId, clubId)))
       .orderBy(desc(rsvpFormResponses.submittedAt));
 
     res.json({ form, responses, total: responses.length });
