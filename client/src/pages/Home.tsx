@@ -449,7 +449,7 @@ function Hero({ onCreateTournament }: { onCreateTournament: () => void }) {
               className="opacity-0-init animate-fade-in-up text-sm sm:text-lg leading-relaxed mb-0 sm:mb-10 max-w-xl mx-auto text-muted-foreground px-4 sm:px-0"
               style={{ animationDelay: "0.35s", animationFillMode: "forwards", fontWeight: 400 }}
             >
-              For the local chess clubs.
+              Chess tournaments and leagues for local chess clubs
             </h2>
           </div>
 
@@ -2194,8 +2194,9 @@ export default function Home() {
 
   // SEO
   usePageMeta({
-    title: "ChessOTB | Host Chess Tournaments Over the Board",
-    description: "Host and manage over-the-board chess tournaments with Swiss pairings, live standings, and QR check-in. Free for chess clubs.",
+    title: "ChessOTB.club | Chess Tournaments & Clubs Over the Board",
+    description: "Host over-the-board chess tournaments, grow your chess club, and run leagues with smart pairings, live standings, player profiles, and easy QR check-in.",
+    keywords: "chess tournaments, over-the-board chess, chess clubs, Swiss pairings, chess leagues, tournament management",
     path: "/",
   });
 

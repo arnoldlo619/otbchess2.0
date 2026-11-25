@@ -8,9 +8,9 @@ const pageMetaHook = readFileSync(resolve(process.cwd(), "client/src/hooks/usePa
 
 describe("browser tab metadata", () => {
   it("uses the current ChessOTB Home page title contract", () => {
-    expect(documentHtml).toContain("<title>Play Chess OTB</title>");
-    expect(homePage).toContain('title: "ChessOTB | Host Chess Tournaments Over the Board"');
-    expect(pageMetaHook).toContain('const DEFAULT_PAGE_TITLE = "Play Chess OTB"');
+    expect(documentHtml).toContain("<title>ChessOTB.club | Chess Tournaments &amp; Clubs Over the Board</title>");
+    expect(homePage).toContain('title: "ChessOTB.club | Chess Tournaments & Clubs Over the Board"');
+    expect(pageMetaHook).toContain('const DEFAULT_PAGE_TITLE = "ChessOTB.club | Chess Tournaments & Clubs Over the Board"');
   });
 
   it("uses the supplied checkerboard OTB favicon references", () => {

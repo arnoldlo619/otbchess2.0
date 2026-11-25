@@ -21,6 +21,8 @@ interface PageMetaOptions {
   title?: string;
   /** Meta description (≤ 160 chars recommended) */
   description?: string;
+  /** Comma-separated, focused search keywords for the current page. */
+  keywords?: string;
   /** Absolute URL to OG image (1200×630 recommended) */
   image?: string;
   /** Canonical path, e.g. "/pricing" — will be resolved to full URL */
@@ -36,7 +38,7 @@ interface PageMetaOptions {
 const SITE_NAME = "ChessOTB.club";
 const SITE_URL = "https://chessotb.club";
 const DEFAULT_OG_IMAGE = `${SITE_URL}/brand/otb-retro-og-card.png`;
-const DEFAULT_PAGE_TITLE = "Play Chess OTB";
+const DEFAULT_PAGE_TITLE = "ChessOTB.club | Chess Tournaments & Clubs Over the Board";
 
 function setMeta(name: string, content: string, property = false) {
   const attr = property ? "property" : "name";
@@ -64,6 +66,7 @@ export function usePageMeta(opts: PageMetaOptions = {}) {
     const {
       title,
       description,
+      keywords,
       image = DEFAULT_OG_IMAGE,
       path,
       type = "website",
@@ -84,6 +87,8 @@ export function usePageMeta(opts: PageMetaOptions = {}) {
       setMeta("og:description", description, true);
       setMeta("twitter:description", description);
     }
+
+    if (keywords) setMeta("keywords", keywords);
 
     // ── Image ──
     setMeta("og:image", image, true);
@@ -115,5 +120,5 @@ export function usePageMeta(opts: PageMetaOptions = {}) {
     return () => {
       document.title = DEFAULT_PAGE_TITLE;
     };
-  }, [opts.title, opts.description, opts.image, opts.path, opts.type, opts.publishedTime, opts.author]);
+  }, [opts.title, opts.description, opts.keywords, opts.image, opts.path, opts.type, opts.publishedTime, opts.author]);
 }
